@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String?       @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole      @default(STUDENT)
+  status        UserStatus    @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  accounts      Account[]
+  progress      Progress[]
+  quizAttempts  QuizAttempt[]
+  sessions      Session[]
+  courses       Course[]      @relation("CourseEnrollment")
+}
+
+model Course {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  thumbnail   String?
+  price       Float?
+  isPublished Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  chapters    Chapter[]
+  progress    Progress[]
+  students    User[]     @relation("CourseEnrollment")
+  courseDetails CourseDetails?
+}
+
+model CourseDetails {
+  id          String   @id @default(cuid())
+  courseId    String   @unique
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  // Content details fields
+  title       String
+  category    String
+  tags        String[] // Array of tags
+  instructor  Json     // Instructor object with name, avatar, rating, students
+  rating      Float
+  enrolledCount Int
+  duration    String
+  price       Float
+  originalPrice Float
+  isFree      Boolean
+  description String   @db.Text
+  features    Json     // Array of feature objects
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Chapter {
+  id          String       @id @default(cuid())
+  title       String
+  content     String
+  videoUrl    String?
+  position    Int
+  isFree      Boolean      @default(false)
+  courseId    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  isPublished Boolean      @default(false)
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+  quizzes     Quiz[]
+  subchapters Subchapter[]
+}
+
+model Lesson {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  videoUrl  String?
+  position  Int
+  chapterId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+}
+
+model Quiz {
+  id        String        @id @default(cuid())
+  title     String
+  chapterId String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  questions Question[]
+  chapter   Chapter       @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id        String   @id @default(cuid())
+  text      String
+  type      String
+  options   Json
+  answer    String
+  points    Int      @default(1)
+  quizId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  quizId    String
+  score     Int
+  answers   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Progress {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+  chapterId   String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapterId])
+}
+
+model Subchapter {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  videoUrl  String?
+  position  Int
+  chapterId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+}
+
+model ContentSettings {
+  id        String   @id @default("main")
+  settings  Json     // Store filter categories, featured courses, layout options
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlatformSettings {
+  id                      String    @id @default("global")
+  enableTwoFactorAuth     Boolean   @default(false)
+  disablePublicSignups    Boolean   @default(false)
+  lockPlatformInviteOnly  Boolean   @default(false)
+  enableAuditLogs         Boolean   @default(true)
+  updatedAt               DateTime  @updatedAt
+}
+
+model Invitation {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  role      UserRole
+  courseId  String?
+  message   String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+  invitedBy String   // ID of the admin who sent the invitation
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+  GUEST
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
