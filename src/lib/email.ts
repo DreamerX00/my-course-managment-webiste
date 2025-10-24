@@ -235,7 +235,8 @@ export async function sendInvitationEmail(
 }
 
 // Send email using SendGrid
-async function sendWithSendGrid(email: string, emailContent: any) {
+async function sendWithSendGrid(email: string, emailContent: { subject: string; html: string; text: string }) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const sgMail = require('@sendgrid/mail');
   sgMail.setApiKey(sendGridConfig.apiKey);
 
@@ -256,7 +257,7 @@ async function sendWithSendGrid(email: string, emailContent: any) {
 }
 
 // Send email using Nodemailer
-async function sendWithNodemailer(email: string, emailContent: any) {
+async function sendWithNodemailer(email: string, emailContent: { subject: string; html: string; text: string }) {
   const mailOptions = {
     from: process.env.EMAIL_SERVER_USER,
     to: email,
@@ -275,6 +276,7 @@ export async function testEmailConfiguration() {
   try {
     if (sendGridConfig.apiKey) {
       // Test SendGrid
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const sgMail = require('@sendgrid/mail');
       sgMail.setApiKey(sendGridConfig.apiKey);
       console.log('SendGrid configuration is valid');

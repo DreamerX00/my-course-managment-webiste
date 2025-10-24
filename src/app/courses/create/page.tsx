@@ -20,14 +20,7 @@ export default function CreateCoursePage() {
   const [imageUrl, setImageUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  // Redirect unauthenticated users or non-instructors
-  if (status === "loading") return <div>Loading...</div>
-  if (status === "unauthenticated" || session?.user?.role !== "INSTRUCTOR") {
-    router.push("/login")
-    return null
-  }
-
-  // TipTap editor for course description
+  // TipTap editor for course description - MUST be called before any conditional returns
   const editor = useEditor({
     extensions: editorExtensions,
     content: description,
@@ -43,6 +36,18 @@ export default function CreateCoursePage() {
       editor.commands.setContent(description);
     }
   }, [description, editor]);
+
+  // Redirect unauthenticated users or non-instructors - after all hooks
+  useEffect(() => {
+    if (status === "unauthenticated" || (session && session.user?.role !== "INSTRUCTOR")) {
+      router.push("/login")
+    }
+  }, [status, session, router])
+
+  if (status === "loading") return <div>Loading...</div>
+  if (status === "unauthenticated" || session?.user?.role !== "INSTRUCTOR") {
+    return null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

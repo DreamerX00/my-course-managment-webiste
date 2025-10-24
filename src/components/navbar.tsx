@@ -162,7 +162,7 @@ export function Navbar() {
                 {isAdmin && (
                   <Link 
                     href="/dashboard/admin-dashboard" 
-                    className="block text-base font-semibold text-purple-700 hover:text-purple-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-purple-50 flex items-center gap-2"
+                    className="flex text-base font-semibold text-purple-700 hover:text-purple-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-purple-50 items-center gap-2"
                     onClick={closeMobileMenu}
                   >
                     <Shield className="h-4 w-4" />

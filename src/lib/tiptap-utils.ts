@@ -218,7 +218,7 @@ export const convertFileToBase64 = (
  * @param file The file to import
  * @returns Promise resolving to the Tiptap JSON object
  */
-export async function importFileToTiptapJSON(file: File): Promise<any> {
+export async function importFileToTiptapJSON(file: File): Promise<Record<string, unknown>> {
   const ext = file.name.split('.').pop()?.toLowerCase();
   
   if (ext === 'docx' || ext === 'doc') {

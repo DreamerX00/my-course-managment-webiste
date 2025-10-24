@@ -1,9 +1,9 @@
 import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
+import type { UserRole } from "@prisma/client"
 // import { PrismaAdapter } from "@auth/prisma-adapter"
 // import { db } from "./db"
-import { compare } from "bcryptjs"
 
 export const authOptions: NextAuthOptions = {
   // adapter: PrismaAdapter(db),
@@ -43,9 +43,9 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
+      if (user && 'role' in user) {
         token.id = user.id;
-        token.role = (user as any).role; // Cast to any to access role
+        token.role = user.role as UserRole;
       }
       return token;
     },

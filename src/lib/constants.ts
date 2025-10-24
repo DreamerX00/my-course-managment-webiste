@@ -9,10 +9,6 @@ import {
   CalendarDays,
   MessageSquare,
   Share2,
-  Github,
-  Linkedin,
-  Twitter,
-  Youtube
 } from "lucide-react"
 import { SiGithub, SiLinkedin, SiX, SiYoutube } from "react-icons/si";
 
@@ -143,16 +139,7 @@ export const NEWSLETTER_CONTENT = {
 }
 
 // --- Footer Section ---
-interface FooterLink {
-  name: string;
-  href: string;
-}
-
-interface SocialLink {
-  icon: LucideIcon;
-  href: string;
-}
-
+// Footer and social links
 export const FOOTER_LINKS = {
   about: [
     { name: "About Us", href: "/about" },
