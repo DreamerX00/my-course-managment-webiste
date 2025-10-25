@@ -20,7 +20,16 @@ import {
   Sparkles,
   Edit,
   Calendar,
-  GraduationCap
+  GraduationCap,
+  MapPin,
+  Phone,
+  Linkedin,
+  Github,
+  Twitter,
+  Globe,
+  Youtube,
+  Instagram,
+  Mail
 } from "lucide-react"
 
 interface Course {
@@ -38,6 +47,18 @@ interface Profile {
   courses: Course[]
   totalScore: number
   completedCourses: number
+  bio?: string
+  title?: string
+  location?: string
+  phone?: string
+  linkedin?: string
+  github?: string
+  twitter?: string
+  website?: string
+  youtube?: string
+  instagram?: string
+  avatar?: string
+  bannerImage?: string
 }
 
 export default function ProfilePage() {
@@ -133,20 +154,35 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/20">
+      {/* Banner Image */}
+      {profile.bannerImage && (
+        <div className="relative h-64 md:h-80 overflow-hidden z-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${profile.bannerImage})` }}
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-transparent via-background/20 to-background" />
+        </div>
+      )}
+
       {/* Hero Section with Profile Header */}
-      <div className="relative overflow-hidden bg-linear-to-r from-primary/5 via-primary/10 to-primary/5">
-        <div className="absolute inset-0 bg-grid-white/5 mask-[linear-gradient(0deg,white,rgba(255,255,255,0.5))]"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse delay-700"></div>
+      <div className={`relative overflow-visible ${!profile.bannerImage ? 'bg-linear-to-r from-primary/5 via-primary/10 to-primary/5' : ''}`}>
+        {!profile.bannerImage && (
+          <>
+            <div className="absolute inset-0 bg-grid-white/5 mask-[linear-gradient(0deg,white,rgba(255,255,255,0.5))]"></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse delay-700"></div>
+          </>
+        )}
         
-        <div className="container relative py-12 md:py-16">
+        <div className={`container relative z-10 ${profile.bannerImage ? '-mt-20 md:-mt-24' : 'py-12 md:py-16'}`}>
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+            <div className="flex flex-col md:flex-row items-start md:items-start gap-8">
               {/* Avatar with Animation */}
-              <div className="relative group">
+              <div className="relative group z-20">
                 <div className="absolute -inset-1 bg-linear-to-r from-primary via-accent to-primary rounded-full blur opacity-25 group-hover:opacity-40 transition duration-1000 animate-pulse"></div>
-                <Avatar className="relative w-32 h-32 border-4 border-background shadow-2xl transition-transform duration-300 group-hover:scale-105">
-                  <AvatarImage src={profile.image} alt={profile.name} />
+                <Avatar className="relative w-32 h-32 md:w-40 md:h-40 border-4 border-background shadow-2xl transition-transform duration-300 group-hover:scale-105 z-20">
+                  <AvatarImage src={profile.avatar || profile.image} alt={profile.name} />
                   <AvatarFallback className="text-4xl font-bold bg-linear-to-br from-primary to-accent text-primary-foreground">
                     {getInitials(profile.name)}
                   </AvatarFallback>
@@ -165,12 +201,90 @@ export default function ProfilePage() {
                       {profile.role.charAt(0) + profile.role.slice(1).toLowerCase()}
                     </Badge>
                   </div>
-                  <p className="text-lg text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                    {profile.email}
-                  </p>
+                  
+                  {profile.title && (
+                    <p className="text-xl font-medium text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+                      {profile.title}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-4 text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      <span className="text-sm">{profile.email}</span>
+                    </div>
+                    {profile.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm">{profile.location}</span>
+                      </div>
+                    )}
+                    {profile.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        <span className="text-sm">{profile.phone}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {profile.bio && (
+                    <Card className="mt-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-250">
+                      <CardContent className="pt-6">
+                        <p className="text-muted-foreground leading-relaxed">{profile.bio}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Social Links */}
+                  {(profile.linkedin || profile.github || profile.twitter || profile.website || profile.youtube || profile.instagram) && (
+                    <div className="flex flex-wrap items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                      {profile.linkedin && (
+                        <Button variant="outline" size="icon" asChild>
+                          <a href={profile.linkedin} target="_blank" rel="noopener noreferrer">
+                            <Linkedin className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {profile.github && (
+                        <Button variant="outline" size="icon" asChild>
+                          <a href={profile.github} target="_blank" rel="noopener noreferrer">
+                            <Github className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {profile.twitter && (
+                        <Button variant="outline" size="icon" asChild>
+                          <a href={profile.twitter} target="_blank" rel="noopener noreferrer">
+                            <Twitter className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {profile.website && (
+                        <Button variant="outline" size="icon" asChild>
+                          <a href={profile.website} target="_blank" rel="noopener noreferrer">
+                            <Globe className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {profile.youtube && (
+                        <Button variant="outline" size="icon" asChild>
+                          <a href={profile.youtube} target="_blank" rel="noopener noreferrer">
+                            <Youtube className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {profile.instagram && (
+                        <Button variant="outline" size="icon" asChild>
+                          <a href={profile.instagram} target="_blank" rel="noopener noreferrer">
+                            <Instagram className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-350">
                   <Button 
                     onClick={() => router.push("/profile/edit")}
                     className="group"

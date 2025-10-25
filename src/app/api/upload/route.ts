@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      url: (result as { secure_url: string }).secure_url,
+      secure_url: (result as { secure_url: string }).secure_url,
+      url: (result as { secure_url: string }).secure_url, // Add url alias
       publicId: (result as { public_id: string }).public_id,
     });
   } catch (error) {
