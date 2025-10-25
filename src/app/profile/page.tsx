@@ -4,8 +4,24 @@ import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/components/ui/use-toast"
-import Image from "next/image"
+import { 
+  BookOpen, 
+  Trophy, 
+  TrendingUp, 
+  Award, 
+  Clock, 
+  Target,
+  Sparkles,
+  Edit,
+  Calendar,
+  GraduationCap
+} from "lucide-react"
 
 interface Course {
   id: string
@@ -62,9 +78,13 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold">Loading...</h2>
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-background via-background to-muted/20">
+        <div className="text-center space-y-4">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin"></div>
+          </div>
+          <h2 className="text-2xl font-semibold animate-pulse">Loading your profile...</h2>
         </div>
       </div>
     )
@@ -72,83 +92,368 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold">Profile not found</h2>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Profile Not Found</CardTitle>
+            <CardDescription>We couldn&apos;t find your profile information.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push("/dashboard")}>Go to Dashboard</Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
+  const enrolledCoursesCount = profile.courses.length
+  const inProgressCourses = profile.courses.filter(c => c.progress > 0 && c.progress < 100).length
+  const averageProgress = enrolledCoursesCount > 0 
+    ? profile.courses.reduce((sum, c) => sum + c.progress, 0) / enrolledCoursesCount 
+    : 0
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role.toUpperCase()) {
+      case "OWNER": return "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20"
+      case "ADMIN": return "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20"
+      case "INSTRUCTOR": return "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20"
+      case "STUDENT": return "bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/20"
+      default: return "bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-500/20"
+    }
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   return (
-    <div className="container py-10">
-      <div className="max-w-4xl mx-auto">
-        <div className="grid gap-8 md:grid-cols-2">
-          <div>
-            <div className="flex items-center gap-4 mb-6">
-              <Image
-                src={profile.image}
-                alt={profile.name}
-                width={80}
-                height={80}
-                className="w-20 h-20 rounded-full"
-              />
-              <div>
-                <h1 className="text-2xl font-bold">{profile.name}</h1>
-                <p className="text-muted-foreground">{profile.email}</p>
-                <p className="text-sm font-medium mt-1">
-                  {profile.role.charAt(0) + profile.role.slice(1).toLowerCase()}
-                </p>
+    <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/20">
+      {/* Hero Section with Profile Header */}
+      <div className="relative overflow-hidden bg-linear-to-r from-primary/5 via-primary/10 to-primary/5">
+        <div className="absolute inset-0 bg-grid-white/5 mask-[linear-gradient(0deg,white,rgba(255,255,255,0.5))]"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse delay-700"></div>
+        
+        <div className="container relative py-12 md:py-16">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+              {/* Avatar with Animation */}
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-linear-to-r from-primary via-accent to-primary rounded-full blur opacity-25 group-hover:opacity-40 transition duration-1000 animate-pulse"></div>
+                <Avatar className="relative w-32 h-32 border-4 border-background shadow-2xl transition-transform duration-300 group-hover:scale-105">
+                  <AvatarImage src={profile.image} alt={profile.name} />
+                  <AvatarFallback className="text-4xl font-bold bg-linear-to-br from-primary to-accent text-primary-foreground">
+                    {getInitials(profile.name)}
+                  </AvatarFallback>
+                </Avatar>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="rounded-lg border p-4">
-                <div className="text-2xl font-bold">{profile.totalScore.toFixed(1)}%</div>
-                <div className="text-sm text-muted-foreground">Average Score</div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="text-2xl font-bold">{profile.completedCourses}</div>
-                <div className="text-sm text-muted-foreground">Courses Completed</div>
-              </div>
-            </div>
-
-            <Button
-              variant="outline"
-              onClick={() => router.push("/profile/edit")}
-            >
-              Edit Profile
-            </Button>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4">My Courses</h2>
-            <div className="space-y-4">
-              {profile.courses.map((course) => (
-                <div
-                  key={course.id}
-                  className="rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => router.push(`/courses/${course.id}/learn`)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium">{course.title}</h3>
-                    <span className="text-sm text-muted-foreground">
-                      {course.progress}%
-                    </span>
+              {/* Profile Info */}
+              <div className="flex-1 space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-foreground to-foreground/60 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-700">
+                      {profile.name}
+                    </h1>
+                    <Badge className={`${getRoleBadgeColor(profile.role)} border animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100`}>
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      {profile.role.charAt(0) + profile.role.slice(1).toLowerCase()}
+                    </Badge>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full"
-                      style={{ width: `${course.progress}%` }}
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Last accessed: {new Date(course.lastAccessed).toLocaleDateString()}
+                  <p className="text-lg text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                    {profile.email}
                   </p>
                 </div>
-              ))}
+
+                <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                  <Button 
+                    onClick={() => router.push("/profile/edit")}
+                    className="group"
+                  >
+                    <Edit className="w-4 h-4 mr-2 transition-transform group-hover:rotate-12" />
+                    Edit Profile
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => router.push("/courses")}
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Browse Courses
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="container py-8 md:py-12">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {/* Total Courses */}
+            <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardDescription className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    Enrolled Courses
+                  </CardDescription>
+                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold">{enrolledCoursesCount}</div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {inProgressCourses} in progress
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Completed Courses */}
+            <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardDescription className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4" />
+                    Completed
+                  </CardDescription>
+                  <div className="p-2 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
+                    <Award className="w-5 h-5" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold">{profile.completedCourses}</div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {enrolledCoursesCount > 0 
+                    ? `${Math.round((profile.completedCourses / enrolledCoursesCount) * 100)}% completion rate`
+                    : "No courses yet"}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Average Progress */}
+            <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardDescription className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" />
+                    Avg Progress
+                  </CardDescription>
+                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                    <Target className="w-5 h-5" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold">{Math.round(averageProgress)}%</div>
+                <Progress value={averageProgress} className="mt-2 h-2" />
+              </CardContent>
+            </Card>
+
+            {/* Total Score */}
+            <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardDescription className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4" />
+                    Total Score
+                  </CardDescription>
+                  <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 group-hover:scale-110 transition-transform">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold">{profile.totalScore}</div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Points earned
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content Tabs */}
+          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400">
+            <Tabs defaultValue="courses" className="w-full">
+              <CardHeader>
+                <TabsList className="grid w-full max-w-md grid-cols-2">
+                  <TabsTrigger value="courses" className="gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    My Courses
+                  </TabsTrigger>
+                  <TabsTrigger value="activity" className="gap-2">
+                    <Clock className="w-4 h-4" />
+                    Recent Activity
+                  </TabsTrigger>
+                </TabsList>
+              </CardHeader>
+
+              <CardContent>
+                {/* Courses Tab */}
+                <TabsContent value="courses" className="space-y-4 mt-0">
+                  {profile.courses.length === 0 ? (
+                    <div className="text-center py-12 space-y-4">
+                      <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
+                        <BookOpen className="w-10 h-10 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Start your learning journey by enrolling in a course
+                        </p>
+                        <Button onClick={() => router.push("/courses")}>
+                          Browse Courses
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {profile.courses.map((course, index) => (
+                        <Card
+                          key={course.id}
+                          className="group hover:shadow-md transition-all duration-300 cursor-pointer border-2 hover:border-primary/50 animate-in fade-in slide-in-from-right-4"
+                          style={{ animationDelay: `${index * 100}ms` }}
+                          onClick={() => router.push(`/courses/${course.id}/learn`)}
+                        >
+                          <CardContent className="p-6">
+                            <div className="space-y-4">
+                              {/* Course Header */}
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                                    {course.title}
+                                  </h3>
+                                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="w-4 h-4" />
+                                      {new Date(course.lastAccessed).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric"
+                                      })}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Progress Badge */}
+                                <div className="text-center">
+                                  <div className={`text-2xl font-bold ${
+                                    course.progress === 100 
+                                      ? "text-green-600 dark:text-green-400" 
+                                      : course.progress > 0 
+                                      ? "text-blue-600 dark:text-blue-400"
+                                      : "text-muted-foreground"
+                                  }`}>
+                                    {course.progress}%
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {course.progress === 100 ? "Complete" : "Progress"}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Progress Bar */}
+                              <div className="space-y-2">
+                                <Progress 
+                                  value={course.progress} 
+                                  className="h-3 transition-all duration-500"
+                                />
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                  <span>
+                                    {course.progress === 0 
+                                      ? "Not started" 
+                                      : course.progress === 100 
+                                      ? "🎉 Completed!" 
+                                      : "Keep going!"}
+                                  </span>
+                                  {course.progress > 0 && course.progress < 100 && (
+                                    <span className="flex items-center gap-1">
+                                      <TrendingUp className="w-3 h-3" />
+                                      {100 - course.progress}% remaining
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Action Hint */}
+                              <div className="flex items-center justify-between pt-2 border-t">
+                                <span className="text-sm text-muted-foreground">
+                                  Click to {course.progress === 0 ? "start" : "continue"} learning
+                                </span>
+                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                                  →
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Activity Tab */}
+                <TabsContent value="activity" className="space-y-4 mt-0">
+                  <div className="space-y-4">
+                    {profile.courses.length === 0 ? (
+                      <div className="text-center py-12 space-y-4">
+                        <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
+                          <Clock className="w-10 h-10 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold mb-2">No activity yet</h3>
+                          <p className="text-muted-foreground">
+                            Your recent learning activity will appear here
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-semibold mb-4">Recently Accessed Courses</h3>
+                        {profile.courses
+                          .sort((a, b) => new Date(b.lastAccessed).getTime() - new Date(a.lastAccessed).getTime())
+                          .slice(0, 5)
+                          .map((course, index) => (
+                            <div
+                              key={course.id}
+                              className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer animate-in fade-in slide-in-from-left-4"
+                              style={{ animationDelay: `${index * 50}ms` }}
+                              onClick={() => router.push(`/courses/${course.id}/learn`)}
+                            >
+                              <div className="p-3 rounded-lg bg-primary/10">
+                                <BookOpen className="w-5 h-5 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium line-clamp-1">{course.title}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(course.lastAccessed).toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric"
+                                  })}
+                                </p>
+                              </div>
+                              <Badge variant="outline" className="shrink-0">
+                                {course.progress}%
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </CardContent>
+            </Tabs>
+          </Card>
         </div>
       </div>
     </div>

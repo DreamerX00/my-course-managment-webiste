@@ -49,6 +49,7 @@ model User {
   quizAttempts  QuizAttempt[]
   sessions      Session[]
   courses       Course[]      @relation("CourseEnrollment")
+  profile       UserProfile?
 }
 
 model Course {
@@ -207,6 +208,36 @@ model Invitation {
   createdAt DateTime @default(now())
   used      Boolean  @default(false)
   invitedBy String   // ID of the admin who sent the invitation
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Personal Information
+  bio         String?  @db.Text
+  title       String?  // Job title or role
+  location    String?
+  phone       String?
+  
+  // Social Links
+  linkedin    String?
+  github      String?
+  twitter     String?
+  website     String?
+  youtube     String?
+  instagram   String?
+  
+  // Images
+  avatar      String?  // Cloudinary URL
+  bannerImage String?  // Cloudinary URL
+  
+  // Additional Settings
+  isPublic    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum UserRole {

@@ -22,6 +22,23 @@ export async function GET() {
         role: true,
         createdAt: true,
         updatedAt: true,
+        profile: {
+          select: {
+            bio: true,
+            title: true,
+            location: true,
+            phone: true,
+            linkedin: true,
+            github: true,
+            twitter: true,
+            website: true,
+            youtube: true,
+            instagram: true,
+            avatar: true,
+            bannerImage: true,
+            isPublic: true,
+          },
+        },
       },
     });
 
@@ -94,11 +111,105 @@ export async function GET() {
       courses: coursesWithProgress,
       totalScore,
       completedCourses,
+      // UserProfile data
+      bio: user.profile?.bio || null,
+      title: user.profile?.title || null,
+      location: user.profile?.location || null,
+      phone: user.profile?.phone || null,
+      linkedin: user.profile?.linkedin || null,
+      github: user.profile?.github || null,
+      twitter: user.profile?.twitter || null,
+      website: user.profile?.website || null,
+      youtube: user.profile?.youtube || null,
+      instagram: user.profile?.instagram || null,
+      avatar: user.profile?.avatar || user.image || '',
+      bannerImage: user.profile?.bannerImage || null,
+      isPublic: user.profile?.isPublic ?? true,
     };
 
     return NextResponse.json(profile);
   } catch (error) {
     console.error('Error fetching profile:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      name,
+      bio,
+      title,
+      location,
+      phone,
+      linkedin,
+      github,
+      twitter,
+      website,
+      youtube,
+      instagram,
+      avatar,
+      bannerImage,
+      isPublic,
+    } = body;
+
+    // Update user name if provided
+    if (name !== undefined) {
+      await db.user.update({
+        where: { id: session.user.id },
+        data: { name },
+      });
+    }
+
+    // Upsert UserProfile
+    await db.userProfile.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        bio,
+        title,
+        location,
+        phone,
+        linkedin,
+        github,
+        twitter,
+        website,
+        youtube,
+        instagram,
+        avatar,
+        bannerImage,
+        isPublic: isPublic ?? true,
+      },
+      update: {
+        bio,
+        title,
+        location,
+        phone,
+        linkedin,
+        github,
+        twitter,
+        website,
+        youtube,
+        instagram,
+        avatar,
+        bannerImage,
+        isPublic,
+      },
+    });
+
+    return NextResponse.json({ success: true, message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Error updating profile:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
