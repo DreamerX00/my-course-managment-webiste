@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
+import Image from "next/image"
 
 interface Course {
   id: string
@@ -25,7 +26,7 @@ interface Profile {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const { toast } = useToast()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -45,7 +46,7 @@ export default function ProfilePage() {
         }
         const data = await response.json()
         setProfile(data)
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load profile",
@@ -85,9 +86,11 @@ export default function ProfilePage() {
         <div className="grid gap-8 md:grid-cols-2">
           <div>
             <div className="flex items-center gap-4 mb-6">
-              <img
+              <Image
                 src={profile.image}
                 alt={profile.name}
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-full"
               />
               <div>

@@ -13,13 +13,11 @@ import {
 } from '@/components/ui/dialog';
 import {
   Calendar,
-  Mail,
   BookOpen,
   TrendingUp,
   MessageSquare,
   UserPlus,
   UserMinus,
-  X,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -50,7 +48,7 @@ const roleColors: Record<UserRole, string> = {
   GUEST: 'bg-yellow-500',
 };
 
-export function UserModal({ user, onClose, onUserUpdate, isAdmin }: UserModalProps) {
+export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUserUpdate'>) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAction = async (action: string) => {

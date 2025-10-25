@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default function TestCategoriesPage() {
   const [loading, setLoading] = useState(false)
@@ -70,7 +71,7 @@ export default function TestCategoriesPage() {
               <h3 className="font-semibold text-blue-900 mb-2">Instructions:</h3>
               <ol className="list-decimal list-inside space-y-1 text-blue-800">
                 <li>Click the button above to create sample course details</li>
-                <li>Go to the <a href="/courses" className="underline">Courses page</a></li>
+                <li>Go to the <Link href="/courses" className="underline">Courses page</Link></li>
                 <li>Test the category filter buttons at the top</li>
                 <li>The courses should now be properly categorized and filterable</li>
               </ol>

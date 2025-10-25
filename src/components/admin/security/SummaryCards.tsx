@@ -45,8 +45,9 @@ export function SummaryCards() {
         }
         const data = await response.json();
         setStats(data);
-      } catch (err: any) {
-        setError(err.message || 'An unknown error occurred');
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }

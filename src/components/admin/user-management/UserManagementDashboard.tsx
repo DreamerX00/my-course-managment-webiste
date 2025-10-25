@@ -46,6 +46,7 @@ export function UserManagementDashboard() {
 
   useEffect(() => {
     filterUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, selectedRole, searchQuery]);
 
   const fetchUsers = async () => {

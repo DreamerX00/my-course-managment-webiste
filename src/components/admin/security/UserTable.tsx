@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { UserRole, UserStatus } from '@prisma/client';
@@ -58,11 +58,6 @@ const roleColors: Record<UserRole, string> = {
   GUEST: 'bg-yellow-500',
 };
 
-const statusColors: Record<UserStatus, string> = {
-  ACTIVE: 'bg-green-500',
-  BLOCKED: 'bg-red-500',
-};
-
 export function UserTable() {
   const [data, setData] = useState<User[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
@@ -101,6 +96,7 @@ export function UserTable() {
     }, 500); // Debounce search query
 
     return () => clearTimeout(debounceTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination, sorting, searchQuery]);
 
   const handleChangeRole = async (user: User) => {
@@ -127,8 +123,9 @@ export function UserTable() {
 
       const updatedUser = await response.json();
       setData(prev => prev.map(u => u.id === user.id ? updatedUser : u));
-    } catch (error: any) {
-      console.error(error.message || 'Failed to update role');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update role';
+      console.error(errorMessage);
     }
   };
 
@@ -154,8 +151,9 @@ export function UserTable() {
 
       const updatedUser = await response.json();
       setData(prev => prev.map(u => u.id === user.id ? updatedUser : u));
-    } catch (error: any) {
-      console.error(error.message || 'Failed to update status');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update status';
+      console.error(errorMessage);
     }
   };
 
@@ -178,8 +176,9 @@ export function UserTable() {
 
       setData(prev => prev.filter(u => u.id !== user.id));
       setTotalUsers(prev => prev - 1);
-    } catch (error: any) {
-      console.error(error.message || 'Failed to delete user');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete user';
+      console.error(errorMessage);
     }
   };
 

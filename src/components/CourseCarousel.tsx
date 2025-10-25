@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ModernCourseCard } from "./ModernCourseCard"
+import Link from "next/link"
 
 interface Course {
   id: string
@@ -115,7 +116,7 @@ export function CourseCarousel({ courses, title, subtitle }: CourseCarouselProps
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="flex-shrink-0 w-full sm:w-56 lg:w-72"
+                className="shrink-0 w-full sm:w-56 lg:w-72"
               >
                 <ModernCourseCard course={course} index={index} />
               </motion.div>
@@ -151,7 +152,7 @@ export function CourseCarousel({ courses, title, subtitle }: CourseCarouselProps
           className="mt-8 text-center"
         >
           <Button asChild size="lg" variant="outline">
-            <a href="/courses">View All Courses</a>
+            <Link href="/courses">View All Courses</Link>
           </Button>
         </motion.div>
       </div>

@@ -1,20 +1,11 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-// Email transporter configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_SERVER_USER,
-    pass: process.env.EMAIL_SERVER_PASSWORD,
-  },
-});
+// Initialize Resend client
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// SendGrid configuration (alternative)
-const sendGridConfig = {
-  apiKey: process.env.SENDGRID_API_KEY,
-  fromEmail: process.env.EMAIL_SERVER_USER || 'MyViewrs123@outlook.com',
+// Email configuration
+const emailConfig = {
+  fromEmail: process.env.EMAIL_FROM || 'onboarding@resend.dev',
   fromName: 'Learning Platform',
 };
 
@@ -203,7 +194,7 @@ The Learning Platform Team
   };
 }
 
-// Send invitation email using SendGrid or Nodemailer
+// Send invitation email using Resend
 export async function sendInvitationEmail(
   email: string,
   name: string | null,
@@ -222,71 +213,49 @@ export async function sendInvitationEmail(
       signupUrl
     );
 
-    // Use SendGrid if API key is available, otherwise use Nodemailer
-    if (sendGridConfig.apiKey) {
-      return await sendWithSendGrid(email, emailContent);
-    } else {
-      return await sendWithNodemailer(email, emailContent);
-    }
+    return await sendWithResend(email, emailContent);
   } catch (error) {
     console.error('Failed to send invitation email:', error);
     throw new Error('Failed to send invitation email');
   }
 }
 
-// Send email using SendGrid
-async function sendWithSendGrid(email: string, emailContent: { subject: string; html: string; text: string }) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(sendGridConfig.apiKey);
+// Send email using Resend
+async function sendWithResend(
+  email: string, 
+  emailContent: { subject: string; html: string; text: string }
+) {
+  try {
+    const result = await resend.emails.send({
+      from: `${emailConfig.fromName} <${emailConfig.fromEmail}>`,
+      to: email,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text,
+    });
 
-  const msg = {
-    to: email,
-    from: {
-      email: sendGridConfig.fromEmail,
-      name: sendGridConfig.fromName,
-    },
-    subject: emailContent.subject,
-    html: emailContent.html,
-    text: emailContent.text,
-  };
+    if (result.error) {
+      throw new Error(`Resend API error: ${result.error.message}`);
+    }
 
-  const result = await sgMail.send(msg);
-  console.log('SendGrid email sent successfully:', result[0].statusCode);
-  return { success: true, messageId: result[0].headers['x-message-id'] };
-}
-
-// Send email using Nodemailer
-async function sendWithNodemailer(email: string, emailContent: { subject: string; html: string; text: string }) {
-  const mailOptions = {
-    from: process.env.EMAIL_SERVER_USER,
-    to: email,
-    subject: emailContent.subject,
-    html: emailContent.html,
-    text: emailContent.text,
-  };
-
-  const result = await transporter.sendMail(mailOptions);
-  console.log('Nodemailer email sent successfully:', result.messageId);
-  return { success: true, messageId: result.messageId };
+    return { success: true, messageId: result.data?.id };
+  } catch (error) {
+    console.error('Resend email error:', error);
+    throw error;
+  }
 }
 
 // Test email configuration
 export async function testEmailConfiguration() {
   try {
-    if (sendGridConfig.apiKey) {
-      // Test SendGrid
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const sgMail = require('@sendgrid/mail');
-      sgMail.setApiKey(sendGridConfig.apiKey);
-      console.log('SendGrid configuration is valid');
-      return true;
-    } else {
-      // Test Nodemailer
-      await transporter.verify();
-      console.log('Nodemailer configuration is valid');
-      return true;
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not configured');
+      return false;
     }
+    
+    // Test by sending a test email to a verified address
+    // In production, you should verify domains with Resend
+    return true;
   } catch (error) {
     console.error('Email configuration error:', error);
     return false;

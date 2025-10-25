@@ -35,7 +35,7 @@ export default function AdminLayout({
       <div className="flex flex-col items-center justify-center h-screen bg-red-50 text-red-700">
         <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
         <p>You do not have the required permissions to view this page.</p>
-        <p className="text-sm mt-2">Only users with 'ADMIN', 'INSTRUCTOR', or 'OWNER' roles can access this page.</p>
+        <p className="text-sm mt-2">Only users with &apos;ADMIN&apos;, &apos;INSTRUCTOR&apos;, or &apos;OWNER&apos; roles can access this page.</p>
       </div>
     );
   }

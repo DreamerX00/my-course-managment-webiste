@@ -24,8 +24,9 @@ export function SecuritySettings() {
         if (!response.ok) throw new Error('Failed to fetch settings');
         const data = await response.json();
         setSettings(data);
-      } catch (err: any) {
-        setError(err.message || 'An error occurred');
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -48,8 +49,9 @@ export function SecuritySettings() {
       if (!response.ok) {
         throw new Error('Failed to save settings');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
       // Revert UI on failure
       setSettings(settings);
     }

@@ -224,7 +224,7 @@ export function FilterManager({ categories, onUpdate }: FilterManagerProps) {
               <li>• Drag and drop categories to reorder them</li>
               <li>• Click the palette icon to edit category name and color</li>
               <li>• Categories will appear as filter tabs on the explore page</li>
-              <li>• Changes are saved automatically when you click "Save Changes"</li>
+              <li>• Changes are saved automatically when you click &quot;Save Changes&quot;</li>
             </ul>
           </div>
         </CardContent>

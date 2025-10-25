@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import { 
   Eye, 
   Filter, 
@@ -159,10 +160,12 @@ export function LivePreview({ settings }: LivePreviewProps) {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       {featuredCourseObjects.map((course) => (
-                        <div key={course.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-gradient-to-br from-yellow-50 to-orange-50">
-                          <img 
+                        <div key={course.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-linear-to-br from-yellow-50 to-orange-50">
+                          <Image 
                             src={course.thumbnail} 
                             alt={course.title}
+                            width={400}
+                            height={128}
                             className="w-full h-32 object-cover"
                           />
                           <div className="p-3">
@@ -195,9 +198,11 @@ export function LivePreview({ settings }: LivePreviewProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {displayCourses.slice(0, 3).map((course) => (
                         <div key={course.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                          <img 
+                          <Image 
                             src={course.thumbnail} 
                             alt={course.title}
+                            width={400}
+                            height={128}
                             className="w-full h-32 object-cover"
                           />
                           <div className="p-3">
@@ -230,9 +235,11 @@ export function LivePreview({ settings }: LivePreviewProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {displayCourses.slice(3, 6).map((course) => (
                         <div key={course.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                          <img 
+                          <Image 
                             src={course.thumbnail} 
                             alt={course.title}
+                            width={400}
+                            height={128}
                             className="w-full h-32 object-cover"
                           />
                           <div className="p-3">
@@ -271,9 +278,11 @@ export function LivePreview({ settings }: LivePreviewProps) {
                     <div className={`grid gap-4 ${gridColsClass}`}>
                       {displayCourses.map((course) => (
                         <div key={course.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                          <img 
+                          <Image 
                             src={course.thumbnail} 
                             alt={course.title}
+                            width={400}
+                            height={128}
                             className="w-full h-32 object-cover"
                           />
                           <div className="p-3">

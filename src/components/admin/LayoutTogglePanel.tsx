@@ -7,9 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Grid3X3, 
   Filter, 
-  ArrowUpDown, 
   TrendingUp,
-  Clock,
   Monitor
 } from "lucide-react"
 
@@ -27,7 +25,7 @@ interface LayoutTogglePanelProps {
 }
 
 export function LayoutTogglePanel({ options, onUpdate }: LayoutTogglePanelProps) {
-  const updateOption = (key: keyof LayoutOptions, value: any) => {
+  const updateOption = (key: keyof LayoutOptions, value: number | boolean) => {
     onUpdate({ ...options, [key]: value })
   }
 

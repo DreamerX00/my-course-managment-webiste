@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, Reorder } from "framer-motion"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +12,6 @@ import {
   Search, 
   GripVertical,
   X,
-  BookOpen,
   Users,
   Clock
 } from "lucide-react"
@@ -125,13 +125,15 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
                   >
                     <motion.div
                       layout
-                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg shadow-sm"
+                      className="flex items-center gap-4 p-4 bg-linear-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg shadow-sm"
                     >
                       <GripVertical className="h-5 w-5 text-gray-400 cursor-grab active:cursor-grabbing" />
                       
-                      <img 
+                      <Image 
                         src={course.thumbnail} 
                         alt={course.title}
+                        width={64}
+                        height={48}
                         className="w-16 h-12 object-cover rounded-md"
                       />
                       
@@ -210,9 +212,11 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
                       className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white"
                       onClick={() => addCourse(course.id)}
                     >
-                      <img 
+                      <Image 
                         src={course.thumbnail} 
                         alt={course.title}
+                        width={400}
+                        height={96}
                         className="w-full h-24 object-cover rounded-md mb-3"
                       />
                       <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">
@@ -247,7 +251,7 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
               <li>• Select exactly 4 courses to be featured on the homepage</li>
               <li>• Drag and drop to reorder the display sequence</li>
               <li>• Choose courses with high ratings and enrollment for best results</li>
-              <li>• Featured courses appear in the "Our Popular Courses" section</li>
+              <li>• Featured courses appear in the &quot;Our Popular Courses&quot; section</li>
             </ul>
           </div>
         </CardContent>

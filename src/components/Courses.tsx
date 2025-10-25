@@ -22,7 +22,6 @@ interface Course {
 }
 
 export function Courses() {
-  const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
 
@@ -44,7 +43,6 @@ export function Courses() {
         const featured = featuredIds
           .map(id => allCourses.find((c: Course) => c.id === id))
           .filter(Boolean) as Course[]
-        setCourses(allCourses)
         setFeaturedCourses(featured)
         setLoading(false)
       } catch (error) {

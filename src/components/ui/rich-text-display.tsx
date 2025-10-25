@@ -9,7 +9,6 @@ interface RichTextDisplayProps {
   editable?: boolean
   className?: string
   maxHeight?: string
-  showToolbar?: boolean
 }
 
 export function RichTextDisplay({ 
@@ -17,7 +16,6 @@ export function RichTextDisplay({
   editable = false, 
   className = "",
   maxHeight = "none",
-  showToolbar = false 
 }: RichTextDisplayProps) {
   const editor = useEditor({
     extensions: editorExtensions,

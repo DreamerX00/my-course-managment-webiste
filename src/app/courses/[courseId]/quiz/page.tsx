@@ -27,7 +27,7 @@ export default function QuizPage() {
   const params = useParams();
   const courseId = params.courseId as string;
   const router = useRouter()
-  const { data, status } = useSession()
+  const { status } = useSession()
   const { toast } = useToast()
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -52,7 +52,7 @@ export default function QuizPage() {
         }
         const data = await response.json()
         setQuiz(data)
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load quiz",
@@ -101,7 +101,7 @@ export default function QuizPage() {
       })
 
       setShowResults(true)
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to submit quiz",

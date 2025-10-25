@@ -14,7 +14,7 @@ interface Profile {
 
 export default function EditProfilePage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const { toast } = useToast()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -35,7 +35,7 @@ export default function EditProfilePage() {
         }
         const data = await response.json()
         setProfile(data)
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load profile",
@@ -78,7 +78,7 @@ export default function EditProfilePage() {
 
       router.push("/profile")
       router.refresh()
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update profile",

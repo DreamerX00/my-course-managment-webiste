@@ -24,7 +24,7 @@ export default function CourseLearnPage() {
   const params = useParams();
   const courseId = params.courseId as string;
   const router = useRouter()
-  const { data, status } = useSession()
+  const { status } = useSession()
   const { toast } = useToast()
   const [course, setCourse] = useState<Course | null>(null)
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
@@ -48,7 +48,7 @@ export default function CourseLearnPage() {
         if (data.chapters.length > 0) {
           setCurrentChapter(data.chapters[0])
         }
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load course",

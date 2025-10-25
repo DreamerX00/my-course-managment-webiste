@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, UserPlus, X } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 
 interface InviteUserFormProps {
   onClose: () => void;
@@ -58,7 +58,7 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
         throw new Error('Failed to send invitation');
       }
 
-      const data = await response.json();
+      await response.json();
       alert(`Invitation email sent successfully to ${formData.email}! The invitation will expire in 7 days.`);
       onSuccess();
     } catch (error) {
