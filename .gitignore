@@ -54,3 +54,10 @@ next-env.d.ts
 ngrok file/
 ngrok.yml
 *.ngrok
+
+# Firebase credentials
+*firebase-service-account*.json
+firebase-adminsdk*.json
+serviceAccountKey*.json
+google-services.json
+GoogleService-Info.plist
