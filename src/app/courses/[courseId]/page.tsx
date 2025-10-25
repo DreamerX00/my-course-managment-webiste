@@ -1,37 +1,29 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Progress } from "@/components/ui/progress";
 import { 
   Star, 
   Users, 
   Clock, 
   FileText, 
-  Download, 
-  Award, 
-  MessageSquare, 
-  Smartphone, 
-  Lock, 
-  Play,
   CheckCircle,
   ArrowRight,
-  BookOpen,
   Video,
   FileCode,
-  Trophy
+  Trophy,
+  MessageSquare,
+  Smartphone,
+  Lock
 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { EditorContent, useEditor } from '@tiptap/react';
 import { editorExtensions } from "@/lib/tiptap-extensions";
 import { motion } from "framer-motion";
-import clsx from "clsx";
 
 // Data structures from DB
 interface Subchapter {
@@ -143,7 +135,9 @@ const defaultContentDetails: ContentDetails = {
 };
 
 // Icon mapping for features
-const iconMap: { [key: string]: any } = {
+import Image from "next/image"
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Video,
   FileText,
   FileCode,
@@ -154,7 +148,7 @@ const iconMap: { [key: string]: any } = {
 
 function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
   return (
-    <div className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 sm:py-16 lg:py-20">
+    <div className="relative bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 py-12 sm:py-16 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Main Content */}
@@ -184,10 +178,12 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
 
             {/* Instructor Info */}
             <div className="flex items-center gap-4">
-              <img 
+              <Image 
                 src={contentDetails.instructor.avatar} 
                 alt={contentDetails.instructor.name}
-                className="w-12 h-12 rounded-full object-cover"
+                width={48}
+                height={48}
+                className="rounded-full object-cover"
               />
               <div>
                 <p className="font-semibold text-gray-900">{contentDetails.instructor.name}</p>
@@ -221,12 +217,14 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
           {/* Course Thumbnail */}
           <div className="lg:col-span-1">
             <div className="relative rounded-xl overflow-hidden shadow-lg">
-              <img 
+              <Image 
                 src="https://images.unsplash.com/photo-1517694712202-14dd953bb09f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                 alt={contentDetails.title}
+                width={400}
+                height={256}
                 className="w-full h-48 lg:h-64 object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
             </div>
           </div>
         </div>
@@ -269,7 +267,7 @@ function CourseFeatures({ contentDetails }: { contentDetails: ContentDetails }) 
           transition={{ duration: 0.6, delay: 0.3 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">What's Included</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">What&apos;s Included</h2>
           <p className="text-lg text-gray-600">Everything you need to master this course</p>
         </motion.div>
 
@@ -286,7 +284,7 @@ function CourseFeatures({ contentDetails }: { contentDetails: ContentDetails }) 
                 <Card className="h-full hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                           <IconComponent className="w-6 h-6 text-blue-600" />
                         </div>
@@ -319,7 +317,7 @@ function CourseCurriculum({ course }: { course: Course }) {
           className="text-center mb-12"
         >
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Course Curriculum</h2>
-          <p className="text-lg text-gray-600">What you'll learn in this course</p>
+          <p className="text-lg text-gray-600">What you&apos;ll learn in this course</p>
         </motion.div>
 
         <div className="space-y-4">
@@ -456,7 +454,9 @@ function PricingCard({ contentDetails, courseId }: { contentDetails: ContentDeta
   );
 }
 
-export default function CourseDetailsPage({ params }: { params: { courseId: string } }) {
+export default function CourseDetailsPage() {
+  const params = useParams();
+  const courseId = params.courseId as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [contentDetails, setContentDetails] = useState<ContentDetails>(defaultContentDetails);
   const [loading, setLoading] = useState(true);
@@ -468,7 +468,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
         setLoading(true);
         
         // Fetch course data
-        const courseResponse = await fetch(`/api/courses/${params.courseId}`);
+        const courseResponse = await fetch(`/api/courses/${courseId}`);
         if (!courseResponse.ok) {
           throw new Error('Failed to fetch course data');
         }
@@ -477,25 +477,23 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
 
         // Fetch content details
         try {
-          const detailsResponse = await fetch(`/api/admin/courses/${params.courseId}/details`);
+          const detailsResponse = await fetch(`/api/admin/courses/${courseId}/details`);
           if (detailsResponse.ok) {
             const detailsData = await detailsResponse.json();
             setContentDetails(detailsData);
           }
-        } catch (error) {
-          console.error('Error fetching content details:', error);
+        } catch {
           // Use default content details if fetch fails
         }
-      } catch (error) {
+      } catch {
         setError('Failed to load course data');
-        console.error('Error:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [params.courseId]);
+  }, [courseId]);
 
   if (loading) {
     return (
@@ -534,7 +532,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
           {/* Pricing Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-28">
-              <PricingCard contentDetails={contentDetails} courseId={params.courseId} />
+              <PricingCard contentDetails={contentDetails} courseId={courseId} />
               </div>
           </div>
         </div>

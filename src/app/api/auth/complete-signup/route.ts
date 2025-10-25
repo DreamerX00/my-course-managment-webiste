@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     // Validate invitation token
     const validation = await validateInvitationToken(token);
 
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+    if (!validation.valid || !validation.invitation) {
+      return NextResponse.json({ error: validation.error || 'Invalid invitation' }, { status: 400 });
     }
 
     const { invitation } = validation;
@@ -62,12 +62,6 @@ export async function POST(req: NextRequest) {
 
     // Mark invitation as used
     await markInvitationAsUsed(token);
-
-    console.log('User account created successfully:', {
-      email: user.email,
-      role: user.role,
-      invitationId: invitation.id,
-    });
 
     return NextResponse.json({
       message: 'Account created successfully',

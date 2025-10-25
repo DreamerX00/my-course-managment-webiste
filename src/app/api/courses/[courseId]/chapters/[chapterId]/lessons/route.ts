@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
-import { use } from 'react';
 
-export async function GET(req: NextRequest, context: { params: Promise<{ courseId: string, chapterId: string }> }) {
-  const { courseId, chapterId } = await context.params;
+export async function GET(_req: NextRequest, context: { params: Promise<{ chapterId: string }> }) {
+  const { chapterId } = await context.params;
   try {
     const lessons = await db.lesson.findMany({
       where: { chapterId },
@@ -13,12 +12,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ courseI
     });
     return NextResponse.json(lessons);
   } catch (error) {
+    console.error('Failed to fetch lessons:', error);
     return NextResponse.json({ error: 'Failed to fetch lessons' }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest, context: { params: Promise<{ courseId: string, chapterId: string }> }) {
-  const { courseId, chapterId } = await context.params;
+export async function POST(req: NextRequest, context: { params: Promise<{ chapterId: string }> }) {
+  const { chapterId } = await context.params;
   const session = await getServerSession(authOptions);
   if (!session || !['ADMIN', 'INSTRUCTOR', 'OWNER'].includes(session.user.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ course
     });
     return NextResponse.json(lesson, { status: 201 });
   } catch (error) {
+    console.error('Failed to create lesson:', error);
     return NextResponse.json({ error: 'Failed to create lesson' }, { status: 500 });
   }
 } 

@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <div
       onMouseMove={handleMouseMove}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 px-4 py-12 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 px-4 py-12 relative overflow-hidden"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.5 }}
@@ -110,7 +110,7 @@ export default function LoginPage() {
             >
               <GraduationCap className="w-12 h-12 text-blue-600" />
             </motion.div>
-            <span className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-pink-500 to-yellow-500 bg-clip-text text-transparent">
+            <span className="text-3xl font-extrabold bg-linear-to-r from-blue-600 via-pink-500 to-yellow-500 bg-clip-text text-transparent">
               LearnHub
             </span>
           </Link>
@@ -153,12 +153,12 @@ export default function LoginPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full h-12 text-base font-semibold relative overflow-hidden group bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:via-pink-50 hover:to-yellow-50 border-2 hover:border-blue-400 transition-all duration-300"
+                    className="w-full h-12 text-base font-semibold relative overflow-hidden group bg-white hover:bg-linear-to-r hover:from-blue-50 hover:via-pink-50 hover:to-yellow-50 border-2 hover:border-blue-400 transition-all duration-300"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
                   >
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-pink-400/20 to-yellow-400/20"
+                      className="absolute inset-0 bg-linear-to-r from-blue-400/20 via-pink-400/20 to-yellow-400/20"
                       initial={{ x: "-100%" }}
                       whileHover={{ x: "100%" }}
                       transition={{ duration: 0.6 }}

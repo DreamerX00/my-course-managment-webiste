@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
@@ -23,13 +23,11 @@ interface Quiz {
   questions: Question[]
 }
 
-export default function QuizPage({
-  params,
-}: {
-  params: Promise<{ courseId: string }>
-}) {
+export default function QuizPage() {
+  const params = useParams();
+  const courseId = params.courseId as string;
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data, status } = useSession()
   const { toast } = useToast()
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -38,7 +36,6 @@ export default function QuizPage({
   const [isLoading, setIsLoading] = useState(true)
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
-  const { courseId } = use(params);
 
   useEffect(() => {
     if (status === "unauthenticated") {

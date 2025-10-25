@@ -1,15 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { 
   Save, 
@@ -131,12 +130,13 @@ const iconMap = {
   Star
 }
 
-export default function CourseContentDetailsPage({ params }: { params: Promise<{ courseId: string }> }) {
+export default function CourseContentDetailsPage() {
+  const params = useParams();
+  const courseId = params.courseId as string;
   const router = useRouter()
   const { toast } = useToast()
-  const [courseId, setCourseId] = useState<string | null>(null)
   const [contentDetails, setContentDetails] = useState(defaultContentDetails)
-  const [loading, setLoading] = useState(true)
+  const [loading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newTag, setNewTag] = useState("")
@@ -160,44 +160,6 @@ export default function CourseContentDetailsPage({ params }: { params: Promise<{
     }
   })
 
-  useEffect(() => {
-    (async () => {
-      const { courseId } = await params
-      setCourseId(courseId)
-      loadContentDetails(courseId)
-    })()
-  }, [params])
-
-  const loadContentDetails = async (id: string) => {
-    setLoading(true)
-    try {
-      // For now, we'll use the default template
-      // In a real app, you'd fetch from your API
-      const response = await fetch(`/api/admin/courses/${id}/details`)
-      if (response.ok) {
-        const data = await response.json()
-        setContentDetails(data)
-        if (editor) {
-          editor.commands.setContent(data.description)
-        }
-      } else {
-        // Use default template if no data exists
-        setContentDetails(defaultContentDetails)
-        if (editor) {
-          editor.commands.setContent(defaultContentDetails.description)
-        }
-      }
-    } catch (error) {
-      console.error('Error loading content details:', error)
-      setContentDetails(defaultContentDetails)
-      if (editor) {
-        editor.commands.setContent(defaultContentDetails.description)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleSave = async () => {
     if (!courseId) return
     setSaving(true)
@@ -218,7 +180,7 @@ export default function CourseContentDetailsPage({ params }: { params: Promise<{
       } else {
         throw new Error('Failed to save content details')
       }
-    } catch (error) {
+    } catch {
       setError('Failed to save content details')
       toast({
         title: "Error",
@@ -282,7 +244,7 @@ export default function CourseContentDetailsPage({ params }: { params: Promise<{
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-yellow-50 to-pink-50 p-8">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 via-yellow-50 to-pink-50 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center">Loading content details...</div>
         </div>
@@ -291,7 +253,7 @@ export default function CourseContentDetailsPage({ params }: { params: Promise<{
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-yellow-50 to-pink-50 p-8 pt-24">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-yellow-50 to-pink-50 p-8 pt-24">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <motion.div

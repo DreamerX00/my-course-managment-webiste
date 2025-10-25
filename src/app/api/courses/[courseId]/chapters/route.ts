@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
-import { use } from 'react';
 
-export async function GET(req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
+export async function GET(_req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await context.params;
   try {
     const chapters = await db.chapter.findMany({
@@ -13,6 +12,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ courseI
     });
     return NextResponse.json(chapters);
   } catch (error) {
+    console.error('Failed to fetch chapters:', error);
     return NextResponse.json({ error: 'Failed to fetch chapters' }, { status: 500 });
   }
 }
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ course
     });
     return NextResponse.json(chapter, { status: 201 });
   } catch (error) {
+    console.error('Failed to create chapter:', error);
     return NextResponse.json({ error: 'Failed to create chapter' }, { status: 500 });
   }
 } 

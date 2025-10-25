@@ -25,13 +25,24 @@ interface Course {
   updatedAt: string
 }
 
+interface ContentSettings {
+  filterCategories?: Array<{ name: string; color: string }>;
+  layoutOptions?: {
+    showFiltersSidebar?: boolean;
+    showSortingDropdown?: boolean;
+    gridColumns?: number;
+    showTrendingSection?: boolean;
+    showRecentlyAdded?: boolean;
+  };
+}
+
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
   // Content settings state
-  const [contentSettings, setContentSettings] = useState<any>(null)
+  const [contentSettings, setContentSettings] = useState<ContentSettings | null>(null)
   const [settingsLoading, setSettingsLoading] = useState(true)
 
   // Filter states
@@ -85,7 +96,7 @@ export default function CoursesPage() {
 
   // Filter and sort courses
   const filteredAndSortedCourses = useMemo(() => {
-    let filtered = courses.filter(course => {
+    const filtered = courses.filter(course => {
       // Search filter
       const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -131,7 +142,7 @@ export default function CoursesPage() {
   }, [courses, searchQuery, selectedCategory, selectedPriceType, selectedSort])
 
   // Dynamic categories from settings
-  const dynamicCategories = contentSettings?.filterCategories?.map((cat: any) => cat.name) || []
+  const dynamicCategories = contentSettings?.filterCategories?.map((cat) => cat.name) || []
   const showFiltersSidebar = contentSettings?.layoutOptions?.showFiltersSidebar !== false
   const showSortingDropdown = contentSettings?.layoutOptions?.showSortingDropdown !== false
   const gridColumns = contentSettings?.layoutOptions?.gridColumns || 3
@@ -190,7 +201,7 @@ export default function CoursesPage() {
             showSidebar={showFiltersSidebar}
             showSorting={showSortingDropdown}
             loading={settingsLoading}
-            colorMap={contentSettings?.filterCategories?.reduce((acc: any, cat: any) => { acc[cat.name] = cat.color; return acc }, {})}
+            colorMap={contentSettings?.filterCategories?.reduce((acc: Record<string, string>, cat) => { acc[cat.name] = cat.color; return acc }, {})}
           />
         </motion.div>
 

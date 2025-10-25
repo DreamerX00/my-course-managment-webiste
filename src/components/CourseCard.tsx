@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { motion } from "framer-motion"
-import { BookOpen, Download, Play } from "lucide-react"
+import { BookOpen, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { CourseDetailCardProps } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
-import { RichTextDisplay } from "@/components/ui/rich-text-display"
 
 interface CourseCardProps {
   course: {
@@ -43,7 +42,7 @@ export function CourseCard({ course, index }: CourseCardProps) {
           const courseData = await response.json();
           
           // Calculate total items (chapters + subchapters)
-          const totalItems = courseData.chapters.reduce((total: number, chapter: any) => {
+          const totalItems = courseData.chapters.reduce((total: number, chapter: { subchapters?: unknown[] }) => {
             return total + 1 + (chapter.subchapters?.length || 0); // +1 for the chapter itself
           }, 0);
           
@@ -82,10 +81,12 @@ export function CourseCard({ course, index }: CourseCardProps) {
     >
       {/* Course Image */}
       <div className="aspect-video relative overflow-hidden">
-        <img
+        <Image
           src={course.imageUrl}
           alt={course.title}
-          className="object-cover w-full h-full"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         {course.tags.includes("Popular") && (
           <span className="absolute top-2 right-2 bg-yellow-500 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded-full shadow-md">
@@ -99,7 +100,7 @@ export function CourseCard({ course, index }: CourseCardProps) {
         )}
       </div>
 
-      <div className="p-4 flex flex-col flex-grow">
+      <div className="p-4 flex flex-col grow">
         {/* Title and Description */}
         <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2">
           {course.title}

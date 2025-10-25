@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/table';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UserRole } from '@prisma/client';
 import {
@@ -42,7 +41,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { UserActionMenu } from './UserActionMenu';
 import { UserModal } from './UserModal';
 
 export type User = {
@@ -63,9 +61,7 @@ interface UserTableProps {
   selectedUsers: string[];
   onSelectionChange: (userIds: string[]) => void;
   onUserUpdate: (user: User) => void;
-  onUserDelete: (userId: string) => void;
   isAdmin: boolean;
-  onRefresh: () => void;
 }
 
 const roleColors: Record<UserRole, string> = {
@@ -82,9 +78,7 @@ export function UserTable({
   selectedUsers,
   onSelectionChange,
   onUserUpdate,
-  onUserDelete,
   isAdmin,
-  onRefresh,
 }: UserTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);

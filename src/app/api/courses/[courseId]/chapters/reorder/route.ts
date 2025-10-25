@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
-import { use } from 'react';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await context.params;
@@ -20,6 +19,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ course
     }
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Failed to reorder chapters:', error);
     return NextResponse.json({ error: 'Failed to reorder chapters' }, { status: 500 });
   }
 } 

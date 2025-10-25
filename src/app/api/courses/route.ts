@@ -3,12 +3,50 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
 
+interface ChapterWithContent {
+  lessons: { id: string }[];
+  subchapters: { id: string }[];
+}
+
+interface AdminCategory {
+  id: string;
+  name: string;
+  color: string;
+  order: number;
+}
+
+interface InstructorData {
+  name?: string;
+  avatar?: string;
+  rating?: number;
+  students?: number;
+}
+
+interface CourseDetailsSettings {
+  filterCategories?: AdminCategory[];
+  [key: string]: unknown;
+}
+
+interface CourseDetailsData {
+  title?: string;
+  description?: string;
+  instructor?: InstructorData;
+  category?: string;
+  price?: number;
+  rating?: number;
+  enrolledCount?: number;
+  duration?: string;
+  isFree?: boolean;
+  [key: string]: unknown;
+}
+
 export async function GET(req: NextRequest) {
   const showAll = req.nextUrl?.searchParams.get('all') === 'true';
   try {
     // Get content settings for categories
     const contentSettings = await db.contentSettings.findFirst();
-    const adminCategories = contentSettings?.settings?.filterCategories || [
+    const settings = (contentSettings?.settings as CourseDetailsSettings) || {};
+    const adminCategories = settings.filterCategories || [
       { id: "web-dev", name: "Web Development", color: "#3B82F6", order: 1 },
       { id: "data-science", name: "Data Science", color: "#10B981", order: 2 },
       { id: "ai-ml", name: "AI & Machine Learning", color: "#8B5CF6", order: 3 },
@@ -35,12 +73,12 @@ export async function GET(req: NextRequest) {
     // Transform the data to match our frontend interface
     const transformedCourses = courses.map(course => {
       const totalChapters = course.chapters.length;
-      const totalLessons = course.chapters.reduce((acc: any, chapter: any) => 
+      const totalLessons = course.chapters.reduce((acc: number, chapter: ChapterWithContent) => 
         acc + chapter.lessons.length + chapter.subchapters.length, 0
       );
       const estimatedHours = Math.round((totalLessons * 30) / 60);
       const enrolledCount = course.students.length;
-      const details = course.courseDetails;
+      const details = course.courseDetails as CourseDetailsData | null;
 
       // Determine category
       const assignedCategory = details?.category || getCategoryFromTitle(course.title, adminCategories);
@@ -50,7 +88,7 @@ export async function GET(req: NextRequest) {
         id: course.id,
         title: details?.title || course.title,
         description: details?.description || course.description,
-        instructor: details?.instructor?.name || 'CodeWithHarry',
+        instructor: (details?.instructor as InstructorData)?.name || 'CodeWithHarry',
         category: assignedCategory,
         price: details?.price ?? course.price ?? 0,
         rating: details?.rating ? Math.round(details.rating * 10) / 10 : 4.5,
@@ -73,7 +111,7 @@ export async function GET(req: NextRequest) {
 }
 
 // Helper function to determine category from title using admin-configured categories
-function getCategoryFromTitle(title: string, adminCategories: any[]): string {
+function getCategoryFromTitle(title: string, adminCategories: AdminCategory[]): string {
   const titleLower = title.toLowerCase();
   
   // Map keywords to admin category names
@@ -194,7 +232,8 @@ export async function PUT(req: NextRequest) {
     if (action === 'create-sample-details') {
       // Get content settings for categories
       const contentSettings = await db.contentSettings.findFirst();
-      const adminCategories = contentSettings?.settings?.filterCategories || [
+      const settings = (contentSettings?.settings as CourseDetailsSettings) || {};
+      const adminCategories = settings.filterCategories || [
         { id: "web-dev", name: "Web Development", color: "#3B82F6", order: 1 },
         { id: "data-science", name: "Data Science", color: "#10B981", order: 2 },
         { id: "ai-ml", name: "AI & Machine Learning", color: "#8B5CF6", order: 3 },
@@ -219,15 +258,15 @@ export async function PUT(req: NextRequest) {
           
           if (titleLower.includes('web') || titleLower.includes('html') || titleLower.includes('css') || 
               titleLower.includes('javascript') || titleLower.includes('react') || titleLower.includes('typescript')) {
-            category = adminCategories.find(cat => cat.name.toLowerCase().includes('web') || cat.name.toLowerCase().includes('development'))?.name || adminCategories[0].name;
+            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('web') || cat.name.toLowerCase().includes('development'))?.name || adminCategories[0].name;
           } else if (titleLower.includes('data') || titleLower.includes('python') || titleLower.includes('analytics')) {
-            category = adminCategories.find(cat => cat.name.toLowerCase().includes('data') || cat.name.toLowerCase().includes('science'))?.name || adminCategories[0].name;
+            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('data') || cat.name.toLowerCase().includes('science'))?.name || adminCategories[0].name;
           } else if (titleLower.includes('ai') || titleLower.includes('machine') || titleLower.includes('ml')) {
-            category = adminCategories.find(cat => cat.name.toLowerCase().includes('ai') || cat.name.toLowerCase().includes('machine'))?.name || adminCategories[0].name;
+            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('ai') || cat.name.toLowerCase().includes('machine'))?.name || adminCategories[0].name;
           } else if (titleLower.includes('mobile') || titleLower.includes('flutter') || titleLower.includes('react native')) {
-            category = adminCategories.find(cat => cat.name.toLowerCase().includes('mobile'))?.name || adminCategories[0].name;
+            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('mobile'))?.name || adminCategories[0].name;
           } else if (titleLower.includes('blockchain') || titleLower.includes('crypto')) {
-            category = adminCategories.find(cat => cat.name.toLowerCase().includes('blockchain'))?.name || adminCategories[0].name;
+            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('blockchain'))?.name || adminCategories[0].name;
           }
           
           await db.courseDetails.create({

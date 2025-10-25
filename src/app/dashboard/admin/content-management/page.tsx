@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
-  Settings, 
   Filter, 
   Star, 
   Grid3X3, 
@@ -62,6 +60,7 @@ export default function ContentManagementPage() {
     }
 
     fetchSettings()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, router, status])
 
   const fetchSettings = async () => {
@@ -128,7 +127,7 @@ export default function ContentManagementPage() {
   // Show loading state while session is loading
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -144,7 +143,7 @@ export default function ContentManagementPage() {
   // Access denied for non-admin users
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 pt-24 p-8">
+      <div className="min-h-screen bg-linear-to-br from-red-50 to-pink-50 pt-24 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center">
             <div className="bg-white rounded-lg shadow-lg p-8">
@@ -168,7 +167,7 @@ export default function ContentManagementPage() {
 
   if (!settings) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-red-600 mb-4">Failed to Load Settings</h1>
@@ -180,7 +179,7 @@ export default function ContentManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div

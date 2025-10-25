@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 
 interface Chapter {
@@ -21,18 +20,15 @@ interface Course {
   chapters: Chapter[]
 }
 
-export default function CourseLearnPage({
-  params,
-}: {
-  params: Promise<{ courseId: string }>
-}) {
+export default function CourseLearnPage() {
+  const params = useParams();
+  const courseId = params.courseId as string;
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data, status } = useSession()
   const { toast } = useToast()
   const [course, setCourse] = useState<Course | null>(null)
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { courseId } = use(params);
 
   useEffect(() => {
     if (status === "unauthenticated") {

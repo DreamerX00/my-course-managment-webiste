@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { EditorContent, useEditor } from '@tiptap/react'
 import { editorExtensions } from '@/lib/tiptap-extensions'
@@ -77,7 +76,7 @@ export default function CreateCoursePage() {
         description: "Course created successfully!",
       })
       router.push(`/courses/${course.id}`)
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to create course. Please try again.",

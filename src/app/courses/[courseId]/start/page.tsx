@@ -1,6 +1,6 @@
 "use client"
-import { useEffect, useState, use, Suspense, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense, useMemo } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,7 +11,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import { editorExtensions } from "@/lib/tiptap-extensions";
 import clsx from "clsx";
 
-function parseContent(content: any) {
+function parseContent(content: unknown) {
   if (!content) return undefined;
   if (typeof content === 'string') {
     try {
@@ -65,7 +65,7 @@ const CourseSidebar = ({ course, currentItemId, onSelectItem, completedItems, ha
   expandedChapters: Set<string>,
   onToggleChapter: (chapterId: string) => void,
 }) => (
-  <aside className="sticky top-0 h-full overflow-y-auto w-64 flex-shrink-0 border-r border-slate-200 bg-white p-3 hidden lg:block">
+  <aside className="sticky top-0 h-full overflow-y-auto w-64 shrink-0 border-r border-slate-200 bg-white p-3 hidden lg:block">
     <h2 className="text-lg font-bold mb-3 text-slate-900 px-3">Course Content</h2>
     <nav className="space-y-1">
       {course.chapters.map((chapter) => {
@@ -161,9 +161,11 @@ const LessonContent = ({ item, isLocked, courseId }: { item: (Chapter | Subchapt
 
 // --- Main Page ---
 
-function CourseStartPageContent({ params }: { params: { courseId: string } }) {
+function CourseStartPageContent() {
+  const params = useParams();
+  const courseId = params.courseId as string;
   const router = useRouter();
-  const { data: session } = useSession();
+  useSession();
   const { toast } = useToast();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -173,7 +175,7 @@ function CourseStartPageContent({ params }: { params: { courseId: string } }) {
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetchCourseData(params.courseId)
+    fetchCourseData(courseId)
       .then(data => {
         setCourse(data);
         const firstChapter = data.chapters[0];
@@ -183,20 +185,20 @@ function CourseStartPageContent({ params }: { params: { courseId: string } }) {
           setExpandedChapters(new Set([firstChapter.id]));
         }
       })
-      .catch(err => {
+      .catch(() => {
         toast({ title: "Error", description: "Could not load course content.", variant: "destructive" });
-        router.push(`/courses/${params.courseId}`);
+        router.push(`/courses/${courseId}`);
       });
 
-    const savedProgress = localStorage.getItem(`progress_${params.courseId}`);
+    const savedProgress = localStorage.getItem(`progress_${courseId}`);
     if (savedProgress) {
       setCompletedItems(new Set(JSON.parse(savedProgress)));
     }
-    setHasPurchased(localStorage.getItem(`purchase_${params.courseId}`) === 'true');
+    setHasPurchased(localStorage.getItem(`purchase_${courseId}`) === 'true');
 
-  }, [params.courseId, toast, router]);
+  }, [courseId, toast, router]);
   
-  const handleSelectItem = (itemId: string, isSubchapter: boolean) => {
+  const handleSelectItem = (itemId: string) => {
     setCurrentItemId(itemId);
   };
 
@@ -291,7 +293,7 @@ function CourseStartPageContent({ params }: { params: { courseId: string } }) {
 
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-sm p-3 flex-shrink-0">
+        <header className="flex items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-sm p-3 shrink-0">
            <div className="lg:hidden">
              <Sheet>
                <SheetTrigger asChild>
@@ -312,12 +314,12 @@ function CourseStartPageContent({ params }: { params: { courseId: string } }) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 lg:p-10">
            <div className="max-w-2xl mx-auto">
-             <LessonContent item={currentItem} isLocked={isLocked} courseId={params.courseId} />
+             <LessonContent item={currentItem} isLocked={isLocked} courseId={courseId} />
            </div>
         </div>
 
         {/* Footer */}
-        <footer className="flex justify-between items-center border-t border-slate-200 bg-white/80 backdrop-blur-sm p-3 flex-shrink-0">
+        <footer className="flex justify-between items-center border-t border-slate-200 bg-white/80 backdrop-blur-sm p-3 shrink-0">
           <Button variant="outline" onClick={handlePrev} disabled={currentIndex === 0}>
             Previous Lesson
           </Button>
@@ -341,13 +343,12 @@ function CourseStartPageContent({ params }: { params: { courseId: string } }) {
   );
 }
 
-export default function CourseStartPage({ params }: { params: Promise<{ courseId: string }> }) {
-  const resolvedParams = use(params);
+export default function CourseStartPage() {
   return (
     <div className="bg-slate-100 p-3 pt-24">
       <div className="h-[calc(100vh-7rem)] max-w-[76.8rem] mx-auto">
         <Suspense fallback={<div className="flex items-center justify-center h-full text-slate-500">Loading Course...</div>}>
-          <CourseStartPageContent params={resolvedParams} />
+          <CourseStartPageContent />
         </Suspense>
       </div>
     </div>

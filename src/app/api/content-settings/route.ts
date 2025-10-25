@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // Get content settings from database
     const settings = await db.contentSettings.findFirst()

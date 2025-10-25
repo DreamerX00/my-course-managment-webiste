@@ -21,12 +21,12 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where = {
+    const where = searchQuery ? {
       OR: [
-        { name: { contains: searchQuery, mode: 'insensitive' } },
-        { email: { contains: searchQuery, mode: 'insensitive' } },
+        { name: { contains: searchQuery, mode: 'insensitive' as const } },
+        { email: { contains: searchQuery, mode: 'insensitive' as const } },
       ],
-    };
+    } : {};
 
     const [users, totalUsers] = await db.$transaction([
       db.user.findMany({

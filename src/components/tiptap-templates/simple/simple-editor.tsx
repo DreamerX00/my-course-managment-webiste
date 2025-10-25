@@ -4,23 +4,6 @@ import * as React from "react"
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 import clsx from "clsx"
 
-// --- Tiptap Core Extensions ---
-import { StarterKit } from "@tiptap/starter-kit"
-import { Image } from "@tiptap/extension-image"
-import { TaskItem } from "@tiptap/extension-task-item"
-import { TaskList } from "@tiptap/extension-task-list"
-import { TextAlign } from "@tiptap/extension-text-align"
-import { Typography } from "@tiptap/extension-typography"
-import { Highlight } from "@tiptap/extension-highlight"
-import { Subscript } from "@tiptap/extension-subscript"
-import { Superscript } from "@tiptap/extension-superscript"
-import { Underline } from "@tiptap/extension-underline"
-
-// --- Custom Extensions ---
-import { Link } from "@/components/tiptap-extension/link-extension"
-import { Selection } from "@/components/tiptap-extension/selection-extension"
-import { TrailingNode } from "@/components/tiptap-extension/trailing-node-extension"
-
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
 import { Spacer } from "@/components/tiptap-ui-primitive/spacer"
@@ -29,13 +12,6 @@ import {
   ToolbarGroup,
   ToolbarSeparator,
 } from "@/components/tiptap-ui-primitive/toolbar"
-
-// --- Tiptap Node ---
-import { ImageUploadNode } from "@/components/tiptap-node/image-upload-node/image-upload-node-extension"
-import "@/components/tiptap-node/code-block-node/code-block-node.scss"
-import "@/components/tiptap-node/list-node/list-node.scss"
-import "@/components/tiptap-node/image-node/image-node.scss"
-import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
@@ -71,13 +47,7 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
 
 // --- Lib ---
-import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 import { editorExtensions } from "@/lib/tiptap-extensions"
-
-// --- Styles ---
-import "@/components/tiptap-templates/simple/simple-editor.scss"
-
-import content from "@/components/tiptap-templates/simple/data/content.json"
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -185,14 +155,18 @@ const MobileToolbarContent = ({
 )
 
 export interface SimpleEditorProps {
-  content?: any;
-  onSave?: (content: any) => void;
+  content?: unknown;
+  onSave?: (content: unknown) => void;
   theme?: 'light' | 'dark';
 }
 
-export const SimpleEditor = React.forwardRef(function SimpleEditor(
-  { content, onSave, theme = 'light' }: SimpleEditorProps,
-  ref: React.Ref<any>
+export interface SimpleEditorHandle {
+  setContent: (json: unknown) => void;
+}
+
+export const SimpleEditor = React.forwardRef<SimpleEditorHandle, SimpleEditorProps>(function SimpleEditor(
+  { content, onSave, theme = 'light' },
+  ref
 ) {
   const isMobile = useMobile()
   const windowSize = useWindowSize()
@@ -200,9 +174,6 @@ export const SimpleEditor = React.forwardRef(function SimpleEditor(
     "main" | "highlighter" | "link"
   >("main")
   const toolbarRef = React.useRef<HTMLDivElement>(null)
-  const [saving, setSaving] = React.useState(false)
-  const [success, setSuccess] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -215,7 +186,7 @@ export const SimpleEditor = React.forwardRef(function SimpleEditor(
       },
     },
     extensions: editorExtensions,
-    content: content ?? require("@/components/tiptap-templates/simple/data/content.json"),
+    content: content ?? {},
     onUpdate: ({ editor }) => {
       if (onSave) {
         onSave(editor.getJSON());
@@ -225,12 +196,12 @@ export const SimpleEditor = React.forwardRef(function SimpleEditor(
 
   // Expose setContent method to parent
   React.useImperativeHandle(ref, () => ({
-    setContent: (json: any) => {
-      if (editor) editor.commands.setContent(json);
+    setContent: (json: unknown) => {
+      if (editor) editor.commands.setContent(json as Parameters<typeof editor.commands.setContent>[0]);
     },
   }), [editor]);
 
-  const bodyRect = useCursorVisibility({
+  useCursorVisibility({
     editor,
     overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
   })
@@ -240,22 +211,6 @@ export const SimpleEditor = React.forwardRef(function SimpleEditor(
       setMobileView("main")
     }
   }, [isMobile, mobileView])
-
-  const handleSaveClick = async () => {
-    if (!editor || !onSave) return
-    setSaving(true)
-    setError(null)
-    setSuccess(false)
-    try {
-      await onSave(editor.getJSON())
-      setSuccess(true)
-    } catch (e: any) {
-      setError(e.message || "Failed to save")
-    } finally {
-      setSaving(false)
-      setTimeout(() => setSuccess(false), 2000)
-    }
-  }
 
   if (!editor || !windowSize) return null
 

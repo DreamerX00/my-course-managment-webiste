@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
-import { use } from 'react';
 
-export async function GET(req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
+interface CourseUpdateData {
+  title?: string;
+  description?: string;
+  price?: number;
+  thumbnail?: string;
+  isPublished?: boolean;
+}
+
+export async function GET(_req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await context.params;
   try {
     const course = await db.course.findUnique({
@@ -37,7 +44,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ courseI
   }
 }
 
-export async function DELETE(req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
+export async function DELETE(_req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await context.params;
   const session = await getServerSession(authOptions);
   if (!session || !['ADMIN', 'INSTRUCTOR', 'OWNER'].includes(session.user.role)) {
@@ -47,6 +54,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ cour
     await db.course.delete({ where: { id: courseId } });
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Failed to delete course:', error);
     return NextResponse.json({ error: 'Failed to delete course' }, { status: 500 });
   }
 }
@@ -62,7 +70,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ cours
     const { title, description, price, thumbnail, isPublished, category } = data;
     
     // Update course data
-    const updateData: any = {};
+    const updateData: CourseUpdateData = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = price;

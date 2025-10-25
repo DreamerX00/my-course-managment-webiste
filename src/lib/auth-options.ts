@@ -1,12 +1,10 @@
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
 import { NextAuthOptions } from "next-auth";
-
-const prisma = new PrismaClient();
+import { db } from '@/lib/db';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(db),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -21,7 +19,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         // Fetch user role from database
-        const dbUser = await prisma.user.findUnique({
+        const dbUser = await db.user.findUnique({
           where: { id: user.id },
           select: { role: true },
         });
@@ -42,12 +40,12 @@ export const authOptions: NextAuthOptions = {
         return true;
       }
       
-      const dbUser = await prisma.user.findUnique({
+      const dbUser = await db.user.findUnique({
         where: { id: user.id },
       });
       
       if (!dbUser) {
-        await prisma.user.update({
+        await db.user.update({
           where: { id: user.id },
           data: { role: "STUDENT" },
         });
@@ -59,5 +57,5 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET || "super-secret-development-key",
+  secret: process.env.NEXTAUTH_SECRET,
 };

@@ -22,19 +22,20 @@ const eslintConfig = [
   },
   {
     rules: {
-      // Turn off or downgrade problematic rules during development
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-require-imports": "warn",
-      "@typescript-eslint/no-empty-object-type": "warn",
-      "@typescript-eslint/no-this-alias": "warn",
-      "@typescript-eslint/no-unused-expressions": "warn",
-      "react-hooks/exhaustive-deps": "warn",
-      "react-hooks/rules-of-hooks": "error", // Keep this as error - it's critical
-      "react/no-unescaped-entities": "warn",
-      "@next/next/no-img-element": "warn",
-      "@next/next/no-html-link-for-pages": "warn",
-      "prefer-const": "warn",
+      // All rules enabled as errors for proper code quality
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-require-imports": "error",
+      "@typescript-eslint/no-empty-object-type": "error",
+      "@typescript-eslint/no-this-alias": "error",
+      "@typescript-eslint/no-unused-expressions": "error",
+      "react-hooks/exhaustive-deps": "error",
+      "react-hooks/rules-of-hooks": "error",
+      "react/no-unescaped-entities": "error",
+      "@next/next/no-img-element": "error",
+      "@next/next/no-html-link-for-pages": "error",
+      "prefer-const": "error",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
 ];

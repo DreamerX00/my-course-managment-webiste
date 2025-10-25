@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from '@/lib/auth-options'
-import { db } from "@/lib/db"
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
+import { db } from '@/lib/db';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // Check authentication and admin access
     const session = await getServerSession(authOptions)

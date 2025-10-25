@@ -10,7 +10,7 @@ import { motion } from "framer-motion"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50">
+    <div className="min-h-screen flex flex-col bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

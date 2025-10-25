@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -20,7 +20,7 @@ export default function SignupPage() {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
-  const [invitationData, setInvitationData] = useState<any>(null);
+  const [invitationData, setInvitationData] = useState<{email: string; role: string; courseName?: string} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -28,6 +28,7 @@ export default function SignupPage() {
     if (token) {
       validateInvitation();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const validateInvitation = async () => {
@@ -36,12 +37,11 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Invalid invitation');
         return;
       }
 
       setInvitationData(data.invitation);
-    } catch (error) {
+    } catch {
       setError('Failed to validate invitation');
     }
   };
@@ -85,7 +85,7 @@ export default function SignupPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-    } catch (error) {
+    } catch {
       setError('Failed to complete signup');
     } finally {
       setLoading(false);
@@ -160,7 +160,7 @@ export default function SignupPage() {
           <CardTitle className="text-center">Complete Your Account Setup</CardTitle>
           {invitationData && (
             <div className="text-center text-sm text-gray-600">
-              <p>Welcome! You're joining as a <strong>{invitationData.role}</strong></p>
+              <p>Welcome! You&apos;re joining as a <strong>{invitationData.role}</strong></p>
               {invitationData.courseName && (
                 <p>Assigned to: <strong>{invitationData.courseName}</strong></p>
               )}
@@ -230,5 +230,13 @@ export default function SignupPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <SignupForm />
+    </Suspense>
   );
 } 

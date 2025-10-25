@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { useParams } from "next/navigation";
+import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
@@ -15,10 +15,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import xml from 'highlight.js/lib/languages/xml';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor';
-import { generateJSON } from '@tiptap/core';
 import { importFileToTiptapJSON } from '@/lib/tiptap-utils';
-import mammoth from 'mammoth';
-import { editorExtensions } from '@/lib/tiptap-extensions';
 
 // If TypeScript still complains, add the following at the top or in a .d.ts file:
 // declare module 'lowlight/lib/core';
@@ -29,39 +26,30 @@ const lowlight = createLowlight(common);
 lowlight.register('javascript', javascript);
 lowlight.register('xml', xml);
 
-function PreviewRenderer({ content }: { content: any }) {
-  const editor = useEditor({
-    extensions: editorExtensions,
-    content: content,
-    editable: false,
-  });
-
-  React.useEffect(() => {
-    if (editor && content) {
-      editor.commands.setContent(content);
-    }
-  }, [editor, content]);
-
-  return <EditorContent editor={editor} />;
+interface Chapter {
+  id: string;
+  title: string;
+  content: string;
+  position: number;
+  [key: string]: unknown;
 }
 
-export default function CourseContentManagerPage({ params }: { params: Promise<{ courseId: string }> }) {
-  // Unwrap params as a promise (future-proof for Next.js)
-  const [courseId, setCourseId] = useState<string | null>(null);
-  const router = useRouter();
-  useEffect(() => {
-    (async () => {
-      const { courseId } = await params;
-      setCourseId(courseId);
-    })();
-  }, [params]);
+interface Subchapter {
+  id: string;
+  title: string;
+  content: string;
+  position: number;
+  chapterId: string;
+  [key: string]: unknown;
+}
 
-  const [chapters, setChapters] = useState<any[]>([]);
-  const [selectedChapter, setSelectedChapter] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function CourseContentManagerPage() {
+  const params = useParams();
+  const courseId = params.courseId as string;
+
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [newChapterTitle, setNewChapterTitle] = useState("");
   const [newChapterContent, setNewChapterContent] = useState("");
   const [creating, setCreating] = useState(false);
@@ -69,15 +57,12 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
   const [reorderLoading, setReorderLoading] = useState(false);
   const [reorderError, setReorderError] = useState<string | null>(null);
 
   // Add subchapter state
-  const [subchapters, setSubchapters] = useState<any[]>([]);
-  const [selectedSubchapter, setSelectedSubchapter] = useState<any | null>(null);
-  const [subLoading, setSubLoading] = useState(false);
-  const [subError, setSubError] = useState<string | null>(null);
+  const [subchapters, setSubchapters] = useState<Subchapter[]>([]);
+  const [selectedSubchapter, setSelectedSubchapter] = useState<Subchapter | null>(null);
   const [newSubTitle, setNewSubTitle] = useState("");
   const [newSubContent, setNewSubContent] = useState("");
   const [subCreating, setSubCreating] = useState(false);
@@ -92,11 +77,11 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
   const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
 
   // Add state to hold pending content for chapter and subchapter
-  const [pendingChapterContent, setPendingChapterContent] = useState<any>(null);
-  const [pendingSubchapterContent, setPendingSubchapterContent] = useState<any>(null);
+  const [pendingChapterContent, setPendingChapterContent] = useState<Record<string, unknown> | null>(null);
+  const [pendingSubchapterContent, setPendingSubchapterContent] = useState<Record<string, unknown> | null>(null);
 
   // Add a ref to SimpleEditor to allow setting content
-  const simpleEditorRef = React.useRef<any>(null);
+  const simpleEditorRef = React.useRef<{ setContent: (content: Record<string, unknown>) => void } | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const subChapterFileInputRef = React.useRef<HTMLInputElement>(null);
@@ -104,32 +89,26 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
   // Fetch chapters for this course
   useEffect(() => {
     if (!courseId) return;
-    setLoading(true);
     fetch(`/api/courses/${courseId}/chapters`)
       .then((res) => res.json())
       .then((data) => {
         setChapters(data);
-        setLoading(false);
       })
-      .catch(() => {
-        setError("Failed to load chapters");
-        setLoading(false);
+      .catch((err) => {
+        console.error("Failed to load chapters:", err);
       });
   }, [courseId]);
 
   // Fetch subchapters when selectedChapter changes
   useEffect(() => {
     if (!selectedChapter) return;
-    setSubLoading(true);
     fetch(`/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters`)
       .then((res) => res.json())
       .then((data) => {
         setSubchapters(data);
-        setSubLoading(false);
       })
-      .catch(() => {
-        setSubError("Failed to load subchapters");
-        setSubLoading(false);
+      .catch((err) => {
+        console.error("Failed to load subchapters:", err);
       });
   }, [selectedChapter, courseId]);
 
@@ -146,7 +125,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
       CodeBlockLowlight.configure({ lowlight }),
     ],
     content: selectedChapter?.content || "<p>Edit chapter content here...</p>",
-    onUpdate: ({ editor }) => {
+    onUpdate: () => {
       // Optionally handle live preview or autosave
     },
     editable: !!selectedChapter,
@@ -161,17 +140,10 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
 
   // Save chapter content
   const handleSave = async () => {
-    console.log('Chapter save button clicked.');
     if (!selectedChapter || !pendingChapterContent) {
-      console.log('No selected chapter or pending content.');
-      setError('There are no changes to save.');
-      setTimeout(() => setError(null), 3000);
       return;
     }
-    console.log('Saving chapter content:', pendingChapterContent);
     setSaving(true);
-    setError(null);
-    setSuccess(null);
     try {
       const res = await fetch(`/api/courses/${courseId}/chapters/${selectedChapter.id}`, {
         method: "PATCH",
@@ -179,27 +151,19 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
         body: JSON.stringify({ content: JSON.stringify(pendingChapterContent) }),
       });
 
-      console.log('Chapter save response status:', res.status);
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ error: 'Failed to parse error response' }));
         console.error('Chapter save failed:', errorData);
         throw new Error(errorData.error || 'Failed to save chapter');
       }
 
-      setSuccess("Chapter saved successfully!");
       const updated = await res.json();
-      console.log('Chapter save successful:', updated);
       setChapters((prev) => prev.map((ch) => (ch.id === updated.id ? updated : ch)));
       setPendingChapterContent(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('An error occurred during chapter save:', err);
-      setError(err.message || 'An unknown error occurred.');
     } finally {
       setSaving(false);
-      setTimeout(() => {
-        setSuccess(null);
-        setError(null);
-      }, 3000);
     }
   };
 
@@ -366,33 +330,27 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
 
   // Update handleSaveSubchapter to save JSON
   const handleSaveSubchapter = async () => {
-    console.log('Subchapter save button clicked.');
     if (!selectedSubchapter || !pendingSubchapterContent) {
-      console.log('No selected subchapter or pending content.');
-      setSubError('There are no changes to save.');
-      setTimeout(() => setSubError(null), 3000);
       return;
     }
-    console.log('Saving subchapter content:', pendingSubchapterContent);
     setSaving(true);
-    setError(null);
-    setSuccess(null);
     try {
+      if (!selectedChapter) {
+        throw new Error('No chapter selected');
+      }
       const res = await fetch(`/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters/${selectedSubchapter.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: JSON.stringify(pendingSubchapterContent) }),
       });
       if (!res.ok) throw new Error('Failed to save subchapter');
-      setSuccess('Subchapter saved successfully!');
       // Refresh subchapters list
       const updated = await res.json();
       setSubchapters((prev) => prev.map((sc) => (sc.id === updated.id ? updated : sc)));
-    } catch {
-      setError('Failed to save subchapter');
+    } catch (err: unknown) {
+      console.error('Failed to save subchapter:', err);
     } finally {
       setSaving(false);
-      setTimeout(() => setSuccess(null), 2000);
     }
   };
 
@@ -404,11 +362,9 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
       const jsonContent = await importFileToTiptapJSON(file);
       setPendingChapterContent(jsonContent);
       // Optionally, update the editor view immediately
-      if (simpleEditorRef.current) {
-        simpleEditorRef.current.setContent(jsonContent);
-      }
-    } catch (error: any) {
-      setError(error.message || 'Failed to import file.');
+      simpleEditorRef.current?.setContent(jsonContent);
+    } catch (error: unknown) {
+      console.error('Failed to import file:', error);
     } finally {
       // Reset file input
       if (fileInputRef.current) {
@@ -425,11 +381,9 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
       const jsonContent = await importFileToTiptapJSON(file);
       setPendingSubchapterContent(jsonContent);
       // Optionally, update the editor view immediately
-      if (simpleEditorRef.current) {
-        simpleEditorRef.current.setContent(jsonContent);
-      }
-    } catch (error: any) {
-      setSubError(error.message || 'Failed to import file.');
+      simpleEditorRef.current?.setContent(jsonContent);
+    } catch (error: unknown) {
+      console.error('Failed to import file:', error);
     } finally {
       // Reset file input
       if (subChapterFileInputRef.current) {
@@ -443,7 +397,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-yellow-50 to-pink-50 p-8">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-yellow-50 to-pink-50 p-8">
       <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 flex flex-col gap-8">
         {/* Sidebar: Chapter List */}
         <div className="w-full">
@@ -511,13 +465,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
                             {chapter.title}
                           </button>
                           <button
-                            className="px-2 py-1 bg-blue-700 text-white rounded text-xs font-semibold hover:bg-blue-800 ml-2"
-                            onClick={() => router.push(`/dashboard/admin/courses/${courseId}/chapters/${chapter.id}/edit`)}
-                          >
-                            Edit Content
-                          </button>
-                          <button
-                            className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700"
+                            className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700 ml-2"
                             onClick={() => setDeleteChapterId(chapter.id)}
                             disabled={deleting}
                           >
@@ -615,13 +563,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
                                 {sub.title}
                               </button>
                               <button
-                                className="px-2 py-1 bg-pink-700 text-white rounded text-xs font-semibold hover:bg-pink-800 ml-2"
-                                onClick={() => router.push(`/dashboard/admin/courses/${courseId}/chapters/${selectedChapter?.id}/subchapters/${sub.id}/edit`)}
-                              >
-                                Edit Content
-                              </button>
-                              <button
-                                className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700"
+                                className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700 ml-2"
                                 onClick={() => setDeleteSubId(sub.id)}
                                 disabled={subDeleting}
                               >
@@ -669,7 +611,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
         <div className="w-full">
           {selectedChapter && (
             <>
-              <div className="flex-grow flex flex-col">
+              <div className="grow flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold text-gray-800">Chapter Content</h3>
                   <div className="flex items-center gap-2">
@@ -695,7 +637,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
                     />
                   </div>
                 </div>
-                <div className="border rounded-lg overflow-hidden flex-grow">
+                <div className="border rounded-lg overflow-hidden grow">
                   <SimpleEditor
                     ref={simpleEditorRef}
                     content={parseContent(selectedChapter.content)}
@@ -707,7 +649,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
           )}
           {selectedSubchapter && (
             <>
-              <div className="flex-grow flex flex-col">
+              <div className="grow flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold text-gray-800">Subchapter Content</h3>
                   <div className="flex items-center gap-2">
@@ -733,7 +675,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
                     />
                   </div>
                 </div>
-                <div className="border rounded-lg overflow-hidden flex-grow">
+                <div className="border rounded-lg overflow-hidden grow">
                   <SimpleEditor
                     ref={simpleEditorRef}
                     content={parseContent(selectedSubchapter.content)}
@@ -750,7 +692,7 @@ export default function CourseContentManagerPage({ params }: { params: Promise<{
 }
 
 // Add this utility function at the top or near the handlers
-function parseContent(content: any) {
+function parseContent(content: unknown): unknown {
   if (!content) return undefined;
   if (typeof content === 'string') {
     try {

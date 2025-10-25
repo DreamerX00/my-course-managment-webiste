@@ -2,13 +2,28 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   eslint: {
-    // Temporarily disable ESLint during builds
-    // TODO: Fix all ESLint warnings and re-enable
-    ignoreDuringBuilds: true,
+    // ESLint enabled for build - all warnings must be fixed
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    // Skip type checking during build - types are checked by IDE
-    ignoreBuildErrors: true,
+    // TypeScript checking enabled for build
+    ignoreBuildErrors: false,
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

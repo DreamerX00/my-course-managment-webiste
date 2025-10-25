@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
 import { UserRole, UserStatus } from '@prisma/client';
 
@@ -17,7 +17,7 @@ export async function PATCH(
 
     const { userId } = await params;
     const body = await req.json();
-    const { action, role, status } = body;
+    const { action, role } = body;
 
     // Check if user exists
     const user = await db.user.findUnique({

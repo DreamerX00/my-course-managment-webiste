@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
 
     const validation = await validateInvitationToken(token);
 
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+    if (!validation.valid || !validation.invitation) {
+      return NextResponse.json({ error: validation.error || 'Invalid invitation' }, { status: 400 });
     }
 
     const { invitation } = validation;

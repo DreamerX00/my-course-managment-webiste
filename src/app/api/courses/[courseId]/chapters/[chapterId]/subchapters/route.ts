@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
 
-export async function GET(req: NextRequest, context: { params: Promise<{ courseId: string, chapterId: string }> }) {
+export async function GET(_req: NextRequest, context: { params: Promise<{ courseId: string, chapterId: string }> }) {
   const { chapterId } = await context.params;
   try {
     const subchapters = await db.subchapter.findMany({
@@ -12,6 +12,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ courseI
     });
     return NextResponse.json(subchapters);
   } catch (error) {
+    console.error('Failed to fetch subchapters:', error);
     return NextResponse.json({ error: 'Failed to fetch subchapters' }, { status: 500 });
   }
 }
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ course
     });
     return NextResponse.json(subchapter, { status: 201 });
   } catch (error) {
+    console.error('Failed to create subchapter:', error);
     return NextResponse.json({ error: 'Failed to create subchapter' }, { status: 500 });
   }
 } 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ courseId: string, chapterId: string }> }) {
@@ -19,6 +19,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ course
     }
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Failed to reorder subchapters:', error);
     return NextResponse.json({ error: 'Failed to reorder subchapters' }, { status: 500 });
   }
 } 

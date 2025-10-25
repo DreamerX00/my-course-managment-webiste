@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { RichTextDisplay } from "@/components/ui/rich-text-display";
@@ -49,30 +50,8 @@ export default function AdminPanelPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // Add state for free toggle and delete confirmation
+  // Add state for free toggle
   const [isFree, setIsFree] = useState(true);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteInput, setDeleteInput] = useState("");
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  // Add state for expanded course content management
-  const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
-  const [chapters, setChapters] = useState<{ [courseId: string]: any[] }>({});
-  const [chapterTitle, setChapterTitle] = useState("");
-  const [chapterContent, setChapterContent] = useState("");
-  const [chapterLoading, setChapterLoading] = useState(false);
-  const [chapterError, setChapterError] = useState<string | null>(null);
-
-  // Add state for editing chapters
-  const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
-  const [editChapterTitle, setEditChapterTitle] = useState("");
-  const [editChapterContent, setEditChapterContent] = useState("");
-  const [editChapterLoading, setEditChapterLoading] = useState(false);
-  const [editChapterError, setEditChapterError] = useState<string | null>(null);
-  const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
-  const [deleteChapterLoading, setDeleteChapterLoading] = useState(false);
-  const [deleteChapterError, setDeleteChapterError] = useState<string | null>(null);
 
   // Add state for editing courses
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
@@ -136,7 +115,6 @@ export default function AdminPanelPage() {
         if (response.ok) {
           const data = await response.json();
           const filterCategories = data.filterCategories || [];
-          console.log('Fetched categories:', filterCategories);
           setCategories(filterCategories);
         } else {
           console.error('Failed to fetch categories');
@@ -152,13 +130,11 @@ export default function AdminPanelPage() {
 
     // Add focus event listener to refresh categories when page is focused
     const handleFocus = () => {
-      console.log('Page focused, refreshing categories...');
       fetchCategories();
     };
 
     // Set up periodic refresh every 30 seconds
     const intervalId = setInterval(() => {
-      console.log('Periodic category refresh...');
       fetchCategories();
     }, 30000);
 
@@ -180,7 +156,6 @@ export default function AdminPanelPage() {
       if (response.ok) {
         const data = await response.json();
         const filterCategories = data.filterCategories || [];
-        console.log('Refreshed categories:', filterCategories);
         setCategories(filterCategories);
       } else {
         console.error('Failed to refresh categories');
@@ -234,123 +209,11 @@ export default function AdminPanelPage() {
       setPrice(0);
       setImageUrl("");
       setSelectedCategory("");
-    } catch (err: any) {
-      setCreateError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create course';
+      setCreateError(errorMessage);
     } finally {
       setCreating(false);
-    }
-  };
-
-  const handleDelete = async (course: Course) => {
-    setDeleting(true);
-    setDeleteError(null);
-    try {
-      const res = await fetch(`/api/courses/${course.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to delete course");
-      }
-      setCourses(courses.filter(c => c.id !== course.id));
-      setDeleteId(null);
-      setDeleteInput("");
-    } catch (err: any) {
-      setDeleteError(err.message);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  // Fetch chapters for a course
-  const fetchChapters = async (courseId: string) => {
-    setChapterLoading(true);
-    setChapterError(null);
-    try {
-      const res = await fetch(`/api/courses/${courseId}/chapters`);
-      const data = await res.json();
-      setChapters((prev) => ({ ...prev, [courseId]: data }));
-    } catch {
-      setChapterError("Failed to load chapters");
-    } finally {
-      setChapterLoading(false);
-    }
-  };
-
-  // Add chapter to a course
-  const handleAddChapter = async (courseId: string) => {
-    setChapterLoading(true);
-    setChapterError(null);
-    try {
-      const res = await fetch(`/api/courses/${courseId}/chapters`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: chapterTitle, content: chapterContent }),
-      });
-      if (!res.ok) throw new Error("Failed to add chapter");
-      setChapterTitle("");
-      setChapterContent("");
-      fetchChapters(courseId);
-    } catch {
-      setChapterError("Failed to add chapter");
-    } finally {
-      setChapterLoading(false);
-    }
-  };
-
-  // Handler to start editing a chapter
-  const handleStartEditChapter = (chapter: any) => {
-    setEditingChapterId(chapter.id);
-    setEditChapterTitle(chapter.title);
-    setEditChapterContent(chapter.content);
-    setEditChapterError(null);
-  };
-
-  // Handler to cancel editing
-  const handleCancelEditChapter = () => {
-    setEditingChapterId(null);
-    setEditChapterTitle("");
-    setEditChapterContent("");
-    setEditChapterError(null);
-  };
-
-  // Handler to submit chapter edit
-  const handleEditChapter = async (courseId: string, chapterId: string) => {
-    setEditChapterLoading(true);
-    setEditChapterError(null);
-    try {
-      const res = await fetch(`/api/courses/${courseId}/chapters/${chapterId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: editChapterTitle, content: editChapterContent }),
-      });
-      if (!res.ok) throw new Error("Failed to update chapter");
-      setEditingChapterId(null);
-      setEditChapterTitle("");
-      setEditChapterContent("");
-      fetchChapters(courseId);
-    } catch {
-      setEditChapterError("Failed to update chapter");
-    } finally {
-      setEditChapterLoading(false);
-    }
-  };
-
-  // Handler to delete a chapter
-  const handleDeleteChapter = async (courseId: string, chapterId: string) => {
-    setDeleteChapterLoading(true);
-    setDeleteChapterError(null);
-    try {
-      const res = await fetch(`/api/courses/${courseId}/chapters/${chapterId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete chapter");
-      setDeleteChapterId(null);
-      fetchChapters(courseId);
-    } catch {
-      setDeleteChapterError("Failed to delete chapter");
-    } finally {
-      setDeleteChapterLoading(false);
     }
   };
 
@@ -456,7 +319,7 @@ export default function AdminPanelPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-yellow-50 to-pink-50 p-8">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-yellow-50 to-pink-50 p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
         <h1 className="text-4xl font-extrabold text-blue-900 mb-6">Admin Panel</h1>
         <p className="text-lg text-gray-800 mb-8">Manage courses, sessions, and content here.</p>
@@ -657,7 +520,7 @@ export default function AdminPanelPage() {
                   </form>
                 ) : (
                   <>
-                    <img src={course.thumbnail || "/placeholder.png"} alt={course.title} className="w-full h-40 object-cover rounded mb-2" />
+                    <Image src={course.thumbnail || "/placeholder.png"} alt={course.title} width={400} height={160} className="w-full h-40 object-cover rounded mb-2" />
                     <h3 className="text-xl font-bold text-blue-900">{course.title}</h3>
                     <div className="text-gray-800 mb-2 line-clamp-2">
                       <RichTextDisplay 
@@ -697,13 +560,6 @@ export default function AdminPanelPage() {
                         disabled={editCourseLoading}
                       >
                         Edit
-                      </button>
-                      <button
-                        onClick={() => { setDeleteId(course.id); setDeleteInput(""); setDeleteError(null); }}
-                        className="px-4 py-2 bg-red-600 text-white rounded font-semibold hover:bg-red-700"
-                        disabled={editCourseLoading}
-                      >
-                        Delete
                       </button>
                     </div>
                     {!editingCourseId && publishError && (

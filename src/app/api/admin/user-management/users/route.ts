@@ -22,12 +22,12 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where = {
+    const where = searchQuery ? {
       OR: [
-        { name: { contains: searchQuery, mode: 'insensitive' } },
-        { email: { contains: searchQuery, mode: 'insensitive' } },
+        { name: { contains: searchQuery, mode: 'insensitive' as const } },
+        { email: { contains: searchQuery, mode: 'insensitive' as const } },
       ],
-    };
+    } : {};
 
     // Get users with course enrollment count
     const users = await db.user.findMany({
