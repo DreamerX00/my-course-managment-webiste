@@ -6,9 +6,9 @@ export default withAuth(
     const token = req.nextauth.token
     const path = req.nextUrl.pathname
     
-    // Admin routes require ADMIN or OWNER role
+    // Admin routes require ADMIN, OWNER, or INSTRUCTOR role
     if (path.startsWith("/dashboard/admin")) {
-      if (!token || !["ADMIN", "OWNER"].includes(token.role as string)) {
+      if (!token || !["ADMIN", "OWNER", "INSTRUCTOR"].includes(token.role as string)) {
         return NextResponse.redirect(new URL("/dashboard", req.url))
       }
     }
@@ -23,5 +23,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/courses/:path*"],
+  matcher: ["/dashboard/:path*", "/profile/:path*"],
 } 

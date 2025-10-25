@@ -12,7 +12,6 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <SessionProvider>
       <Navbar />
-      {/* <Navbar /> */}
       {children}
       <Toaster />
     </SessionProvider>

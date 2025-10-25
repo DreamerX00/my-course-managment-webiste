@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import { Menu, X, Shield } from "lucide-react"
+import { Menu, X, Shield, User } from "lucide-react"
 
 export function Navbar() {
   const { data: session } = useSession()
@@ -33,7 +33,7 @@ export function Navbar() {
   }, [])
 
   const handleSignOut = () => {
-    signOut()
+    signOut({ callbackUrl: "/" })
     setMobileMenuOpen(false)
   }
 
@@ -89,6 +89,13 @@ export function Navbar() {
                   Admin Panel
                 </Link>
               )}
+              <Link 
+                href="/profile" 
+                className="text-sm lg:text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-2 lg:px-3 py-1 rounded-md hover:bg-blue-50 flex items-center gap-1"
+              >
+                <User className="h-4 w-4" />
+                Profile
+              </Link>
               <Button
                 variant="ghost"
                 onClick={handleSignOut}
@@ -169,6 +176,14 @@ export function Navbar() {
                     Admin Panel
                   </Link>
                 )}
+                <Link 
+                  href="/profile" 
+                  className="flex text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-blue-50 items-center gap-2"
+                  onClick={closeMobileMenu}
+                >
+                  <User className="h-4 w-4" />
+                  Profile
+                </Link>
                 <Button
                   variant="ghost"
                   onClick={handleSignOut}

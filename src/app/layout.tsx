@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${poppins.variable} font-sans`} suppressHydrationWarning>
+      <body className={`${poppins.variable} font-sans pt-16`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
