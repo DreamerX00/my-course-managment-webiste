@@ -1,22 +1,29 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-options';
-import { db } from '@/lib/db';
-import { UserRole, UserStatus } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { db } from "@/lib/db";
+import { UserRole, UserStatus } from "@prisma/client";
+
+// Force dynamic rendering for Next.js 15+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
     if (session?.user?.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const totalUsers = await db.user.count();
     const admins = await db.user.count({ where: { role: UserRole.ADMIN } });
-    const instructors = await db.user.count({ where: { role: UserRole.INSTRUCTOR } });
+    const instructors = await db.user.count({
+      where: { role: UserRole.INSTRUCTOR },
+    });
     const students = await db.user.count({ where: { role: UserRole.STUDENT } });
-    const blocked = await db.user.count({ where: { status: UserStatus.BLOCKED } });
+    const blocked = await db.user.count({
+      where: { status: UserStatus.BLOCKED },
+    });
 
     const response = {
       totalUsers,
@@ -28,7 +35,7 @@ export async function GET() {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('[USERS_STATS_GET]', error);
-    return new NextResponse('Internal Error', { status: 500 });
+    console.error("[USERS_STATS_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
-} 
+}

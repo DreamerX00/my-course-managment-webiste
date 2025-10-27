@@ -1,27 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateInvitationToken, markInvitationAsUsed } from '@/lib/invitation';
-import { db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  validateInvitationToken,
+  markInvitationAsUsed,
+} from "@/lib/invitation";
+import { db } from "@/lib/db";
+import bcrypt from "bcryptjs";
+import { completeSignupSchema } from "@/lib/validations";
+import { validateRequest } from "@/lib/validation-helpers";
+
+// Force dynamic rendering for Next.js 15+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { token, name, password } = body;
 
-    if (!token || !name || !password) {
-      return NextResponse.json({ 
-        error: 'Token, name, and password are required' 
-      }, { status: 400 });
+    // Validate request body
+    const bodyValidation = await validateRequest(body, completeSignupSchema);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+
+    const { token, name, password } = bodyValidation.data;
 
     // Validate invitation token
-    const validation = await validateInvitationToken(token);
+    const tokenValidation = await validateInvitationToken(token);
 
-    if (!validation.valid || !validation.invitation) {
-      return NextResponse.json({ error: validation.error || 'Invalid invitation' }, { status: 400 });
+    if (!tokenValidation.valid || !tokenValidation.invitation) {
+      return NextResponse.json(
+        { error: tokenValidation.error || "Invalid invitation" },
+        { status: 400 }
+      );
     }
 
-    const { invitation } = validation;
+    const { invitation } = tokenValidation;
 
     // Check if user already exists
     const existingUser = await db.user.findUnique({
@@ -29,9 +41,12 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ 
-        error: 'User with this email already exists' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "User with this email already exists",
+        },
+        { status: 400 }
+      );
     }
 
     // Hash password
@@ -44,7 +59,7 @@ export async function POST(req: NextRequest) {
         name,
         password: hashedPassword,
         role: invitation.role,
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
     });
 
@@ -64,7 +79,7 @@ export async function POST(req: NextRequest) {
     await markInvitationAsUsed(token);
 
     return NextResponse.json({
-      message: 'Account created successfully',
+      message: "Account created successfully",
       user: {
         id: user.id,
         email: user.email,
@@ -73,7 +88,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[COMPLETE_SIGNUP_POST]', error);
-    return new NextResponse('Internal Error', { status: 500 });
+    console.error("[COMPLETE_SIGNUP_POST]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
-} 
+}

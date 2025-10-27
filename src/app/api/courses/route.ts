@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-options';
-import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { db } from "@/lib/db";
+import { createCourseSchema } from "@/lib/validations";
+import { validateRequest } from "@/lib/validation-helpers";
 
 // Force dynamic rendering for Next.js 15+
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface ChapterWithContent {
   lessons: { id: string }[];
@@ -44,7 +46,7 @@ interface CourseDetailsData {
 }
 
 export async function GET(req: NextRequest) {
-  const showAll = req.nextUrl?.searchParams.get('all') === 'true';
+  const showAll = req.nextUrl?.searchParams.get("all") === "true";
   try {
     // Get content settings for categories
     const contentSettings = await db.contentSettings.findFirst();
@@ -52,9 +54,19 @@ export async function GET(req: NextRequest) {
     const adminCategories = settings.filterCategories || [
       { id: "web-dev", name: "Web Development", color: "#3B82F6", order: 1 },
       { id: "data-science", name: "Data Science", color: "#10B981", order: 2 },
-      { id: "ai-ml", name: "AI & Machine Learning", color: "#8B5CF6", order: 3 },
-      { id: "mobile-dev", name: "Mobile Development", color: "#F59E0B", order: 4 },
-      { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 }
+      {
+        id: "ai-ml",
+        name: "AI & Machine Learning",
+        color: "#8B5CF6",
+        order: 3,
+      },
+      {
+        id: "mobile-dev",
+        name: "Mobile Development",
+        color: "#F59E0B",
+        order: 4,
+      },
+      { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 },
     ];
 
     const courses = await db.course.findMany({
@@ -63,97 +75,114 @@ export async function GET(req: NextRequest) {
         chapters: {
           include: {
             subchapters: true,
-            lessons: true
-          }
+            lessons: true,
+          },
         },
         students: true,
         progress: true,
-        courseDetails: true
+        courseDetails: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     // Transform the data to match our frontend interface
-    const transformedCourses = courses.map(course => {
+    const transformedCourses = courses.map((course) => {
       const totalChapters = course.chapters.length;
-      const totalLessons = course.chapters.reduce((acc: number, chapter: ChapterWithContent) => 
-        acc + chapter.lessons.length + chapter.subchapters.length, 0
+      const totalLessons = course.chapters.reduce(
+        (acc: number, chapter: ChapterWithContent) =>
+          acc + chapter.lessons.length + chapter.subchapters.length,
+        0
       );
       const estimatedHours = Math.round((totalLessons * 30) / 60);
       const enrolledCount = course.students.length;
       const details = course.courseDetails as CourseDetailsData | null;
 
       // Determine category
-      const assignedCategory = details?.category || getCategoryFromTitle(course.title, adminCategories);
+      const assignedCategory =
+        details?.category ||
+        getCategoryFromTitle(course.title, adminCategories);
 
       // Use CourseDetails fields if available, otherwise fallback
       return {
         id: course.id,
         title: details?.title || course.title,
         description: details?.description || course.description,
-        instructor: (details?.instructor as InstructorData)?.name || 'CodeWithHarry',
+        instructor:
+          (details?.instructor as InstructorData)?.name || "CodeWithHarry",
         category: assignedCategory,
         price: details?.price ?? course.price ?? 0,
         rating: details?.rating ? Math.round(details.rating * 10) / 10 : 4.5,
         enrolledCount: details?.enrolledCount ?? enrolledCount,
         duration: details?.duration || `${estimatedHours} hours`,
         chaptersCount: totalChapters,
-        thumbnail: course.thumbnail || 'https://images.unsplash.com/photo-1517694712202-14dd953bb09f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        thumbnail:
+          course.thumbnail ||
+          "https://images.unsplash.com/photo-1517694712202-14dd953bb09f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         isFree: details?.isFree ?? (!course.price || course.price === 0),
         isPublished: course.isPublished,
         createdAt: course.createdAt,
-        updatedAt: course.updatedAt
+        updatedAt: course.updatedAt,
       };
     });
 
     return NextResponse.json(transformedCourses);
   } catch (error) {
-    console.error('Error fetching courses:', error);
-    return NextResponse.json({ error: 'Failed to fetch courses' }, { status: 500 });
+    console.error("Error fetching courses:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch courses" },
+      { status: 500 }
+    );
   }
 }
 
 // Helper function to determine category from title using admin-configured categories
-function getCategoryFromTitle(title: string, adminCategories: AdminCategory[]): string {
+function getCategoryFromTitle(
+  title: string,
+  adminCategories: AdminCategory[]
+): string {
   const titleLower = title.toLowerCase();
-  
+
   // Map keywords to admin category names
   const categoryMapping: { [key: string]: string } = {};
-  
-  adminCategories.forEach(cat => {
+
+  adminCategories.forEach((cat) => {
     const catName = cat.name.toLowerCase();
-    if (catName.includes('web') || catName.includes('development')) {
-      categoryMapping['web'] = cat.name;
-      categoryMapping['html'] = cat.name;
-      categoryMapping['css'] = cat.name;
-      categoryMapping['javascript'] = cat.name;
-      categoryMapping['react'] = cat.name;
-      categoryMapping['node'] = cat.name;
+    if (catName.includes("web") || catName.includes("development")) {
+      categoryMapping["web"] = cat.name;
+      categoryMapping["html"] = cat.name;
+      categoryMapping["css"] = cat.name;
+      categoryMapping["javascript"] = cat.name;
+      categoryMapping["react"] = cat.name;
+      categoryMapping["node"] = cat.name;
     }
-    if (catName.includes('data') || catName.includes('science')) {
-      categoryMapping['data'] = cat.name;
-      categoryMapping['python'] = cat.name;
-      categoryMapping['analytics'] = cat.name;
-      categoryMapping['visualization'] = cat.name;
+    if (catName.includes("data") || catName.includes("science")) {
+      categoryMapping["data"] = cat.name;
+      categoryMapping["python"] = cat.name;
+      categoryMapping["analytics"] = cat.name;
+      categoryMapping["visualization"] = cat.name;
     }
-    if (catName.includes('ai') || catName.includes('machine') || catName.includes('learning')) {
-      categoryMapping['ai'] = cat.name;
-      categoryMapping['ml'] = cat.name;
-      categoryMapping['neural'] = cat.name;
-      categoryMapping['deep'] = cat.name;
+    if (
+      catName.includes("ai") ||
+      catName.includes("machine") ||
+      catName.includes("learning")
+    ) {
+      categoryMapping["ai"] = cat.name;
+      categoryMapping["ml"] = cat.name;
+      categoryMapping["neural"] = cat.name;
+      categoryMapping["deep"] = cat.name;
     }
-    if (catName.includes('mobile')) {
-      categoryMapping['mobile'] = cat.name;
-      categoryMapping['flutter'] = cat.name;
-      categoryMapping['react native'] = cat.name;
-      categoryMapping['ios'] = cat.name;
-      categoryMapping['android'] = cat.name;
+    if (catName.includes("mobile")) {
+      categoryMapping["mobile"] = cat.name;
+      categoryMapping["flutter"] = cat.name;
+      categoryMapping["react native"] = cat.name;
+      categoryMapping["ios"] = cat.name;
+      categoryMapping["android"] = cat.name;
     }
-    if (catName.includes('blockchain')) {
-      categoryMapping['blockchain'] = cat.name;
-      categoryMapping['crypto'] = cat.name;
-      categoryMapping['ethereum'] = cat.name;
-      categoryMapping['bitcoin'] = cat.name;
+    if (catName.includes("blockchain")) {
+      categoryMapping["blockchain"] = cat.name;
+      categoryMapping["crypto"] = cat.name;
+      categoryMapping["ethereum"] = cat.name;
+      categoryMapping["bitcoin"] = cat.name;
     }
   });
 
@@ -165,20 +194,29 @@ function getCategoryFromTitle(title: string, adminCategories: AdminCategory[]): 
   }
 
   // Default to first category if no match found
-  return adminCategories.length > 0 ? adminCategories[0].name : 'Programming';
+  return adminCategories.length > 0 ? adminCategories[0].name : "Programming";
 }
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || !['ADMIN', 'INSTRUCTOR', 'OWNER'].includes(session.user.role)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (
+    !session ||
+    !["ADMIN", "INSTRUCTOR", "OWNER"].includes(session.user.role)
+  ) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const { title, description, price, imageUrl, category } = await req.json();
-    if (!title || !description || !imageUrl) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const body = await req.json();
+
+    // Validate request body
+    const validation = await validateRequest(body, createCourseSchema);
+    if (!validation.success) {
+      return validation.error;
     }
-    
+
+    const { title, description, price, category, level } = validation.data;
+    const { imageUrl } = body; // Optional field not in base schema
+
     // Create the course
     const course = await db.course.create({
       data: {
@@ -197,33 +235,46 @@ export async function POST(req: NextRequest) {
           courseId: course.id,
           title: title,
           category: category,
-          tags: ['New Course'],
+          tags: ["New Course"],
           instructor: {
-            name: 'CodeWithHarry',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
+            name: "CodeWithHarry",
+            avatar:
+              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
             rating: 4.8,
-            students: 15000
+            students: 15000,
           },
           rating: 4.5,
           enrolledCount: 0,
-          duration: '10 hours',
+          duration: "10 hours",
           price: price || 0,
           originalPrice: (price || 0) * 1.5,
           isFree: !price || price === 0,
           description: description,
           features: [
-            { title: 'Lifetime Access', description: 'Access to all course content forever' },
-            { title: 'Certificate', description: 'Get a certificate upon completion' },
-            { title: 'Community Support', description: 'Join our community of learners' }
-          ]
-        }
+            {
+              title: "Lifetime Access",
+              description: "Access to all course content forever",
+            },
+            {
+              title: "Certificate",
+              description: "Get a certificate upon completion",
+            },
+            {
+              title: "Community Support",
+              description: "Join our community of learners",
+            },
+          ],
+        },
       });
     }
 
     return NextResponse.json(course, { status: 201 });
   } catch (error) {
-    console.error('Error creating course:', error);
-    return NextResponse.json({ error: 'Failed to create course' }, { status: 500 });
+    console.error("Error creating course:", error);
+    return NextResponse.json(
+      { error: "Failed to create course" },
+      { status: 500 }
+    );
   }
 }
 
@@ -231,82 +282,155 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const { action } = await req.json();
-    
-    if (action === 'create-sample-details') {
+
+    if (action === "create-sample-details") {
       // Get content settings for categories
       const contentSettings = await db.contentSettings.findFirst();
-      const settings = (contentSettings?.settings as CourseDetailsSettings) || {};
+      const settings =
+        (contentSettings?.settings as CourseDetailsSettings) || {};
       const adminCategories = settings.filterCategories || [
         { id: "web-dev", name: "Web Development", color: "#3B82F6", order: 1 },
-        { id: "data-science", name: "Data Science", color: "#10B981", order: 2 },
-        { id: "ai-ml", name: "AI & Machine Learning", color: "#8B5CF6", order: 3 },
-        { id: "mobile-dev", name: "Mobile Development", color: "#F59E0B", order: 4 },
-        { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 }
+        {
+          id: "data-science",
+          name: "Data Science",
+          color: "#10B981",
+          order: 2,
+        },
+        {
+          id: "ai-ml",
+          name: "AI & Machine Learning",
+          color: "#8B5CF6",
+          order: 3,
+        },
+        {
+          id: "mobile-dev",
+          name: "Mobile Development",
+          color: "#F59E0B",
+          order: 4,
+        },
+        { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 },
       ];
 
       // Get all courses
       const courses = await db.course.findMany();
-      
+
       // Create sample course details for each course
       for (const course of courses) {
         // Check if course details already exist
         const existingDetails = await db.courseDetails.findUnique({
-          where: { courseId: course.id }
+          where: { courseId: course.id },
         });
-        
+
         if (!existingDetails) {
           // Determine category based on title using the same logic as getCategoryFromTitle
           const titleLower = course.title.toLowerCase();
           let category = adminCategories[0].name; // default to first category
-          
-          if (titleLower.includes('web') || titleLower.includes('html') || titleLower.includes('css') || 
-              titleLower.includes('javascript') || titleLower.includes('react') || titleLower.includes('typescript')) {
-            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('web') || cat.name.toLowerCase().includes('development'))?.name || adminCategories[0].name;
-          } else if (titleLower.includes('data') || titleLower.includes('python') || titleLower.includes('analytics')) {
-            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('data') || cat.name.toLowerCase().includes('science'))?.name || adminCategories[0].name;
-          } else if (titleLower.includes('ai') || titleLower.includes('machine') || titleLower.includes('ml')) {
-            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('ai') || cat.name.toLowerCase().includes('machine'))?.name || adminCategories[0].name;
-          } else if (titleLower.includes('mobile') || titleLower.includes('flutter') || titleLower.includes('react native')) {
-            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('mobile'))?.name || adminCategories[0].name;
-          } else if (titleLower.includes('blockchain') || titleLower.includes('crypto')) {
-            category = adminCategories.find((cat: AdminCategory) => cat.name.toLowerCase().includes('blockchain'))?.name || adminCategories[0].name;
+
+          if (
+            titleLower.includes("web") ||
+            titleLower.includes("html") ||
+            titleLower.includes("css") ||
+            titleLower.includes("javascript") ||
+            titleLower.includes("react") ||
+            titleLower.includes("typescript")
+          ) {
+            category =
+              adminCategories.find(
+                (cat: AdminCategory) =>
+                  cat.name.toLowerCase().includes("web") ||
+                  cat.name.toLowerCase().includes("development")
+              )?.name || adminCategories[0].name;
+          } else if (
+            titleLower.includes("data") ||
+            titleLower.includes("python") ||
+            titleLower.includes("analytics")
+          ) {
+            category =
+              adminCategories.find(
+                (cat: AdminCategory) =>
+                  cat.name.toLowerCase().includes("data") ||
+                  cat.name.toLowerCase().includes("science")
+              )?.name || adminCategories[0].name;
+          } else if (
+            titleLower.includes("ai") ||
+            titleLower.includes("machine") ||
+            titleLower.includes("ml")
+          ) {
+            category =
+              adminCategories.find(
+                (cat: AdminCategory) =>
+                  cat.name.toLowerCase().includes("ai") ||
+                  cat.name.toLowerCase().includes("machine")
+              )?.name || adminCategories[0].name;
+          } else if (
+            titleLower.includes("mobile") ||
+            titleLower.includes("flutter") ||
+            titleLower.includes("react native")
+          ) {
+            category =
+              adminCategories.find((cat: AdminCategory) =>
+                cat.name.toLowerCase().includes("mobile")
+              )?.name || adminCategories[0].name;
+          } else if (
+            titleLower.includes("blockchain") ||
+            titleLower.includes("crypto")
+          ) {
+            category =
+              adminCategories.find((cat: AdminCategory) =>
+                cat.name.toLowerCase().includes("blockchain")
+              )?.name || adminCategories[0].name;
           }
-          
+
           await db.courseDetails.create({
             data: {
               courseId: course.id,
               title: course.title,
               category: category,
-              tags: ['Beginner', 'Popular'],
+              tags: ["Beginner", "Popular"],
               instructor: {
-                name: 'CodeWithHarry',
-                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
+                name: "CodeWithHarry",
+                avatar:
+                  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
                 rating: 4.8,
-                students: 15000
+                students: 15000,
               },
               rating: 4.5,
               enrolledCount: Math.floor(Math.random() * 1000) + 100,
-              duration: '10 hours',
+              duration: "10 hours",
               price: course.price || 29.99,
               originalPrice: (course.price || 29.99) * 1.5,
               isFree: !course.price || course.price === 0,
               description: course.description,
               features: [
-                { title: 'Lifetime Access', description: 'Access to all course content forever' },
-                { title: 'Certificate', description: 'Get a certificate upon completion' },
-                { title: 'Community Support', description: 'Join our community of learners' }
-              ]
-            }
+                {
+                  title: "Lifetime Access",
+                  description: "Access to all course content forever",
+                },
+                {
+                  title: "Certificate",
+                  description: "Get a certificate upon completion",
+                },
+                {
+                  title: "Community Support",
+                  description: "Join our community of learners",
+                },
+              ],
+            },
           });
         }
       }
-      
-      return NextResponse.json({ message: 'Sample course details created successfully' });
+
+      return NextResponse.json({
+        message: "Sample course details created successfully",
+      });
     }
-    
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    console.error('Error creating sample course details:', error);
-    return NextResponse.json({ error: 'Failed to create sample course details' }, { status: 500 });
+    console.error("Error creating sample course details:", error);
+    return NextResponse.json(
+      { error: "Failed to create sample course details" },
+      { status: 500 }
+    );
   }
-} 
+}

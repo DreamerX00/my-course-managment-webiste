@@ -10,12 +10,20 @@ import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import { common, createLowlight } from 'lowlight';
-import javascript from 'highlight.js/lib/languages/javascript';
-import xml from 'highlight.js/lib/languages/xml';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor';
-import { importFileToTiptapJSON } from '@/lib/tiptap-utils';
+import { common, createLowlight } from "lowlight";
+import javascript from "highlight.js/lib/languages/javascript";
+import xml from "highlight.js/lib/languages/xml";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
+import {
+  SimpleEditor,
+  SimpleEditorHandle,
+} from "@/components/tiptap-templates/simple/simple-editor";
+import { importFileToTiptapJSON } from "@/lib/tiptap-utils";
 
 // If TypeScript still complains, add the following at the top or in a .d.ts file:
 // declare module 'lowlight/lib/core';
@@ -23,8 +31,8 @@ import { importFileToTiptapJSON } from '@/lib/tiptap-utils';
 // declare module 'highlight.js/lib/languages/xml';
 
 const lowlight = createLowlight(common);
-lowlight.register('javascript', javascript);
-lowlight.register('xml', xml);
+lowlight.register("javascript", javascript);
+lowlight.register("xml", xml);
 
 interface Chapter {
   id: string;
@@ -62,7 +70,8 @@ export default function CourseContentManagerPage() {
 
   // Add subchapter state
   const [subchapters, setSubchapters] = useState<Subchapter[]>([]);
-  const [selectedSubchapter, setSelectedSubchapter] = useState<Subchapter | null>(null);
+  const [selectedSubchapter, setSelectedSubchapter] =
+    useState<Subchapter | null>(null);
   const [newSubTitle, setNewSubTitle] = useState("");
   const [newSubContent, setNewSubContent] = useState("");
   const [subCreating, setSubCreating] = useState(false);
@@ -74,14 +83,18 @@ export default function CourseContentManagerPage() {
   const [subReorderError, setSubReorderError] = useState<string | null>(null);
 
   // Add expandedChapterId state
-  const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
+  const [expandedChapterId, setExpandedChapterId] = useState<string | null>(
+    null
+  );
 
   // Add state to hold pending content for chapter and subchapter
-  const [pendingChapterContent, setPendingChapterContent] = useState<Record<string, unknown> | null>(null);
-  const [pendingSubchapterContent, setPendingSubchapterContent] = useState<Record<string, unknown> | null>(null);
+  const [pendingChapterContent, setPendingChapterContent] =
+    useState<unknown>(null);
+  const [pendingSubchapterContent, setPendingSubchapterContent] =
+    useState<unknown>(null);
 
   // Add a ref to SimpleEditor to allow setting content
-  const simpleEditorRef = React.useRef<{ setContent: (content: Record<string, unknown>) => void } | null>(null);
+  const simpleEditorRef = React.useRef<SimpleEditorHandle | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const subChapterFileInputRef = React.useRef<HTMLInputElement>(null);
@@ -134,7 +147,9 @@ export default function CourseContentManagerPage() {
   // Update editor content when chapter changes
   useEffect(() => {
     if (editor && selectedChapter) {
-      editor.commands.setContent(selectedChapter.content || "<p>Edit chapter content here...</p>");
+      editor.commands.setContent(
+        selectedChapter.content || "<p>Edit chapter content here...</p>"
+      );
     }
   }, [selectedChapter, editor]);
 
@@ -145,23 +160,32 @@ export default function CourseContentManagerPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch(`/api/courses/${courseId}/chapters/${selectedChapter.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: JSON.stringify(pendingChapterContent) }),
-      });
+      const res = await fetch(
+        `/api/courses/${courseId}/chapters/${selectedChapter.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: JSON.stringify(pendingChapterContent),
+          }),
+        }
+      );
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: 'Failed to parse error response' }));
-        console.error('Chapter save failed:', errorData);
-        throw new Error(errorData.error || 'Failed to save chapter');
+        const errorData = await res
+          .json()
+          .catch(() => ({ error: "Failed to parse error response" }));
+        console.error("Chapter save failed:", errorData);
+        throw new Error(errorData.error || "Failed to save chapter");
       }
 
       const updated = await res.json();
-      setChapters((prev) => prev.map((ch) => (ch.id === updated.id ? updated : ch)));
+      setChapters((prev) =>
+        prev.map((ch) => (ch.id === updated.id ? updated : ch))
+      );
       setPendingChapterContent(null);
     } catch (err: unknown) {
-      console.error('An error occurred during chapter save:', err);
+      console.error("An error occurred during chapter save:", err);
     } finally {
       setSaving(false);
     }
@@ -177,7 +201,10 @@ export default function CourseContentManagerPage() {
       const res = await fetch(`/api/courses/${courseId}/chapters`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newChapterTitle, content: newChapterContent }),
+        body: JSON.stringify({
+          title: newChapterTitle,
+          content: newChapterContent,
+        }),
       });
       if (!res.ok) throw new Error("Failed to create chapter");
       const created = await res.json();
@@ -198,9 +225,12 @@ export default function CourseContentManagerPage() {
     setDeleting(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`/api/courses/${courseId}/chapters/${chapterId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/courses/${courseId}/chapters/${chapterId}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!res.ok) throw new Error("Failed to delete chapter");
       setChapters((prev) => prev.filter((ch) => ch.id !== chapterId));
       if (selectedChapter?.id === chapterId) setSelectedChapter(null);
@@ -224,13 +254,13 @@ export default function CourseContentManagerPage() {
     try {
       const chapterIds = reordered.map((ch) => ch.id);
       const res = await fetch(`/api/courses/${courseId}/chapters/reorder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chapterIds }),
       });
-      if (!res.ok) throw new Error('Failed to reorder chapters');
+      if (!res.ok) throw new Error("Failed to reorder chapters");
     } catch {
-      setReorderError('Failed to save chapter order');
+      setReorderError("Failed to save chapter order");
     } finally {
       setReorderLoading(false);
     }
@@ -243,11 +273,14 @@ export default function CourseContentManagerPage() {
     setSubCreating(true);
     setSubCreateError(null);
     try {
-      const res = await fetch(`/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newSubTitle, content: newSubContent }),
-      });
+      const res = await fetch(
+        `/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: newSubTitle, content: newSubContent }),
+        }
+      );
       if (!res.ok) throw new Error("Failed to create subchapter");
       const created = await res.json();
       setSubchapters((prev) => [...prev, created]);
@@ -267,9 +300,12 @@ export default function CourseContentManagerPage() {
     setSubDeleting(true);
     setSubDeleteError(null);
     try {
-      const res = await fetch(`/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters/${subId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters/${subId}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!res.ok) throw new Error("Failed to delete subchapter");
       setSubchapters((prev) => prev.filter((sc) => sc.id !== subId));
       if (selectedSubchapter?.id === subId) setSelectedSubchapter(null);
@@ -293,14 +329,17 @@ export default function CourseContentManagerPage() {
     try {
       const subIds = reordered.map((sc) => sc.id);
       // You need to implement this API route
-      const res = await fetch(`/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters/reorder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subchapterIds: subIds }),
-      });
-      if (!res.ok) throw new Error('Failed to reorder subchapters');
+      const res = await fetch(
+        `/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters/reorder`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subchapterIds: subIds }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to reorder subchapters");
     } catch {
-      setSubReorderError('Failed to save subchapter order');
+      setSubReorderError("Failed to save subchapter order");
     } finally {
       setSubReorderLoading(false);
     }
@@ -317,14 +356,17 @@ export default function CourseContentManagerPage() {
       TableHeader,
       CodeBlockLowlight.configure({ lowlight }),
     ],
-    content: selectedSubchapter?.content || '<p>Edit subchapter content here...</p>',
+    content:
+      selectedSubchapter?.content || "<p>Edit subchapter content here...</p>",
     editable: !!selectedSubchapter,
   });
 
   // Update subEditor content when subchapter changes
   useEffect(() => {
     if (subEditor && selectedSubchapter) {
-      subEditor.commands.setContent(selectedSubchapter.content || '<p>Edit subchapter content here...</p>');
+      subEditor.commands.setContent(
+        selectedSubchapter.content || "<p>Edit subchapter content here...</p>"
+      );
     }
   }, [selectedSubchapter, subEditor]);
 
@@ -336,25 +378,34 @@ export default function CourseContentManagerPage() {
     setSaving(true);
     try {
       if (!selectedChapter) {
-        throw new Error('No chapter selected');
+        throw new Error("No chapter selected");
       }
-      const res = await fetch(`/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters/${selectedSubchapter.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: JSON.stringify(pendingSubchapterContent) }),
-      });
-      if (!res.ok) throw new Error('Failed to save subchapter');
+      const res = await fetch(
+        `/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters/${selectedSubchapter.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: JSON.stringify(pendingSubchapterContent),
+          }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to save subchapter");
       // Refresh subchapters list
       const updated = await res.json();
-      setSubchapters((prev) => prev.map((sc) => (sc.id === updated.id ? updated : sc)));
+      setSubchapters((prev) =>
+        prev.map((sc) => (sc.id === updated.id ? updated : sc))
+      );
     } catch (err: unknown) {
-      console.error('Failed to save subchapter:', err);
+      console.error("Failed to save subchapter:", err);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file || !selectedChapter) return;
 
@@ -364,16 +415,18 @@ export default function CourseContentManagerPage() {
       // Optionally, update the editor view immediately
       simpleEditorRef.current?.setContent(jsonContent);
     } catch (error: unknown) {
-      console.error('Failed to import file:', error);
+      console.error("Failed to import file:", error);
     } finally {
       // Reset file input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
 
-  const handleSubchapterFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubchapterFileImport = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file || !selectedSubchapter) return;
 
@@ -383,11 +436,11 @@ export default function CourseContentManagerPage() {
       // Optionally, update the editor view immediately
       simpleEditorRef.current?.setContent(jsonContent);
     } catch (error: unknown) {
-      console.error('Failed to import file:', error);
+      console.error("Failed to import file:", error);
     } finally {
       // Reset file input
       if (subChapterFileInputRef.current) {
-        subChapterFileInputRef.current.value = '';
+        subChapterFileInputRef.current.value = "";
       }
     }
   };
@@ -403,12 +456,15 @@ export default function CourseContentManagerPage() {
         <div className="w-full">
           <h2 className="text-xl font-bold text-blue-900 mb-4">Chapters</h2>
           {/* New Chapter Form */}
-          <form onSubmit={handleCreateChapter} className="mb-6 space-y-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
+          <form
+            onSubmit={handleCreateChapter}
+            className="mb-6 space-y-2 bg-blue-50 p-3 rounded-lg border border-blue-100"
+          >
             <input
               className="w-full border border-black rounded px-2 py-1 text-gray-900 font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="New Chapter Title"
               value={newChapterTitle}
-              onChange={e => setNewChapterTitle(e.target.value)}
+              onChange={(e) => setNewChapterTitle(e.target.value)}
               required
               disabled={creating}
             />
@@ -416,11 +472,13 @@ export default function CourseContentManagerPage() {
               className="w-full border border-black rounded px-2 py-1 text-gray-900 font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Initial Content"
               value={newChapterContent}
-              onChange={e => setNewChapterContent(e.target.value)}
+              onChange={(e) => setNewChapterContent(e.target.value)}
               required
               disabled={creating}
             />
-            {createError && <div className="text-red-700 font-bold">{createError}</div>}
+            {createError && (
+              <div className="text-red-700 font-bold">{createError}</div>
+            )}
             <button
               type="submit"
               className="px-3 py-1 bg-blue-700 text-white rounded font-semibold w-full"
@@ -433,14 +491,24 @@ export default function CourseContentManagerPage() {
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="chapter-list">
               {(provided) => (
-                <ul className="space-y-2" ref={provided.innerRef} {...provided.droppableProps}>
+                <ul
+                  className="space-y-2"
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                >
                   {chapters.map((chapter, index) => (
-                    <Draggable key={chapter.id} draggableId={chapter.id} index={index}>
+                    <Draggable
+                      key={chapter.id}
+                      draggableId={chapter.id}
+                      index={index}
+                    >
                       {(provided, snapshot) => (
                         <li
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`flex items-center gap-2 bg-white relative ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                          className={`flex items-center gap-2 bg-white relative ${
+                            snapshot.isDragging ? "ring-2 ring-blue-400" : ""
+                          }`}
                         >
                           {/* Drag handle */}
                           <span
@@ -453,13 +521,27 @@ export default function CourseContentManagerPage() {
                           {/* Toggle arrow */}
                           <button
                             className="text-lg focus:outline-none px-1"
-                            onClick={() => setExpandedChapterId(expandedChapterId === chapter.id ? null : chapter.id)}
-                            aria-label={expandedChapterId === chapter.id ? 'Collapse' : 'Expand'}
+                            onClick={() =>
+                              setExpandedChapterId(
+                                expandedChapterId === chapter.id
+                                  ? null
+                                  : chapter.id
+                              )
+                            }
+                            aria-label={
+                              expandedChapterId === chapter.id
+                                ? "Collapse"
+                                : "Expand"
+                            }
                           >
-                            {expandedChapterId === chapter.id ? '▼' : '▶'}
+                            {expandedChapterId === chapter.id ? "▼" : "▶"}
                           </button>
                           <button
-                            className={`flex-1 text-left px-3 py-2 rounded font-semibold ${selectedChapter?.id === chapter.id ? "bg-blue-100 text-blue-900" : "bg-gray-100 text-gray-800"}`}
+                            className={`flex-1 text-left px-3 py-2 rounded font-semibold ${
+                              selectedChapter?.id === chapter.id
+                                ? "bg-blue-100 text-blue-900"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
                             onClick={() => setSelectedChapter(chapter)}
                           >
                             {chapter.title}
@@ -475,8 +557,14 @@ export default function CourseContentManagerPage() {
                           {deleteChapterId === chapter.id && (
                             <div className="absolute z-20 left-0 top-0 w-full h-full flex items-center justify-center bg-black bg-opacity-30">
                               <div className="bg-white border border-red-300 rounded p-4 flex flex-col gap-2 shadow-lg">
-                                <span className="text-sm text-red-700">Are you sure you want to delete this chapter?</span>
-                                {deleteError && <div className="text-red-700 text-xs">{deleteError}</div>}
+                                <span className="text-sm text-red-700">
+                                  Are you sure you want to delete this chapter?
+                                </span>
+                                {deleteError && (
+                                  <div className="text-red-700 text-xs">
+                                    {deleteError}
+                                  </div>
+                                )}
                                 <div className="flex gap-2">
                                   <button
                                     className="px-3 py-1 bg-gray-300 text-gray-800 rounded font-semibold"
@@ -487,7 +575,9 @@ export default function CourseContentManagerPage() {
                                   </button>
                                   <button
                                     className="px-3 py-1 bg-red-700 text-white rounded font-semibold"
-                                    onClick={() => handleDeleteChapter(chapter.id)}
+                                    onClick={() =>
+                                      handleDeleteChapter(chapter.id)
+                                    }
                                     disabled={deleting}
                                   >
                                     {deleting ? "Deleting..." : "Delete"}
@@ -505,18 +595,27 @@ export default function CourseContentManagerPage() {
               )}
             </Droppable>
           </DragDropContext>
-          {reorderLoading && <div className="text-blue-700 mt-2">Saving order...</div>}
-          {reorderError && <div className="text-red-700 mt-2">{reorderError}</div>}
+          {reorderLoading && (
+            <div className="text-blue-700 mt-2">Saving order...</div>
+          )}
+          {reorderError && (
+            <div className="text-red-700 mt-2">{reorderError}</div>
+          )}
           {/* Only show subchapters if expandedChapterId === chapter.id */}
           {expandedChapterId === selectedChapter?.id && selectedChapter && (
             <div className="mt-6">
-              <h3 className="text-lg font-bold text-blue-800 mb-2">Subchapters</h3>
-              <form onSubmit={handleCreateSubchapter} className="mb-4 space-y-2 bg-blue-50 p-2 rounded-lg border border-blue-100">
+              <h3 className="text-lg font-bold text-blue-800 mb-2">
+                Subchapters
+              </h3>
+              <form
+                onSubmit={handleCreateSubchapter}
+                className="mb-4 space-y-2 bg-blue-50 p-2 rounded-lg border border-blue-100"
+              >
                 <input
                   className="w-full border border-black rounded px-2 py-1 text-gray-900 font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="New Subchapter Title"
                   value={newSubTitle}
-                  onChange={e => setNewSubTitle(e.target.value)}
+                  onChange={(e) => setNewSubTitle(e.target.value)}
                   required
                   disabled={subCreating}
                 />
@@ -524,11 +623,13 @@ export default function CourseContentManagerPage() {
                   className="w-full border border-black rounded px-2 py-1 text-gray-900 font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Initial Content"
                   value={newSubContent}
-                  onChange={e => setNewSubContent(e.target.value)}
+                  onChange={(e) => setNewSubContent(e.target.value)}
                   required
                   disabled={subCreating}
                 />
-                {subCreateError && <div className="text-red-700 font-bold">{subCreateError}</div>}
+                {subCreateError && (
+                  <div className="text-red-700 font-bold">{subCreateError}</div>
+                )}
                 <button
                   type="submit"
                   className="px-3 py-1 bg-blue-700 text-white rounded font-semibold w-full"
@@ -540,14 +641,26 @@ export default function CourseContentManagerPage() {
               <DragDropContext onDragEnd={handleSubDragEnd}>
                 <Droppable droppableId="subchapter-list">
                   {(provided) => (
-                    <ul className="space-y-1" ref={provided.innerRef} {...provided.droppableProps}>
+                    <ul
+                      className="space-y-1"
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                    >
                       {subchapters.map((sub, idx) => (
-                        <Draggable key={sub.id} draggableId={sub.id} index={idx}>
+                        <Draggable
+                          key={sub.id}
+                          draggableId={sub.id}
+                          index={idx}
+                        >
                           {(provided, snapshot) => (
                             <li
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className={`flex items-center gap-2 bg-white relative ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                              className={`flex items-center gap-2 bg-white relative ${
+                                snapshot.isDragging
+                                  ? "ring-2 ring-blue-400"
+                                  : ""
+                              }`}
                             >
                               <span
                                 {...provided.dragHandleProps}
@@ -557,7 +670,11 @@ export default function CourseContentManagerPage() {
                                 ≡
                               </span>
                               <button
-                                className={`flex-1 text-left px-2 py-1 rounded font-semibold ${selectedSubchapter?.id === sub.id ? "bg-blue-50 text-blue-900" : "bg-gray-50 text-gray-800"}`}
+                                className={`flex-1 text-left px-2 py-1 rounded font-semibold ${
+                                  selectedSubchapter?.id === sub.id
+                                    ? "bg-blue-50 text-blue-900"
+                                    : "bg-gray-50 text-gray-800"
+                                }`}
                                 onClick={() => setSelectedSubchapter(sub)}
                               >
                                 {sub.title}
@@ -572,8 +689,15 @@ export default function CourseContentManagerPage() {
                               {deleteSubId === sub.id && (
                                 <div className="absolute z-20 left-0 top-0 w-full h-full flex items-center justify-center bg-black bg-opacity-30">
                                   <div className="bg-white border border-red-300 rounded p-4 flex flex-col gap-2 shadow-lg">
-                                    <span className="text-sm text-red-700">Are you sure you want to delete this subchapter?</span>
-                                    {subDeleteError && <div className="text-red-700 text-xs">{subDeleteError}</div>}
+                                    <span className="text-sm text-red-700">
+                                      Are you sure you want to delete this
+                                      subchapter?
+                                    </span>
+                                    {subDeleteError && (
+                                      <div className="text-red-700 text-xs">
+                                        {subDeleteError}
+                                      </div>
+                                    )}
                                     <div className="flex gap-2">
                                       <button
                                         className="px-3 py-1 bg-gray-300 text-gray-800 rounded font-semibold"
@@ -584,7 +708,9 @@ export default function CourseContentManagerPage() {
                                       </button>
                                       <button
                                         className="px-3 py-1 bg-red-700 text-white rounded font-semibold"
-                                        onClick={() => handleDeleteSubchapter(sub.id)}
+                                        onClick={() =>
+                                          handleDeleteSubchapter(sub.id)
+                                        }
                                         disabled={subDeleting}
                                       >
                                         {subDeleting ? "Deleting..." : "Delete"}
@@ -602,8 +728,14 @@ export default function CourseContentManagerPage() {
                   )}
                 </Droppable>
               </DragDropContext>
-              {subReorderLoading && <div className="text-blue-700 mt-2">Saving subchapter order...</div>}
-              {subReorderError && <div className="text-red-700 mt-2">{subReorderError}</div>}
+              {subReorderLoading && (
+                <div className="text-blue-700 mt-2">
+                  Saving subchapter order...
+                </div>
+              )}
+              {subReorderError && (
+                <div className="text-red-700 mt-2">{subReorderError}</div>
+              )}
             </div>
           )}
         </div>
@@ -613,14 +745,16 @@ export default function CourseContentManagerPage() {
             <>
               <div className="grow flex flex-col">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-gray-800">Chapter Content</h3>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Chapter Content
+                  </h3>
                   <div className="flex items-center gap-2">
                     <button
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
                       onClick={handleSave}
                       disabled={saving}
                     >
-                      {saving ? 'Saving...' : 'Save'}
+                      {saving ? "Saving..." : "Save"}
                     </button>
                     <button
                       className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold border border-gray-300 hover:bg-gray-200 transition-colors"
@@ -651,14 +785,16 @@ export default function CourseContentManagerPage() {
             <>
               <div className="grow flex flex-col">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-gray-800">Subchapter Content</h3>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Subchapter Content
+                  </h3>
                   <div className="flex items-center gap-2">
                     <button
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
                       onClick={handleSaveSubchapter}
                       disabled={saving}
                     >
-                      {saving ? 'Saving...' : 'Save'}
+                      {saving ? "Saving..." : "Save"}
                     </button>
                     <button
                       className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold border border-gray-300 hover:bg-gray-200 transition-colors"
@@ -694,7 +830,7 @@ export default function CourseContentManagerPage() {
 // Add this utility function at the top or near the handlers
 function parseContent(content: unknown): unknown {
   if (!content) return undefined;
-  if (typeof content === 'string') {
+  if (typeof content === "string") {
     try {
       return JSON.parse(content);
     } catch {
@@ -703,4 +839,4 @@ function parseContent(content: unknown): unknown {
     }
   }
   return content;
-} 
+}

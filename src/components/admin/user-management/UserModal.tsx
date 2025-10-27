@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { UserRole } from '@prisma/client';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from "react";
+import { UserRole } from "@prisma/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Calendar,
   BookOpen,
@@ -18,8 +18,8 @@ import {
   MessageSquare,
   UserPlus,
   UserMinus,
-} from 'lucide-react';
-import Image from 'next/image';
+} from "lucide-react";
+import Image from "next/image";
 
 export type User = {
   id: string;
@@ -41,37 +41,42 @@ interface UserModalProps {
 }
 
 const roleColors: Record<UserRole, string> = {
-  OWNER: 'bg-red-500',
-  ADMIN: 'bg-green-500',
-  INSTRUCTOR: 'bg-blue-500',
-  STUDENT: 'bg-purple-500',
-  GUEST: 'bg-yellow-500',
+  OWNER: "bg-red-500",
+  ADMIN: "bg-green-500",
+  INSTRUCTOR: "bg-blue-500",
+  STUDENT: "bg-purple-500",
+  GUEST: "bg-yellow-500",
 };
 
-export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUserUpdate'>) {
+export function UserModal({
+  user,
+  onClose,
+  onUserUpdate,
+  isAdmin,
+}: UserModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAction = async (action: string) => {
     setIsLoading(true);
     try {
       switch (action) {
-        case 'message':
+        case "message":
           // TODO: Implement messaging
-          alert('Messaging feature coming soon');
+          alert("Messaging feature coming soon");
           break;
-        case 'assign-course':
+        case "assign-course":
           // TODO: Implement course assignment
-          alert('Course assignment feature coming soon');
+          alert("Course assignment feature coming soon");
           break;
-        case 'remove-user':
+        case "remove-user":
           if (confirm(`Are you sure you want to remove ${user.name}?`)) {
             // TODO: Implement user removal
-            alert('User removal feature coming soon');
+            alert("User removal feature coming soon");
           }
           break;
       }
     } catch (error) {
-      console.error('Action failed:', error);
+      console.error("Action failed:", error);
     } finally {
       setIsLoading(false);
     }
@@ -86,8 +91,8 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <Image
-              src={user.image || '/default-avatar.png'}
-              alt={user.name || 'User Avatar'}
+              src={user.image || "/default-avatar.png"}
+              alt={user.name || "User Avatar"}
               width={48}
               height={48}
               className="rounded-full"
@@ -113,12 +118,16 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant={user.status === 'ACTIVE' ? 'default' : 'destructive'}>
+                  <Badge
+                    variant={
+                      user.status === "ACTIVE" ? "default" : "destructive"
+                    }
+                  >
                     {user.status}
                   </Badge>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Calendar className="h-4 w-4" />
                 <span>Joined: {joinDate.toLocaleDateString()}</span>
@@ -132,7 +141,10 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
               {user.lastActive && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <TrendingUp className="h-4 w-4" />
-                  <span>Last Active: {new Date(user.lastActive).toLocaleDateString()}</span>
+                  <span>
+                    Last Active:{" "}
+                    {new Date(user.lastActive).toLocaleDateString()}
+                  </span>
                 </div>
               )}
             </CardContent>
@@ -148,16 +160,18 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">{user.coursesEnrolled}</span>
+                <span className="text-2xl font-bold">
+                  {user.coursesEnrolled}
+                </span>
                 <span className="text-gray-600">courses enrolled</span>
               </div>
-              
+
               {user.role === UserRole.STUDENT && (
                 <div className="mt-4">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleAction('assign-course')}
+                    onClick={() => handleAction("assign-course")}
                     disabled={isLoading}
                   >
                     <UserPlus className="mr-2 h-4 w-4" />
@@ -171,7 +185,7 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleAction('view-courses')}
+                    onClick={() => handleAction("view-courses")}
                     disabled={isLoading}
                   >
                     <BookOpen className="mr-2 h-4 w-4" />
@@ -191,7 +205,7 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => handleAction('message')}
+                  onClick={() => handleAction("message")}
                   disabled={isLoading}
                 >
                   <MessageSquare className="mr-2 h-4 w-4" />
@@ -201,7 +215,7 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
                 {user.role === UserRole.STUDENT && (
                   <Button
                     variant="outline"
-                    onClick={() => handleAction('assign-course')}
+                    onClick={() => handleAction("assign-course")}
                     disabled={isLoading}
                   >
                     <UserPlus className="mr-2 h-4 w-4" />
@@ -212,7 +226,7 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
                 {isAdmin && user.role !== UserRole.OWNER && (
                   <Button
                     variant="destructive"
-                    onClick={() => handleAction('remove-user')}
+                    onClick={() => handleAction("remove-user")}
                     disabled={isLoading}
                   >
                     <UserMinus className="mr-2 h-4 w-4" />
@@ -232,4 +246,4 @@ export function UserModal({ user, onClose, isAdmin }: Omit<UserModalProps, 'onUs
       </DialogContent>
     </Dialog>
   );
-} 
+}

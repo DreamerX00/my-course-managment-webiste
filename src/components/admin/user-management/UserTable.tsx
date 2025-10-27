@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   ColumnDef,
@@ -8,7 +8,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 import {
   Table,
   TableBody,
@@ -16,11 +16,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { UserRole } from '@prisma/client';
+} from "@/components/ui/table";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { UserRole } from "@prisma/client";
 import {
   ArrowUpDown,
   MoreHorizontal,
@@ -30,7 +30,7 @@ import {
   UserMinus,
   Calendar,
   BookOpen,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,10 +38,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
-import { UserModal } from './UserModal';
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
+import { UserModal } from "./UserModal";
 
 export type User = {
   id: string;
@@ -61,15 +61,17 @@ interface UserTableProps {
   selectedUsers: string[];
   onSelectionChange: (userIds: string[]) => void;
   onUserUpdate: (user: User) => void;
+  onUserDelete?: (userId: string) => void;
+  onRefresh?: () => void;
   isAdmin: boolean;
 }
 
 const roleColors: Record<UserRole, string> = {
-  OWNER: 'bg-red-500',
-  ADMIN: 'bg-green-500',
-  INSTRUCTOR: 'bg-blue-500',
-  STUDENT: 'bg-purple-500',
-  GUEST: 'bg-yellow-500',
+  OWNER: "bg-red-500",
+  ADMIN: "bg-green-500",
+  INSTRUCTOR: "bg-blue-500",
+  STUDENT: "bg-purple-500",
+  GUEST: "bg-yellow-500",
 };
 
 export function UserTable({
@@ -86,7 +88,7 @@ export function UserTable({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(users.map(user => user.id));
+      onSelectionChange(users.map((user) => user.id));
     } else {
       onSelectionChange([]);
     }
@@ -96,7 +98,7 @@ export function UserTable({
     if (checked) {
       onSelectionChange([...selectedUsers, userId]);
     } else {
-      onSelectionChange(selectedUsers.filter(id => id !== userId));
+      onSelectionChange(selectedUsers.filter((id) => id !== userId));
     }
   };
 
@@ -107,7 +109,7 @@ export function UserTable({
 
   const columns: ColumnDef<User>[] = [
     {
-      id: 'select',
+      id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
@@ -118,7 +120,9 @@ export function UserTable({
       cell: ({ row }) => (
         <Checkbox
           checked={selectedUsers.includes(row.original.id)}
-          onCheckedChange={(value) => handleSelectUser(row.original.id, !!value)}
+          onCheckedChange={(value) =>
+            handleSelectUser(row.original.id, !!value)
+          }
           aria-label="Select row"
         />
       ),
@@ -126,15 +130,15 @@ export function UserTable({
       enableHiding: false,
     },
     {
-      accessorKey: 'name',
-      header: 'User',
+      accessorKey: "name",
+      header: "User",
       cell: ({ row }) => {
         const user = row.original;
         return (
           <div className="flex items-center gap-3">
             <Image
-              src={user.image || '/default-avatar.png'}
-              alt={user.name || 'User Avatar'}
+              src={user.image || "/default-avatar.png"}
+              alt={user.name || "User Avatar"}
               width={40}
               height={40}
               className="rounded-full"
@@ -148,30 +152,28 @@ export function UserTable({
       },
     },
     {
-      accessorKey: 'role',
-      header: 'Role',
+      accessorKey: "role",
+      header: "Role",
       cell: ({ row }) => {
-        const role = row.getValue('role') as UserRole;
+        const role = row.getValue("role") as UserRole;
         return (
-          <Badge className={`${roleColors[role]} text-white`}>
-            {role}
-          </Badge>
+          <Badge className={`${roleColors[role]} text-white`}>{role}</Badge>
         );
       },
     },
     {
-      accessorKey: 'coursesEnrolled',
+      accessorKey: "coursesEnrolled",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Courses Enrolled
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
       cell: ({ row }) => {
-        const count = row.getValue('coursesEnrolled') as number;
+        const count = row.getValue("coursesEnrolled") as number;
         return (
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-gray-400" />
@@ -181,18 +183,18 @@ export function UserTable({
       },
     },
     {
-      accessorKey: 'createdAt',
+      accessorKey: "createdAt",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Join Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
       cell: ({ row }) => {
-        const date = new Date(row.getValue('createdAt'));
+        const date = new Date(row.getValue("createdAt"));
         const isRecent = Date.now() - date.getTime() < 7 * 24 * 60 * 60 * 1000; // 7 days
         return (
           <div className="flex items-center gap-2">
@@ -208,7 +210,7 @@ export function UserTable({
       },
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({ row }) => {
         const user = row.original;
         return (
@@ -293,7 +295,10 @@ export function UserTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                     <span className="ml-2">Loading users...</span>
@@ -304,7 +309,7 @@ export function UserTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -318,7 +323,10 @@ export function UserTable({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No users found.
                 </TableCell>
               </TableRow>
@@ -365,4 +373,4 @@ export function UserTable({
       )}
     </div>
   );
-} 
+}

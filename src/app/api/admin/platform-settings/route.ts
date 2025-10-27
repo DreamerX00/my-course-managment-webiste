@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-options';
-import { db } from '@/lib/db';
-import { UserRole } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { db } from "@/lib/db";
+import { UserRole } from "@prisma/client";
+
+// Force dynamic rendering for Next.js 15+
+export const dynamic = "force-dynamic";
 
 // Get platform settings
 export async function GET() {
@@ -10,23 +13,23 @@ export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (session?.user?.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     let settings = await db.platformSettings.findUnique({
-      where: { id: 'global' },
+      where: { id: "global" },
     });
 
     if (!settings) {
       settings = await db.platformSettings.create({
-        data: { id: 'global' },
+        data: { id: "global" },
       });
     }
 
     return NextResponse.json(settings);
   } catch (error) {
-    console.error('[PLATFORM_SETTINGS_GET]', error);
-    return new NextResponse('Internal Error', { status: 500 });
+    console.error("[PLATFORM_SETTINGS_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }
 
@@ -36,7 +39,7 @@ export async function PATCH(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (session?.user?.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -48,7 +51,7 @@ export async function PATCH(req: NextRequest) {
     } = body;
 
     const updatedSettings = await db.platformSettings.update({
-      where: { id: 'global' },
+      where: { id: "global" },
       data: {
         enableTwoFactorAuth,
         disablePublicSignups,
@@ -59,7 +62,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json(updatedSettings);
   } catch (error) {
-    console.error('[PLATFORM_SETTINGS_PATCH]', error);
-    return new NextResponse('Internal Error', { status: 500 });
+    console.error("[PLATFORM_SETTINGS_PATCH]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
-} 
+}

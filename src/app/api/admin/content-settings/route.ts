@@ -1,33 +1,61 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from '@/lib/auth-options'
-import { db } from "@/lib/db"
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { db } from "@/lib/db";
+import { contentSettingsSchema } from "@/lib/validations";
+import { validateRequest } from "@/lib/validation-helpers";
+
+// Force dynamic rendering for Next.js 15+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
     // Check authentication and admin access
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userRole = session.user.role
+    const userRole = session.user.role;
     if (userRole !== "ADMIN" && userRole !== "OWNER") {
-      return NextResponse.json({ error: "Forbidden - Admin or Owner access required" }, { status: 403 })
+      return NextResponse.json(
+        { error: "Forbidden - Admin or Owner access required" },
+        { status: 403 }
+      );
     }
 
     // Get current content settings from database
-    const settings = await db.contentSettings.findFirst()
-    
+    const settings = await db.contentSettings.findFirst();
+
     if (!settings) {
       // Return default settings if none exist
       const defaultSettings = {
         filterCategories: [
-          { id: "web-dev", name: "Web Development", color: "#3B82F6", order: 1 },
-          { id: "data-science", name: "Data Science", color: "#10B981", order: 2 },
-          { id: "ai-ml", name: "AI & Machine Learning", color: "#8B5CF6", order: 3 },
-          { id: "mobile-dev", name: "Mobile Development", color: "#F59E0B", order: 4 },
-          { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 }
+          {
+            id: "web-dev",
+            name: "Web Development",
+            color: "#3B82F6",
+            order: 1,
+          },
+          {
+            id: "data-science",
+            name: "Data Science",
+            color: "#10B981",
+            order: 2,
+          },
+          {
+            id: "ai-ml",
+            name: "AI & Machine Learning",
+            color: "#8B5CF6",
+            order: 3,
+          },
+          {
+            id: "mobile-dev",
+            name: "Mobile Development",
+            color: "#F59E0B",
+            order: 4,
+          },
+          { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 },
         ],
         featuredCourses: [],
         layoutOptions: {
@@ -35,44 +63,59 @@ export async function GET() {
           showFiltersSidebar: true,
           showSortingDropdown: true,
           showTrendingSection: true,
-          showRecentlyAdded: true
-        }
-      }
-      return NextResponse.json(defaultSettings)
+          showRecentlyAdded: true,
+        },
+      };
+      return NextResponse.json(defaultSettings);
     }
 
-    return NextResponse.json(settings.settings)
+    return NextResponse.json(settings.settings);
   } catch (error) {
-    console.error('Error fetching content settings:', error)
+    console.error("Error fetching content settings:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch content settings' }, 
+      { error: "Failed to fetch content settings" },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     // Check authentication and admin access
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userRole = session.user.role
+    const userRole = session.user.role;
     if (userRole !== "ADMIN" && userRole !== "OWNER") {
-      return NextResponse.json({ error: "Forbidden - Admin or Owner access required" }, { status: 403 })
+      return NextResponse.json(
+        { error: "Forbidden - Admin or Owner access required" },
+        { status: 403 }
+      );
     }
 
-    const body = await req.json()
-    const { filterCategories, featuredCourses, layoutOptions } = body
+    const body = await req.json();
+
+    // Validate request body
+    const validation = await validateRequest(body, contentSettingsSchema);
+    if (!validation.success) {
+      return validation.error;
+    }
+
+    const { filterCategories, featuredCourses, layoutOptions } =
+      validation.data;
 
     // Validate featured courses (must be exactly 4 if provided)
-    if (featuredCourses && featuredCourses.length > 0 && featuredCourses.length !== 4) {
+    if (
+      featuredCourses &&
+      featuredCourses.length > 0 &&
+      featuredCourses.length !== 4
+    ) {
       return NextResponse.json(
-        { error: "Featured courses must be exactly 4 if provided" }, 
+        { error: "Featured courses must be exactly 4 if provided" },
         { status: 400 }
-      )
+      );
     }
 
     // Upsert content settings
@@ -82,26 +125,26 @@ export async function POST(req: NextRequest) {
         settings: {
           filterCategories: filterCategories || [],
           featuredCourses: featuredCourses || [],
-          layoutOptions: layoutOptions || {}
+          layoutOptions: layoutOptions || {},
         },
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       create: {
         id: "main",
         settings: {
           filterCategories: filterCategories || [],
           featuredCourses: featuredCourses || [],
-          layoutOptions: layoutOptions || {}
-        }
-      }
-    })
+          layoutOptions: layoutOptions || {},
+        },
+      },
+    });
 
-    return NextResponse.json(settings.settings)
+    return NextResponse.json(settings.settings);
   } catch (error) {
-    console.error('Error updating content settings:', error)
+    console.error("Error updating content settings:", error);
     return NextResponse.json(
-      { error: 'Failed to update content settings' }, 
+      { error: "Failed to update content settings" },
       { status: 500 }
-    )
+    );
   }
-} 
+}

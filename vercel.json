@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "crons": []
+}
