@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
       return validation.error;
     }
 
-    const { title, description, price, category, level } = validation.data;
+    const { title, description, price, category } = validation.data;
     const { imageUrl } = body; // Optional field not in base schema
 
     // Create the course

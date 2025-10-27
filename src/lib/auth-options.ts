@@ -1,9 +1,8 @@
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 import { Adapter } from "next-auth/adapters";
-import { UserRole } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db) as Adapter,
@@ -15,9 +14,9 @@ export const authOptions: NextAuthOptions = {
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
-        }
-      }
+          response_type: "code",
+        },
+      },
     }),
   ],
   session: {
@@ -32,7 +31,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email || "";
         token.name = user.name || "";
         token.picture = user.image || "";
-        
+
         // Fetch user role from database
         const dbUser = await db.user.findUnique({
           where: { id: user.id },
@@ -40,7 +39,7 @@ export const authOptions: NextAuthOptions = {
         });
         token.role = dbUser?.role || "STUDENT";
       }
-      
+
       // Update session (e.g., when user updates profile)
       if (trigger === "update") {
         const dbUser = await db.user.findUnique({
@@ -53,7 +52,7 @@ export const authOptions: NextAuthOptions = {
           token.picture = dbUser.image || "";
         }
       }
-      
+
       return token;
     },
     async session({ session, token }) {
@@ -87,7 +86,7 @@ export const authOptions: NextAuthOptions = {
           console.error("Error in signIn callback:", error);
         }
       }
-      
+
       return true;
     },
   },

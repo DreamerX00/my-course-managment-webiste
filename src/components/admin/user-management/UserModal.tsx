@@ -36,7 +36,6 @@ export type User = {
 interface UserModalProps {
   user: User;
   onClose: () => void;
-  onUserUpdate: (user: User) => void;
   isAdmin: boolean;
 }
 
@@ -48,12 +47,7 @@ const roleColors: Record<UserRole, string> = {
   GUEST: "bg-yellow-500",
 };
 
-export function UserModal({
-  user,
-  onClose,
-  onUserUpdate,
-  isAdmin,
-}: UserModalProps) {
+export function UserModal({ user, onClose, isAdmin }: UserModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAction = async (action: string) => {

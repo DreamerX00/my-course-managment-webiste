@@ -366,8 +366,8 @@ export function UserTable({
           onClose={() => {
             setShowUserModal(false);
             setSelectedUser(null);
+            onUserUpdate(selectedUser);
           }}
-          onUserUpdate={onUserUpdate}
           isAdmin={isAdmin}
         />
       )}
