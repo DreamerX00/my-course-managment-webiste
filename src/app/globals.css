@@ -1,3 +1,47 @@
+/* Shimmer effect for animated gradient text */
+.shimmer {
+  background: linear-gradient(90deg, #f3ec78 25%, #af4261 50%, #f3ec78 75%);
+  background-size: 200% 100%;
+  animation: shimmer-move 2.5s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes shimmer-move {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Animated dashboard stat card */
+.dashboard-stat-card {
+  @apply rounded-xl shadow-lg bg-white dark:bg-gray-900 p-6 flex flex-col items-center justify-center transition-transform duration-300;
+}
+.dashboard-stat-card-animate {
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Animated gradient text for section headers */
+.animate-gradient-move {
+  background-size: 200% 200%;
+  animation: gradient-move 3s linear infinite;
+}
+
+@keyframes gradient-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));

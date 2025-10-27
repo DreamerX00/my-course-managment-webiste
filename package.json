@@ -19,6 +19,7 @@
     "@floating-ui/react": "^0.27.12",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.1.1",
+    "@icons-pack/react-simple-icons": "^13.8.0",
     "@prisma/client": "^6.18.0",
     "@prisma/extension-accelerate": "^2.0.2",
     "@radix-ui/react-avatar": "^1.1.10",

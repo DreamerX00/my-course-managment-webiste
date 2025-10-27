@@ -1,23 +1,126 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { HERO_CONTENT } from "@/lib/constants"
-import { useState } from "react"
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { HERO_CONTENT } from "@/lib/constants";
+import { useState } from "react";
+import { Typewriter } from "@/components/ui/Typewriter";
+
+const LEARNING_QUOTES = [
+  "Learn Programming The Fun Way",
+  "Learning never exhausts the mind.",
+  "Education is the passport to the future.",
+  "Knowledge is power.",
+  "Curiosity is the wick in the candle of learning.",
+  "Mistakes are proof you are trying.",
+  "Every expert was once a beginner.",
+  "Learning is a treasure that will follow its owner everywhere.",
+  "The beautiful thing about learning is nobody can take it away from you.",
+  "Success is the sum of small efforts, repeated day in and day out.",
+  "Dream big, work hard, learn always.",
+  "Never stop learning, because life never stops teaching.",
+  "The more you learn, the more you earn.",
+  "Learning is a journey, not a destination.",
+  "Education is the most powerful weapon you can use to change the world.",
+  "Learning is the eye of the mind.",
+  "To teach is to learn twice.",
+  "Learning is the key to unlock the golden door of freedom.",
+  "A mind that is stretched by a new experience can never go back to its old dimensions.",
+  "The capacity to learn is a gift; the ability to learn is a skill; the willingness to learn is a choice.",
+  "Learning is not attained by chance, it must be sought for with ardor and attended to with diligence.",
+  "The roots of education are bitter, but the fruit is sweet.",
+  "Learning is the only thing the mind never exhausts, never fears, and never regrets.",
+  "The expert in anything was once a beginner.",
+  "Learning is a lifelong process.",
+  "Education breeds confidence. Confidence breeds hope. Hope breeds peace.",
+  "Learning is the stepping stone to wisdom.",
+  "The best way to predict your future is to create it.",
+  "Learning is the beginning of wealth.",
+  "The mind is not a vessel to be filled, but a fire to be kindled.",
+  "Learning is the bridge between confusion and clarity.",
+  "Education is not preparation for life; education is life itself.",
+  "Learning is the art of discovering what you already know.",
+  "The more that you read, the more things you will know.",
+  "Learning is the path to personal growth.",
+  "Education is the key to success in life.",
+  "Learning is the foundation of progress.",
+  "The best learning happens when you least expect it.",
+  "Learning is the adventure of a lifetime.",
+  "Education opens doors you never knew existed.",
+  "Learning is the engine of achievement.",
+  "The journey of a thousand miles begins with a single step.",
+  "Learning is the passport to endless possibilities.",
+  "Education is the movement from darkness to light.",
+  "Learning is the greatest adventure.",
+  "The more you know, the more you realize you don't know.",
+  "Learning is the key to unlocking your potential.",
+  "Education is the foundation upon which we build our future.",
+  "Learning is the secret to a happy life.",
+  "The best investment you can make is in yourself.",
+  "Learning is the antidote to ignorance.",
+  "Education is the light in the darkness.",
+  "Learning is the seed of innovation.",
+  "The mind once enlightened cannot again become dark.",
+  "Learning is the ladder to success.",
+  "Education is the key to unlock the doors of opportunity.",
+  "Learning is the compass that guides us.",
+  "The more you learn, the more places you'll go.",
+  "Education is the foundation of freedom.",
+  "Learning is the spark that ignites change.",
+  "The best way to learn is to do.",
+  "Education is the anchor in the sea of life.",
+  "Learning is the light that guides us through the darkness.",
+  "Education is the key to a better tomorrow.",
+  "Learning is the foundation of happiness.",
+  "The more you learn, the more you grow.",
+  "Education is the key to unlock the golden door of freedom.",
+  "Learning is the foundation of creativity.",
+  "Education is the key to unlock the treasures of the mind.",
+  "Learning is the foundation of leadership.",
+  "Education is the key to unlock the doors of opportunity.",
+  "Learning is the foundation of innovation.",
+  "Education is the key to unlock the doors of success.",
+  "Learning is the foundation of greatness.",
+  "Education is the key to unlock the doors of wisdom.",
+  "Learning is the foundation of excellence.",
+  "Education is the key to unlock the doors of knowledge.",
+  "Learning is the foundation of achievement.",
+  "Education is the key to unlock the doors of understanding.",
+  "Learning is the foundation of fulfillment.",
+  "Education is the key to unlock the doors of possibility.",
+  "Learning is the foundation of joy.",
+  "Education is the key to unlock the doors of discovery.",
+  "Learning is the foundation of hope.",
+  "Education is the key to unlock the doors of imagination.",
+  "Learning is the foundation of courage.",
+  "Education is the key to unlock the doors of adventure.",
+  "Learning is the foundation of resilience.",
+  "Education is the key to unlock the doors of dreams.",
+  "Learning is the foundation of perseverance.",
+  "Education is the key to unlock the doors of ambition.",
+  "Learning is the foundation of determination.",
+  "Education is the key to unlock the doors of potential.",
+  "Learning is the foundation of self-discovery.",
+  "Education is the key to unlock the doors of self-improvement.",
+  "Learning is the foundation of self-empowerment.",
+  "Education is the key to unlock the doors of self-actualization.",
+  "Learning is the foundation of self-mastery.",
+  "Education is the key to unlock the doors of self-expression.",
+];
 
 export function Hero() {
-  const [coords, setCoords] = useState({ x: 0, y: 0 })
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    setCoords({ x, y })
-  }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setCoords({ x, y });
+  };
 
   return (
-    <section 
+    <section
       onMouseMove={handleMouseMove}
       className="relative overflow-hidden bg-gradient-to-br from-blue-200 via-pink-100 to-yellow-100 py-16 sm:py-24 lg:py-32 min-h-[calc(100vh-80px)] flex items-center"
     >
@@ -73,6 +176,18 @@ export function Hero() {
       </motion.div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+        {/* Floating Mascot */}
+        <motion.div
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 1, delay: 0.3, type: "spring" }}
+          className="mx-auto mb-2 flex justify-center"
+        >
+          <span className="text-5xl md:text-6xl drop-shadow-lg animate-bounce-slow">
+            🦉
+          </span>
+        </motion.div>
+
         <motion.h1
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -80,7 +195,7 @@ export function Hero() {
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight text-blue-900 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 drop-shadow-lg"
           whileHover={{
             scale: 1.02,
-            transition: { duration: 0.3 }
+            transition: { duration: 0.3 },
           }}
         >
           <motion.span
@@ -90,9 +205,12 @@ export function Hero() {
           >
             🎓
           </motion.span>
-          <span className="leading-tight bg-gradient-to-r from-blue-900 via-purple-800 to-pink-800 bg-clip-text text-transparent">
-            {HERO_CONTENT.title.replace('👨‍💻✨', '')}
-          </span>
+          <Typewriter
+            texts={LEARNING_QUOTES}
+            speed={40}
+            pause={1600}
+            className="leading-tight bg-gradient-to-r from-blue-900 via-purple-800 to-pink-800 bg-clip-text text-transparent"
+          />
           <motion.span
             whileHover={{ rotate: -10, scale: 1.1 }}
             transition={{ duration: 0.3 }}
@@ -101,7 +219,7 @@ export function Hero() {
             📚
           </motion.span>
         </motion.h1>
-        
+
         <motion.p
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -109,65 +227,48 @@ export function Hero() {
           className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl leading-relaxed text-pink-700 max-w-3xl mx-auto font-bold px-4 drop-shadow-md"
           whileHover={{
             scale: 1.01,
-            transition: { duration: 0.3 }
+            transition: { duration: 0.3 },
           }}
         >
-          {HERO_CONTENT.subtitle.replace('🚀', '')} <span className="inline-block">🚀</span>
+          {HERO_CONTENT.subtitle.replace("🚀", "")}{" "}
+          <span className="inline-block">🚀</span>
         </motion.p>
-        
+
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-          className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4"
+          transition={{ delay: 0.7, duration: 0.7 }}
+          className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <motion.div
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+          <motion.a
+            href="#courses"
+            whileHover={{ scale: 1.08, boxShadow: "0 0 24px #fbbf24" }}
+            whileTap={{ scale: 0.97 }}
+            className="px-8 py-4 rounded-xl bg-gradient-to-r from-yellow-400 to-pink-400 text-white font-bold text-lg shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-200 flex items-center gap-2 animate-glow"
           >
-            <Button 
-              asChild 
-              size="lg" 
-              className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-pink-400 text-white font-bold shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-300 flex items-center gap-2 text-base sm:text-lg relative overflow-hidden group"
-            >
-              <Link href="/courses">
-                <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-pink-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: `linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%)` }}
-                />
-                <span className="relative z-10">
-                  {HERO_CONTENT.cta1} 
-                  <span className="text-xl sm:text-2xl ml-2">✨</span>
-                </span>
-              </Link>
-            </Button>
-          </motion.div>
-          
-          <motion.div
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+            <span>Browse Courses ✨</span>
+          </motion.a>
+          <motion.a
+            href="#community"
+            whileHover={{ scale: 1.08, boxShadow: "0 0 24px #60a5fa" }}
+            whileTap={{ scale: 0.97 }}
+            className="px-8 py-4 rounded-xl bg-white text-blue-800 font-bold text-lg shadow-lg border border-blue-200 hover:bg-blue-50 transition-all duration-200 flex items-center gap-2 animate-glow"
           >
-            <Button 
-              asChild 
-              size="lg" 
-              variant="outline" 
-              className="w-full sm:w-auto text-blue-900 border-blue-900 hover:bg-blue-100/40 transition-all duration-300 shadow-lg font-bold flex items-center gap-2 text-base sm:text-lg relative overflow-hidden group"
-            >
-              <Link href="/community">
-                <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-blue-100 to-purple-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                />
-                <span className="relative z-10">
-                  {HERO_CONTENT.cta2} 
-                  <span className="text-xl sm:text-2xl ml-2">🌈</span>
-                </span>
-              </Link>
-            </Button>
-          </motion.div>
+            <span>Join Community 🌈</span>
+          </motion.a>
         </motion.div>
-        
+
+        {/* Scroll Down Indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2, duration: 0.7 }}
+          className="absolute left-1/2 -translate-x-1/2 bottom-8 flex flex-col items-center"
+        >
+          <span className="text-2xl text-blue-700 animate-bounce">↓</span>
+          <span className="text-xs text-blue-700 mt-1">Scroll Down</span>
+        </motion.div>
+
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 0.9 }}
@@ -175,12 +276,12 @@ export function Hero() {
           className="mt-8 sm:mt-12 text-lg sm:text-xl md:text-2xl font-bold text-blue-900 drop-shadow-lg px-4"
           whileHover={{
             scale: 1.02,
-            transition: { duration: 0.3 }
+            transition: { duration: 0.3 },
           }}
         >
           <motion.span
             animate={{
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
             }}
             transition={{
               duration: 3,
@@ -193,7 +294,21 @@ export function Hero() {
           </motion.span>
           <span className="inline-block ml-2">🌟</span>
         </motion.div>
+
+        {/* Typewriter Effect for Learning Quotes */}
+        <div className="mt-12 sm:mt-16">
+          <Typewriter
+            words={LEARNING_QUOTES}
+            loop={true}
+            cursor
+            cursorStyle="_"
+            typeSpeed={70}
+            deleteSpeed={50}
+            delaySpeed={1000}
+            className="text-lg sm:text-xl md:text-2xl font-semibold text-blue-800"
+          />
+        </div>
       </div>
     </section>
-  )
-} 
+  );
+}
