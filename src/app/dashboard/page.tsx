@@ -66,7 +66,7 @@ export default function DashboardPage() {
             {initials}
           </div>
         )}
-        className="dashboard-stat-card dashboard-stat-card-animate"
+        className={"dashboard-stat-card dashboard-stat-card-animate"}
       </motion.div>
 
       {/* Animated Gradient Header */}

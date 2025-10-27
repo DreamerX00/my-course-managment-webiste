@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { HERO_CONTENT } from "@/lib/constants";
 import { useState } from "react";
 import { Typewriter } from "@/components/ui/Typewriter";
@@ -122,7 +120,7 @@ export function Hero() {
   return (
     <section
       onMouseMove={handleMouseMove}
-      className="relative overflow-hidden bg-gradient-to-br from-blue-200 via-pink-100 to-yellow-100 py-16 sm:py-24 lg:py-32 min-h-[calc(100vh-80px)] flex items-center"
+      className="relative overflow-hidden bg-linear-to-br from-blue-200 via-pink-100 to-yellow-100 py-16 sm:py-24 lg:py-32 min-h-[calc(100vh-80px)] flex items-center"
     >
       {/* Animated Background with Mouse Response */}
       <motion.div
@@ -209,7 +207,7 @@ export function Hero() {
             texts={LEARNING_QUOTES}
             speed={40}
             pause={1600}
-            className="leading-tight bg-gradient-to-r from-blue-900 via-purple-800 to-pink-800 bg-clip-text text-transparent"
+            className="leading-tight bg-linear-to-r from-blue-900 via-purple-800 to-pink-800 bg-clip-text text-transparent"
           />
           <motion.span
             whileHover={{ rotate: -10, scale: 1.1 }}
@@ -244,7 +242,7 @@ export function Hero() {
             href="#courses"
             whileHover={{ scale: 1.08, boxShadow: "0 0 24px #fbbf24" }}
             whileTap={{ scale: 0.97 }}
-            className="px-8 py-4 rounded-xl bg-gradient-to-r from-yellow-400 to-pink-400 text-white font-bold text-lg shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-200 flex items-center gap-2 animate-glow"
+            className="px-8 py-4 rounded-xl bg-linear-to-r from-yellow-400 to-pink-400 text-white font-bold text-lg shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-200 flex items-center gap-2 animate-glow"
           >
             <span>Browse Courses ✨</span>
           </motion.a>
@@ -288,7 +286,7 @@ export function Hero() {
               repeat: Infinity,
               ease: "linear",
             }}
-            className="bg-gradient-to-r from-blue-900 via-purple-800 to-pink-800 bg-clip-text text-transparent bg-[length:200%_200%]"
+            className="bg-linear-to-r from-blue-900 via-purple-800 to-pink-800 bg-clip-text text-transparent bg-size-[200%_200%]"
           >
             Empowering Education for Everyone!
           </motion.span>
@@ -298,13 +296,9 @@ export function Hero() {
         {/* Typewriter Effect for Learning Quotes */}
         <div className="mt-12 sm:mt-16">
           <Typewriter
-            words={LEARNING_QUOTES}
-            loop={true}
-            cursor
-            cursorStyle="_"
-            typeSpeed={70}
-            deleteSpeed={50}
-            delaySpeed={1000}
+            texts={LEARNING_QUOTES}
+            speed={70}
+            pause={1000}
             className="text-lg sm:text-xl md:text-2xl font-semibold text-blue-800"
           />
         </div>

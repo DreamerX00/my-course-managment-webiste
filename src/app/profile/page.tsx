@@ -188,13 +188,13 @@ export default function ProfilePage() {
       )}
 
       {/* Hero Section with Profile Header */}
-        <div
-          className={`relative overflow-visible${
-            profile.bannerImage
-              ? ''
-              : ' bg-linear-to-r from-primary/5 via-primary/10 to-primary/5'
-          }`}
-        >
+      <div
+        className={`relative overflow-visible${
+          profile.bannerImage
+            ? ""
+            : " bg-linear-to-r from-primary/5 via-primary/10 to-primary/5"
+        }`}
+      >
         {!profile.bannerImage && (
           <>
             <div className="absolute inset-0 bg-grid-white/5 mask-[linear-gradient(0deg,white,rgba(255,255,255,0.5))]"></div>
@@ -582,13 +582,20 @@ export default function ProfilePage() {
                                     else if (course.progress > 0)
                                       colorClass =
                                         "text-blue-600 dark:text-blue-400";
-                                    const progressLabel = course.progress === 100 ? "Complete" : "Progress";
+                                    const progressLabel =
+                                      course.progress === 100
+                                        ? "Complete"
+                                        : "Progress";
                                     return (
                                       <>
-                                        <div className={`text-2xl font-bold ${colorClass}`}>
+                                        <div
+                                          className={`text-2xl font-bold ${colorClass}`}
+                                        >
                                           {course.progress}%
                                         </div>
-                                        <p className="text-xs text-muted-foreground">{progressLabel}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {progressLabel}
+                                        </p>
                                       </>
                                     );
                                   })()}
@@ -604,65 +611,81 @@ export default function ProfilePage() {
                                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                                   {(() => {
                                     let progressText = "Not started";
-                                    if (course.progress === 100) progressText = "🎉 Completed!";
-                                    else if (course.progress > 0) progressText = "Keep going!";
+                                    if (course.progress === 100)
+                                      progressText = "🎉 Completed!";
+                                    else if (course.progress > 0)
+                                      progressText = "Keep going!";
                                     return (
                                       <>
                                         <span>{progressText}</span>
-                                        <span>{progressText}</span>
-                                        {course.progress > 0 && course.progress < 100 && (
-                                          <span className="flex items-center gap-1">
-                                            <TrendingUp className="w-3 h-3" />
-                                            {100 - course.progress}% remaining
-                                          </span>
-                                        )}
+                                        {course.progress > 0 &&
+                                          course.progress < 100 && (
+                                            <span className="flex items-center gap-1">
+                                              <TrendingUp className="w-3 h-3" />
+                                              {100 - course.progress}% remaining
+                                            </span>
+                                          )}
                                       </>
                                     );
                                   })()}
                                 </div>
                               </div>
-                        {profile.courses
-                          .toSorted((a, b) => new Date(b.lastAccessed).getTime() - new Date(a.lastAccessed).getTime())
-                          .slice(0, 5)
-                          .map((course, index) => (
-                            <div
-                              key={course.id}
-                              className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer animate-in fade-in slide-in-from-left-4"
-                              style={{ animationDelay: `${index * 50}ms` }}
-                              tabIndex={0}
-                              role="button"
-                              aria-label={`Go to course ${course.title}`}
-                              onClick={() => router.push(`/courses/${course.id}/learn`)}
-                              onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  router.push(`/courses/${course.id}/learn`);
-                                }
-                              }}
-                            >
-                              <div className="p-3 rounded-lg bg-primary/10">
-                                <BookOpen className="w-5 h-5 text-primary" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium line-clamp-1">
-                                  {course.title}
-                                </h4>
-                                <p className="text-sm text-muted-foreground">
-                                  {new Date(course.lastAccessed).toLocaleDateString("en-US", {
-                                    month: "long",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })}
-                                </p>
-                              </div>
-                              <Badge variant="outline" className="shrink-0">
-                                {course.progress}%
-                              </Badge>
                             </div>
-                          ))}
-                      </div>
-                    )}
-                  </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
+                {/* Recent Courses List (outside main .map) */}
+                {profile.courses.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Recent Courses
+                    </h3>
+                    {profile.courses
+                      .toSorted(
+                        (a, b) =>
+                          new Date(b.lastAccessed).getTime() -
+                          new Date(a.lastAccessed).getTime()
+                      )
+                      .slice(0, 5)
+                      .map((course, index) => (
+                        <button
+                          key={course.id}
+                          type="button"
+                          className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer animate-in fade-in slide-in-from-left-4 w-full text-left focus:outline-none focus:ring-2 focus:ring-primary"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                          aria-label={`Go to course ${course.title}`}
+                          onClick={() =>
+                            router.push(`/courses/${course.id}/learn`)
+                          }
+                        >
+                          <div className="p-3 rounded-lg bg-primary/10">
+                            <BookOpen className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium line-clamp-1">
+                              {course.title}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(course.lastAccessed).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "long",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="shrink-0">
+                            {course.progress}%
+                          </Badge>
+                        </button>
+                      ))}
+                  </div>
+                )}
               </CardContent>
             </Tabs>
           </Card>
