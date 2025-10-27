@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { db } from '@/lib/db';
 
+// Force dynamic rendering for Next.js 15+
+export const dynamic = 'force-dynamic';
+
 interface ChapterWithContent {
   lessons: { id: string }[];
   subchapters: { id: string }[];

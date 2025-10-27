@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-options';
-import { v2 as cloudinary } from 'cloudinary';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { v2 as cloudinary } from "cloudinary";
+
+// Force dynamic rendering for Next.js 15+
+export const dynamic = "force-dynamic";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -15,15 +18,15 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const folder = (formData.get('folder') as string) || 'profile';
+    const file = formData.get("file") as File;
+    const folder = (formData.get("folder") as string) || "profile";
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Convert file to buffer
@@ -36,12 +39,13 @@ export async function POST(request: NextRequest) {
         .upload_stream(
           {
             folder: `course-management/${folder}`,
-            resource_type: 'auto',
-            transformation: folder === 'avatar' 
-              ? [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }]
-              : folder === 'banner'
-              ? [{ width: 1200, height: 400, crop: 'fill' }]
-              : undefined,
+            resource_type: "auto",
+            transformation:
+              folder === "avatar"
+                ? [{ width: 400, height: 400, crop: "fill", gravity: "face" }]
+                : folder === "banner"
+                ? [{ width: 1200, height: 400, crop: "fill" }]
+                : undefined,
           },
           (error, result) => {
             if (error) reject(error);
@@ -58,9 +62,9 @@ export async function POST(request: NextRequest) {
       publicId: (result as { public_id: string }).public_id,
     });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error("Upload error:", error);
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: "Failed to upload file" },
       { status: 500 }
     );
   }

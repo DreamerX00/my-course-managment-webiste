@@ -1,14 +1,19 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-options';
-import { db } from '@/lib/db';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { db } from "@/lib/db";
+import { updateProfileSchema } from "@/lib/validations";
+import { validateRequest } from "@/lib/validation-helpers";
+
+// Force dynamic rendering for Next.js 15+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Fetch user profile with related data
@@ -43,7 +48,7 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Fetch user's enrolled courses with progress
@@ -79,7 +84,8 @@ export async function GET() {
           },
         });
 
-        const progress = totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
+        const progress =
+          totalChapters > 0 ? (completedChapters / totalChapters) * 100 : 0;
 
         return {
           id: course.id,
@@ -96,7 +102,10 @@ export async function GET() {
       select: { score: true },
     });
 
-    const totalScore = quizAttempts.reduce((sum, attempt) => sum + attempt.score, 0);
+    const totalScore = quizAttempts.reduce(
+      (sum, attempt) => sum + attempt.score,
+      0
+    );
 
     // Count completed courses
     const completedCourses = coursesWithProgress.filter(
@@ -104,9 +113,9 @@ export async function GET() {
     ).length;
 
     const profile = {
-      name: user.name || 'User',
-      email: user.email || '',
-      image: user.image || '',
+      name: user.name || "User",
+      email: user.email || "",
+      image: user.image || "",
       role: user.role,
       courses: coursesWithProgress,
       totalScore,
@@ -122,16 +131,16 @@ export async function GET() {
       website: user.profile?.website || null,
       youtube: user.profile?.youtube || null,
       instagram: user.profile?.instagram || null,
-      avatar: user.profile?.avatar || user.image || '',
+      avatar: user.profile?.avatar || user.image || "",
       bannerImage: user.profile?.bannerImage || null,
       isPublic: user.profile?.isPublic ?? true,
     };
 
     return NextResponse.json(profile);
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error("Error fetching profile:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
@@ -142,10 +151,17 @@ export async function PATCH(request: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
+
+    // Validate request body
+    const validation = await validateRequest(body, updateProfileSchema);
+    if (!validation.success) {
+      return validation.error;
+    }
+
     const {
       name,
       bio,
@@ -156,12 +172,9 @@ export async function PATCH(request: Request) {
       github,
       twitter,
       website,
-      youtube,
-      instagram,
       avatar,
-      bannerImage,
-      isPublic,
-    } = body;
+      banner,
+    } = validation.data;
 
     // Update user name if provided
     if (name !== undefined) {
@@ -184,11 +197,9 @@ export async function PATCH(request: Request) {
         github,
         twitter,
         website,
-        youtube,
-        instagram,
         avatar,
-        bannerImage,
-        isPublic: isPublic ?? true,
+        bannerImage: banner,
+        isPublic: true,
       },
       update: {
         bio,
@@ -199,19 +210,19 @@ export async function PATCH(request: Request) {
         github,
         twitter,
         website,
-        youtube,
-        instagram,
         avatar,
-        bannerImage,
-        isPublic,
+        bannerImage: banner,
       },
     });
 
-    return NextResponse.json({ success: true, message: 'Profile updated successfully' });
+    return NextResponse.json({
+      success: true,
+      message: "Profile updated successfully",
+    });
   } catch (error) {
-    console.error('Error updating profile:', error);
+    console.error("Error updating profile:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

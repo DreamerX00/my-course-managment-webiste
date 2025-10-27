@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
+// Force dynamic rendering for Next.js 15+
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     // Get content settings from database
