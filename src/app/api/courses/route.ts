@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
           { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 },
         ];
 
-        // Optimized query - use select and _count instead of full includes
+        // Optimized query with Accelerate caching
         const courses = await db.course.findMany({
           where: showAll ? undefined : { isPublished: true },
           select: {
@@ -114,6 +114,11 @@ export async function GET(req: NextRequest) {
             },
           },
           orderBy: { createdAt: "desc" },
+          // Accelerate caching: cache results for 5 minutes
+          cacheStrategy: {
+            ttl: 300,
+            swr: 600, // Serve stale for 10 minutes while revalidating
+          },
         });
 
         // Transform the data to match our frontend interface

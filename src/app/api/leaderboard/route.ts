@@ -78,6 +78,10 @@ export async function GET(request: NextRequest) {
           },
         },
       },
+      cacheStrategy: {
+        ttl: 60, // 1 minute cache for leaderboard
+        swr: 120, // 2 minutes stale-while-revalidate
+      },
     });
 
     // Calculate user scores

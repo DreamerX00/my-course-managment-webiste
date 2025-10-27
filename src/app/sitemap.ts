@@ -4,12 +4,16 @@ export default async function sitemap() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yoursite.com";
 
   try {
-    // Fetch published courses
+    // Fetch published courses with caching
     const courses = await db.course.findMany({
       where: { isPublished: true },
       select: {
         id: true,
         updatedAt: true,
+      },
+      cacheStrategy: {
+        ttl: 3600, // 1 hour cache for sitemap
+        swr: 7200, // 2 hours stale-while-revalidate
       },
     });
 

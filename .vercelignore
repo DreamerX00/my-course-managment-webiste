@@ -11,6 +11,15 @@ coverage
 *.spec.tsx
 __tests__
 
+# Scripts and tools (one-time setup scripts)
+scripts/
+
+# Documentation (not needed in production)
+documents/
+CONTRIBUTING.md
+LICENSE
+README.md
+
 # Local env files
 .env
 .env.local

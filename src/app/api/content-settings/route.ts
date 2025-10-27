@@ -1,71 +1,72 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { withCache } from "@/lib/cache";
 
 // Enable ISR with 1-hour revalidation
 export const revalidate = 3600;
 
 export async function GET() {
   try {
-    // Cache content settings for 1 hour
-    const settingsData = await withCache(
-      "content-settings",
-      async () => {
-        // Get content settings from database
-        const settings = await db.contentSettings.findFirst();
-
-        if (!settings) {
-          // Return default settings if none exist
-          return {
-            filterCategories: [
-              {
-                id: "web-dev",
-                name: "Web Development",
-                color: "#3B82F6",
-                order: 1,
-              },
-              {
-                id: "data-science",
-                name: "Data Science",
-                color: "#10B981",
-                order: 2,
-              },
-              {
-                id: "ai-ml",
-                name: "AI & Machine Learning",
-                color: "#8B5CF6",
-                order: 3,
-              },
-              {
-                id: "mobile-dev",
-                name: "Mobile Development",
-                color: "#F59E0B",
-                order: 4,
-              },
-              {
-                id: "blockchain",
-                name: "Blockchain",
-                color: "#EF4444",
-                order: 5,
-              },
-            ],
-            featuredCourses: [],
-            layoutOptions: {
-              gridColumns: 3,
-              showFiltersSidebar: true,
-              showSortingDropdown: true,
-              showTrendingSection: true,
-              showRecentlyAdded: true,
-            },
-          };
-        }
-
-        return settings.settings;
+    // Get content settings from database with Accelerate caching
+    const settings = await db.contentSettings.findFirst({
+      cacheStrategy: {
+        ttl: 3600, // Cache for 1 hour
+        swr: 7200, // Serve stale for 2 hours while revalidating
       },
-      3600 // 1 hour TTL
-    );
+    });
 
-    return NextResponse.json(settingsData, {
+    if (!settings) {
+      // Return default settings if none exist
+      const defaultSettings = {
+        filterCategories: [
+          {
+            id: "web-dev",
+            name: "Web Development",
+            color: "#3B82F6",
+            order: 1,
+          },
+          {
+            id: "data-science",
+            name: "Data Science",
+            color: "#10B981",
+            order: 2,
+          },
+          {
+            id: "ai-ml",
+            name: "AI & Machine Learning",
+            color: "#8B5CF6",
+            order: 3,
+          },
+          {
+            id: "mobile-dev",
+            name: "Mobile Development",
+            color: "#F59E0B",
+            order: 4,
+          },
+          {
+            id: "blockchain",
+            name: "Blockchain",
+            color: "#EF4444",
+            order: 5,
+          },
+        ],
+        featuredCourses: [],
+        layoutOptions: {
+          gridColumns: 3,
+          showFiltersSidebar: true,
+          showSortingDropdown: true,
+          showTrendingSection: true,
+          showRecentlyAdded: true,
+        },
+      };
+      return NextResponse.json(defaultSettings, {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+          "CDN-Cache-Control": "public, s-maxage=7200",
+        },
+      });
+    }
+
+    return NextResponse.json(settings.settings, {
       headers: {
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
         "CDN-Cache-Control": "public, s-maxage=7200",

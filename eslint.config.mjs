@@ -37,6 +37,8 @@ const eslintConfig = [
       "@next/next/no-html-link-for-pages": "error",
       "prefer-const": "error",
       "no-console": ["warn", { allow: ["warn", "error"] }],
+      // Allow var in global declarations (needed for Prisma singleton pattern)
+      "no-var": "off",
     },
   },
 ];

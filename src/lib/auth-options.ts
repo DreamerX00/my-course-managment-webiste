@@ -96,5 +96,7 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: false,
+  debug: process.env.NODE_ENV === "development",
+  // Vercel auto-detects the URL, but we can be explicit
+  ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
 };
