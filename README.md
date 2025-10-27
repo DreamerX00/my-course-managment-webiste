@@ -144,7 +144,7 @@ cp .env.example .env
 
 # 4. Set up database with Prisma Accelerate
 npx prisma generate --no-engine
-npx prisma migrate deploy
+npx prisma db push
 
 # 5. Run development server
 npm run dev

@@ -57,8 +57,8 @@ cp .env.example .env.local
 # Edit .env.local with your credentials
 
 # 6. Set up database
-npx prisma generate
-npx prisma migrate deploy
+npx prisma generate --no-engine
+npx prisma db push
 
 # 7. Run development server
 npm run dev
