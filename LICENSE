@@ -1,0 +1,221 @@
+PROPRIETARY LICENSE AGREEMENT
+
+Copyright (c) 2025 DreamerX00. All Rights Reserved.
+
+================================================================================
+COURSE MANAGEMENT PLATFORM - PROPRIETARY SOFTWARE LICENSE
+================================================================================
+
+This Proprietary License Agreement ("Agreement") is entered into as of the date
+of access or use between DreamerX00 ("Licensor") and any person or entity
+accessing or using this software ("Licensee").
+
+================================================================================
+
+1. # DEFINITIONS
+
+1.1 "Software" refers to the Course Management Platform, including but not
+limited to all source code, object code, documentation, databases, user
+interfaces, algorithms, and any associated materials.
+
+1.2 "Commercial Use" means any use of the Software for monetary gain, including
+but not limited to selling, licensing, or providing services based on the
+Software.
+
+1.3 "Derivative Work" means any modification, adaptation, or work based upon
+the Software.
+
+# ================================================================================ 2. GRANT OF LICENSE
+
+2.1 PERSONAL USE LICENSE
+Subject to the terms of this Agreement, Licensor grants Licensee a limited,
+non-exclusive, non-transferable, revocable license to:
+
+    (a) View and study the source code for educational purposes only
+    (b) Run a single instance of the Software for personal, non-commercial use
+    (c) Fork the repository for personal development and learning
+
+2.2 RESTRICTIONS
+Licensee shall NOT, without explicit written permission from Licensor:
+
+    (a) Use the Software for any commercial purpose
+    (b) Distribute, sublicense, lease, rent, or lend the Software
+    (c) Modify, adapt, translate, or create derivative works
+    (d) Remove or alter any proprietary notices or labels
+    (e) Reverse engineer, decompile, or disassemble the Software
+    (f) Use the Software to create competing products or services
+    (g) Host the Software as a service for third parties
+    (h) Sell, resell, or monetize the Software in any form
+
+# ================================================================================ 3. INTELLECTUAL PROPERTY RIGHTS
+
+3.1 OWNERSHIP
+The Software and all intellectual property rights therein are and shall
+remain the exclusive property of Licensor. This Agreement does not convey
+to Licensee any rights of ownership in or to the Software.
+
+3.2 TRADEMARK
+The name "Course Management Platform" and any associated logos, trademarks,
+or service marks are proprietary to Licensor. Licensee may not use these
+marks without prior written consent.
+
+3.3 COPYRIGHTS
+All copyrights, patents, trade secrets, and other intellectual property
+rights in the Software are owned exclusively by Licensor.
+
+# ================================================================================ 4. COMMERCIAL LICENSING
+
+4.1 COMMERCIAL LICENSE REQUIRED
+Any commercial use of the Software requires a separate commercial license
+agreement with Licensor. Contact: licensing@yourplatform.com
+
+4.2 ENTERPRISE SOLUTIONS
+For enterprise deployments, custom licensing, or white-label solutions,
+contact: enterprise@yourplatform.com
+
+# ================================================================================ 5. CONTRIBUTIONS
+
+5.1 CONTRIBUTOR AGREEMENT
+By submitting code, documentation, or any other materials to the Software
+("Contributions"), Licensee:
+
+    (a) Grants Licensor a perpetual, worldwide, non-exclusive, royalty-free,
+        irrevocable license to use, reproduce, modify, and distribute the
+        Contributions
+    (b) Represents that the Contributions are original work
+    (c) Waives all moral rights in the Contributions
+    (d) Agrees that Licensor may relicense the Contributions under any terms
+
+# ================================================================================ 6. WARRANTY DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+LICENSOR DOES NOT WARRANT THAT:
+(a) The Software will meet Licensee's requirements
+(b) The Software will be uninterrupted, timely, secure, or error-free
+(c) Results obtained from use of the Software will be accurate or reliable
+(d) Any errors in the Software will be corrected
+
+# ================================================================================ 7. LIMITATION OF LIABILITY
+
+7.1 TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, LICENSOR SHALL NOT BE
+LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
+DAMAGES, OR ANY LOSS OF PROFITS, REVENUE, DATA, OR DATA USE, ARISING OUT
+OF OR IN CONNECTION WITH THIS AGREEMENT OR THE USE OF THE SOFTWARE.
+
+7.2 LICENSOR'S TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT PAID BY LICENSEE
+FOR THE SOFTWARE IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+
+# ================================================================================ 8. INDEMNIFICATION
+
+Licensee agrees to indemnify, defend, and hold harmless Licensor from and
+against any claims, liabilities, damages, losses, and expenses, including
+reasonable attorneys' fees, arising out of or in any way connected with
+Licensee's access to or use of the Software.
+
+# ================================================================================ 9. TERM AND TERMINATION
+
+9.1 TERM
+This Agreement is effective until terminated.
+
+9.2 TERMINATION
+Licensor may terminate this Agreement immediately if Licensee:
+(a) Breaches any term of this Agreement
+(b) Uses the Software for commercial purposes without authorization
+(c) Distributes the Software without permission
+
+9.3 EFFECT OF TERMINATION
+Upon termination, Licensee must:
+(a) Immediately cease all use of the Software
+(b) Delete all copies of the Software in Licensee's possession
+(c) Certify in writing that all copies have been destroyed
+
+# ================================================================================ 10. CONFIDENTIALITY
+
+Licensee acknowledges that the Software contains confidential and proprietary
+information of Licensor. Licensee agrees to maintain the confidentiality of
+such information and not disclose it to any third party.
+
+# ================================================================================ 11. COMPLIANCE WITH LAWS
+
+Licensee shall comply with all applicable laws and regulations in connection
+with the use of the Software, including but not limited to export control laws,
+data protection regulations, and intellectual property laws.
+
+# ================================================================================ 12. AUDIT RIGHTS
+
+Licensor reserves the right to audit Licensee's use of the Software to ensure
+compliance with this Agreement. Licensee agrees to cooperate with such audits
+and provide access to relevant records and systems.
+
+# ================================================================================ 13. UPDATES AND MAINTENANCE
+
+13.1 Licensor has no obligation to provide updates, bug fixes, or technical
+support unless specified in a separate support agreement.
+
+13.2 Any updates provided are subject to the terms of this Agreement.
+
+# ================================================================================ 14. GENERAL PROVISIONS
+
+14.1 GOVERNING LAW
+This Agreement shall be governed by and construed in accordance with the
+laws of [Your Jurisdiction], without regard to its conflict of law
+provisions.
+
+14.2 JURISDICTION
+Any disputes arising under this Agreement shall be subject to the
+exclusive jurisdiction of the courts of [Your Jurisdiction].
+
+14.3 ENTIRE AGREEMENT
+This Agreement constitutes the entire agreement between the parties
+concerning the Software and supersedes all prior agreements and
+understandings.
+
+14.4 SEVERABILITY
+If any provision of this Agreement is held to be invalid or unenforceable,
+the remaining provisions shall continue in full force and effect.
+
+14.5 WAIVER
+No waiver of any term of this Agreement shall be deemed a further or
+continuing waiver of such term or any other term.
+
+14.6 ASSIGNMENT
+Licensee may not assign this Agreement without prior written consent from
+Licensor. Licensor may assign this Agreement at any time.
+
+14.7 NOTICES
+All notices under this Agreement must be in writing and sent to:
+
+     DreamerX00
+     Email: legal@yourplatform.com
+
+14.8 FORCE MAJEURE
+Licensor shall not be liable for any failure to perform due to causes
+beyond its reasonable control.
+
+# ================================================================================ 15. ACCEPTANCE
+
+BY ACCESSING, DOWNLOADING, INSTALLING, OR USING THE SOFTWARE, LICENSEE
+ACKNOWLEDGES THAT LICENSEE HAS READ THIS AGREEMENT, UNDERSTANDS IT, AND AGREES
+TO BE BOUND BY ITS TERMS AND CONDITIONS.
+
+IF LICENSEE DOES NOT AGREE TO THE TERMS OF THIS AGREEMENT, LICENSEE MUST NOT
+ACCESS, DOWNLOAD, INSTALL, OR USE THE SOFTWARE.
+
+# ================================================================================ 16. CONTACT INFORMATION
+
+For licensing inquiries, permissions, or questions about this Agreement:
+
+Email: akashsinghaa008@gmail.com
+Website: https://github.com/DreamerX00
+Repository: https://github.com/DreamerX00/my-course-managment-webiste
+
+================================================================================
+
+LAST UPDATED: October 27, 2025
+VERSION: 1.0
+
+Copyright (c) 2025 DreamerX00. All Rights Reserved.
+Unauthorized use, reproduction, or distribution is strictly prohibited.

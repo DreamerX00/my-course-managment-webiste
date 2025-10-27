@@ -1,0 +1,56 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20.x"
+
+jobs:
+  pr-checks:
+    name: PR Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Run lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Test build
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${status} Build and type checks completed.\n\n**Status:** ${{ job.status }}\n**Commit:** ${context.sha.substring(0, 7)}`
+            })
