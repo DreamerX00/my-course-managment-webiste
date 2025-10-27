@@ -1,41 +1,48 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { signIn } from "next-auth/react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Chrome, Sparkles, GraduationCap, ArrowRight } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Chrome, Sparkles, ArrowRight } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [coords, setCoords] = useState({ x: 0, y: 0 })
-  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const { toast } = useToast();
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    setCoords({ x, y })
-  }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setCoords({ x, y });
+  };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       await signIn("google", {
         callbackUrl: "/dashboard",
-      })
+      });
     } catch {
       toast({
         title: "Error",
         description: "Failed to sign in. Please try again.",
         variant: "destructive",
-      })
-      setIsLoading(false)
+      });
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div
@@ -103,15 +110,21 @@ export default function LoginPage() {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="text-center mb-8"
         >
-          <Link href="/" className="inline-flex items-center gap-2 group">
+          <Link href="/" className="inline-flex items-center gap-3 group">
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
             >
-              <GraduationCap className="w-12 h-12 text-blue-600" />
+              <Image
+                src="/logo.svg"
+                alt="Dreamer Academy Logo"
+                width={48}
+                height={48}
+                className="w-12 h-12"
+              />
             </motion.div>
             <span className="text-3xl font-extrabold bg-linear-to-r from-blue-600 via-pink-500 to-yellow-500 bg-clip-text text-transparent">
-              LearnHub
+              Dreamer Academy
             </span>
           </Link>
         </motion.div>
@@ -125,7 +138,8 @@ export default function LoginPage() {
             <motion.div
               className="absolute inset-0 rounded-lg"
               style={{
-                background: "linear-gradient(90deg, rgba(59,130,246,0.5), rgba(236,72,153,0.5), rgba(251,191,36,0.5))",
+                background:
+                  "linear-gradient(90deg, rgba(59,130,246,0.5), rgba(236,72,153,0.5), rgba(251,191,36,0.5))",
                 padding: "2px",
               }}
               initial={{ opacity: 0 }}
@@ -234,15 +248,21 @@ export default function LoginPage() {
           className="text-center text-sm text-gray-600 mt-6"
         >
           By continuing, you agree to our{" "}
-          <Link href="/terms" className="underline hover:text-blue-600 transition-colors">
+          <Link
+            href="/terms"
+            className="underline hover:text-blue-600 transition-colors"
+          >
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="underline hover:text-blue-600 transition-colors">
+          <Link
+            href="/privacy"
+            className="underline hover:text-blue-600 transition-colors"
+          >
             Privacy Policy
           </Link>
         </motion.p>
       </motion.div>
     </div>
-  )
+  );
 }

@@ -1,41 +1,48 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { signIn } from "next-auth/react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Chrome, GraduationCap, ArrowRight, Check } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Chrome, ArrowRight, Check } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function SignupPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [coords, setCoords] = useState({ x: 0, y: 0 })
-  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const { toast } = useToast();
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    setCoords({ x, y })
-  }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setCoords({ x, y });
+  };
 
   const handleGoogleSignUp = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       await signIn("google", {
         callbackUrl: "/dashboard",
-      })
+      });
     } catch {
       toast({
         title: "Error",
         description: "Failed to sign up. Please try again.",
         variant: "destructive",
-      })
-      setIsLoading(false)
+      });
+      setIsLoading(false);
     }
-  }
+  };
 
   const features = [
     { icon: "🎓", text: "Access to 100+ courses" },
@@ -44,7 +51,7 @@ export default function SignupPage() {
     { icon: "💬", text: "Join the community" },
     { icon: "📱", text: "Learn on any device" },
     { icon: "⚡", text: "Lifetime access" },
-  ]
+  ];
 
   return (
     <div
@@ -112,15 +119,21 @@ export default function SignupPage() {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="text-center mb-8"
         >
-          <Link href="/" className="inline-flex items-center gap-2 group">
+          <Link href="/" className="inline-flex items-center gap-3 group">
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
             >
-              <GraduationCap className="w-12 h-12 text-blue-600" />
+              <Image
+                src="/logo.svg"
+                alt="Dreamer Academy Logo"
+                width={48}
+                height={48}
+                className="w-12 h-12"
+              />
             </motion.div>
             <span className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-pink-500 to-yellow-500 bg-clip-text text-transparent">
-              LearnHub
+              Dreamer Academy
             </span>
           </Link>
         </motion.div>
@@ -134,7 +147,8 @@ export default function SignupPage() {
             <motion.div
               className="absolute inset-0 rounded-lg"
               style={{
-                background: "linear-gradient(90deg, rgba(59,130,246,0.5), rgba(236,72,153,0.5), rgba(251,191,36,0.5))",
+                background:
+                  "linear-gradient(90deg, rgba(59,130,246,0.5), rgba(236,72,153,0.5), rgba(251,191,36,0.5))",
                 padding: "2px",
               }}
               initial={{ opacity: 0 }}
@@ -174,7 +188,9 @@ export default function SignupPage() {
                     />
                     <Chrome className="w-5 h-5 mr-3 relative z-10" />
                     <span className="relative z-10">
-                      {isLoading ? "Creating account..." : "Sign up with Google"}
+                      {isLoading
+                        ? "Creating account..."
+                        : "Sign up with Google"}
                     </span>
                     <ArrowRight className="w-5 h-5 ml-3 relative z-10 group-hover:translate-x-1 transition-transform" />
                   </Button>
@@ -206,7 +222,9 @@ export default function SignupPage() {
                       className="flex items-center space-x-2 text-sm text-gray-700 bg-gradient-to-r from-blue-50 to-pink-50 rounded-lg p-2"
                     >
                       <span className="text-lg">{feature.icon}</span>
-                      <span className="font-medium text-xs">{feature.text}</span>
+                      <span className="font-medium text-xs">
+                        {feature.text}
+                      </span>
                     </motion.div>
                   ))}
                 </motion.div>
@@ -263,15 +281,21 @@ export default function SignupPage() {
           className="text-center text-sm text-gray-600 mt-6"
         >
           By signing up, you agree to our{" "}
-          <Link href="/terms" className="underline hover:text-blue-600 transition-colors">
+          <Link
+            href="/terms"
+            className="underline hover:text-blue-600 transition-colors"
+          >
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="underline hover:text-blue-600 transition-colors">
+          <Link
+            href="/privacy"
+            className="underline hover:text-blue-600 transition-colors"
+          >
             Privacy Policy
           </Link>
         </motion.p>
       </motion.div>
     </div>
-  )
+  );
 }
