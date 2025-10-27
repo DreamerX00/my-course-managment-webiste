@@ -15,6 +15,7 @@ interface Chapter {
   id: string;
   title: string;
   content: string;
+  videoUrl?: string | null;
   position: number;
   [key: string]: unknown;
 }
@@ -23,6 +24,7 @@ interface Subchapter {
   id: string;
   title: string;
   content: string;
+  videoUrl?: string | null;
   position: number;
   chapterId: string;
   [key: string]: unknown;
@@ -71,6 +73,10 @@ export default function CourseContentManagerPage() {
   const [pendingSubchapterContent, setPendingSubchapterContent] =
     useState<unknown>(null);
 
+  // Add state for video URLs
+  const [chapterVideoUrl, setChapterVideoUrl] = useState<string>("");
+  const [subchapterVideoUrl, setSubchapterVideoUrl] = useState<string>("");
+
   // Add a ref to ToastEditor to allow setting content
   const editorRef = React.useRef<ToastEditorHandle | null>(null);
 
@@ -113,26 +119,46 @@ export default function CourseContentManagerPage() {
       });
   }, [selectedChapter, courseId, toast]);
 
+  // Update video URL when chapter/subchapter changes
+  useEffect(() => {
+    if (selectedChapter && !selectedSubchapter) {
+      setChapterVideoUrl(selectedChapter.videoUrl || "");
+    }
+  }, [selectedChapter, selectedSubchapter]);
+
+  useEffect(() => {
+    if (selectedSubchapter) {
+      setSubchapterVideoUrl(selectedSubchapter.videoUrl || "");
+    }
+  }, [selectedSubchapter]);
+
   // Save chapter content
   const handleSave = async () => {
-    if (!selectedChapter || !pendingChapterContent) {
+    if (!selectedChapter) {
       toast({
         title: "Warning",
-        description: "No changes to save.",
+        description: "No chapter selected.",
         variant: "destructive",
       });
       return;
     }
     setSaving(true);
     try {
+      const updateData: { content?: string; videoUrl?: string } = {};
+
+      if (pendingChapterContent) {
+        updateData.content = JSON.stringify(pendingChapterContent);
+      }
+
+      // Always include videoUrl (even if empty string to clear it)
+      updateData.videoUrl = chapterVideoUrl || undefined;
+
       const res = await fetch(
         `/api/courses/${courseId}/chapters/${selectedChapter.id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: JSON.stringify(pendingChapterContent),
-          }),
+          body: JSON.stringify(updateData),
         }
       );
 
@@ -385,10 +411,10 @@ export default function CourseContentManagerPage() {
 
   // Update handleSaveSubchapter to save JSON
   const handleSaveSubchapter = async () => {
-    if (!selectedSubchapter || !pendingSubchapterContent) {
+    if (!selectedSubchapter) {
       toast({
         title: "Warning",
-        description: "No changes to save.",
+        description: "No subchapter selected.",
         variant: "destructive",
       });
       return;
@@ -398,14 +424,21 @@ export default function CourseContentManagerPage() {
       if (!selectedChapter) {
         throw new Error("No chapter selected");
       }
+
+      const updateData: { content?: string; videoUrl?: string } = {};
+
+      if (pendingSubchapterContent) {
+        updateData.content = JSON.stringify(pendingSubchapterContent);
+      }
+
+      // Always include videoUrl (even if empty string to clear it)
+      updateData.videoUrl = subchapterVideoUrl || undefined;
       const res = await fetch(
         `/api/courses/${courseId}/chapters/${selectedChapter.id}/subchapters/${selectedSubchapter.id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: JSON.stringify(pendingSubchapterContent),
-          }),
+          body: JSON.stringify(updateData),
         }
       );
       if (!res.ok) throw new Error("Failed to save subchapter");
@@ -839,6 +872,23 @@ export default function CourseContentManagerPage() {
                     />
                   </div>
                 </div>
+                {/* Video URL input */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Video URL (MP4 or YouTube embed link)
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded px-2 py-1 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://..."
+                    value={chapterVideoUrl}
+                    onChange={(e) => setChapterVideoUrl(e.target.value)}
+                  />
+                  <span className="text-xs text-gray-500">
+                    Leave blank for no video. YouTube links must be embed URLs
+                    (see docs).
+                  </span>
+                </div>
                 <div className="border rounded-lg overflow-hidden grow bg-gray-900">
                   <ToastEditor
                     ref={editorRef}
@@ -882,6 +932,23 @@ export default function CourseContentManagerPage() {
                       accept=".md,.markdown,.txt,.doc,.docx"
                     />
                   </div>
+                </div>
+                {/* Video URL input for subchapter */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Video URL (MP4 or YouTube embed link)
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded px-2 py-1 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://..."
+                    value={subchapterVideoUrl}
+                    onChange={(e) => setSubchapterVideoUrl(e.target.value)}
+                  />
+                  <span className="text-xs text-gray-500">
+                    Leave blank for no video. YouTube links must be embed URLs
+                    (see docs).
+                  </span>
                 </div>
                 <div className="border rounded-lg overflow-hidden grow bg-gray-900">
                   <ToastEditor
