@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   eslint: {
     // ESLint enabled for build - all warnings must be fixed
     ignoreDuringBuilds: false,
+    // Suppress false positive warning about Next.js plugin detection in flat config
+    dirs: ["src"],
   },
   typescript: {
     // TypeScript checking enabled for build
