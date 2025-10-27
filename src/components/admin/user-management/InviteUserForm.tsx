@@ -1,26 +1,27 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { UserRole } from '@prisma/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { UserRole } from "@prisma/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserPlus } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserPlus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface InviteUserFormProps {
   onClose: () => void;
@@ -28,12 +29,13 @@ interface InviteUserFormProps {
 }
 
 export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    email: '',
-    name: '',
+    email: "",
+    name: "",
     role: UserRole.STUDENT,
-    courseId: 'none',
-    message: '',
+    courseId: "none",
+    message: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,32 +47,39 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
       // Prepare data for submission - convert 'none' to empty string for API
       const submitData = {
         ...formData,
-        courseId: formData.courseId === 'none' ? '' : formData.courseId,
+        courseId: formData.courseId === "none" ? "" : formData.courseId,
       };
 
-      const response = await fetch('/api/admin/user-management/invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/user-management/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send invitation');
+        throw new Error("Failed to send invitation");
       }
 
       await response.json();
-      alert(`Invitation email sent successfully to ${formData.email}! The invitation will expire in 7 days.`);
+      toast({
+        title: "Success",
+        description: `Invitation email sent successfully to ${formData.email}! The invitation will expire in 7 days.`,
+      });
       onSuccess();
     } catch (error) {
-      console.error('Error sending invitation:', error);
-      alert('Failed to send invitation. Please try again.');
+      console.error("Error sending invitation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send invitation. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -96,7 +105,7 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleChange('email', e.target.value)}
+                    onChange={(e) => handleChange("email", e.target.value)}
                     placeholder="user@example.com"
                     required
                     className="w-full"
@@ -107,7 +116,7 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
+                    onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="John Doe"
                     className="w-full"
                   />
@@ -118,14 +127,16 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
                 <Label htmlFor="role">Role *</Label>
                 <Select
                   value={formData.role}
-                  onValueChange={(value) => handleChange('role', value)}
+                  onValueChange={(value) => handleChange("role", value)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={UserRole.STUDENT}>Student</SelectItem>
-                    <SelectItem value={UserRole.INSTRUCTOR}>Instructor</SelectItem>
+                    <SelectItem value={UserRole.INSTRUCTOR}>
+                      Instructor
+                    </SelectItem>
                     <SelectItem value={UserRole.ADMIN}>Admin</SelectItem>
                     <SelectItem value={UserRole.GUEST}>Guest</SelectItem>
                   </SelectContent>
@@ -137,7 +148,7 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
                   <Label htmlFor="courseId">Assign to Course (Optional)</Label>
                   <Select
                     value={formData.courseId}
-                    onValueChange={(value) => handleChange('courseId', value)}
+                    onValueChange={(value) => handleChange("courseId", value)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a course" />
@@ -145,7 +156,9 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
                     <SelectContent>
                       <SelectItem value="none">No course assignment</SelectItem>
                       {/* TODO: Add course options from API */}
-                      <SelectItem value="course1">Introduction to Programming</SelectItem>
+                      <SelectItem value="course1">
+                        Introduction to Programming
+                      </SelectItem>
                       <SelectItem value="course2">Web Development</SelectItem>
                     </SelectContent>
                   </Select>
@@ -156,12 +169,14 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
 
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Personal Message (Optional)</CardTitle>
+              <CardTitle className="text-lg">
+                Personal Message (Optional)
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
                 value={formData.message}
-                onChange={(e) => handleChange('message', e.target.value)}
+                onChange={(e) => handleChange("message", e.target.value)}
                 placeholder="Add a personal message to include in the invitation email..."
                 rows={4}
                 className="w-full resize-none"
@@ -170,15 +185,24 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
           </Card>
 
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !formData.email} className="w-full sm:w-auto">
-              {isLoading ? 'Sending...' : 'Send Invitation'}
+            <Button
+              type="submit"
+              disabled={isLoading || !formData.email}
+              className="w-full sm:w-auto"
+            >
+              {isLoading ? "Sending..." : "Send Invitation"}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
-} 
+}

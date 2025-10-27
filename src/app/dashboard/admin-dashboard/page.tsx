@@ -1,70 +1,83 @@
-"use client"
+"use client";
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  BookOpen, 
-  Users, 
-  Settings, 
-  BarChart3, 
-  FileText, 
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  BookOpen,
+  Users,
+  Settings,
+  BarChart3,
+  FileText,
   Shield,
   Plus,
   Edit3,
   Database,
-  Activity
-} from "lucide-react"
+  Activity,
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface DashboardStats {
-  totalCourses: number
-  totalStudents: number
-  totalInstructors: number
-  completionRate: number
+  totalCourses: number;
+  totalStudents: number;
+  totalInstructors: number;
+  completionRate: number;
 }
 
 export default function AdminDashboardPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const userRole = session?.user?.role || "STUDENT"
-  const isAdmin = ["ADMIN", "INSTRUCTOR", "OWNER"].includes(userRole)
-  
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [statsLoading, setStatsLoading] = useState(true)
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { toast } = useToast();
+  const userRole = session?.user?.role || "STUDENT";
+  const isAdmin = ["ADMIN", "INSTRUCTOR", "OWNER"].includes(userRole);
+
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "loading") return // Don't redirect while loading
+    if (status === "loading") return; // Don't redirect while loading
     if (!isAdmin) {
-      router.push("/dashboard")
+      router.push("/dashboard");
     }
-  }, [isAdmin, router, status])
+  }, [isAdmin, router, status]);
 
   // Fetch dashboard statistics
   useEffect(() => {
     const fetchStats = async () => {
-      if (!isAdmin) return
-      
+      if (!isAdmin) return;
+
       try {
-        setStatsLoading(true)
-        const response = await fetch('/api/admin/stats')
+        setStatsLoading(true);
+        const response = await fetch("/api/admin/stats");
         if (response.ok) {
-          const data = await response.json()
-          setStats(data)
+          const data = await response.json();
+          setStats(data);
         } else {
-          console.error('Failed to fetch stats:', response.statusText)
+          console.error("Failed to fetch stats:", response.statusText);
+          toast({
+            title: "Error",
+            description:
+              "Failed to load dashboard statistics. Please refresh the page.",
+            variant: "destructive",
+          });
         }
       } catch (error) {
-        console.error('Error fetching stats:', error)
+        console.error("Error fetching stats:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard statistics. Please try again.",
+          variant: "destructive",
+        });
       } finally {
-        setStatsLoading(false)
+        setStatsLoading(false);
       }
-    }
+    };
 
-    fetchStats()
-  }, [isAdmin])
+    fetchStats();
+  }, [isAdmin, toast]);
 
   // Show loading state while session is loading
   if (status === "loading") {
@@ -79,17 +92,21 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
         <h1 className="text-3xl font-bold text-red-600 mb-4">Access Denied</h1>
-        <p className="mb-6 text-gray-700">You do not have permission to view this page.</p>
-        <Button onClick={() => router.push("/dashboard")}>Back to Dashboard</Button>
+        <p className="mb-6 text-gray-700">
+          You do not have permission to view this page.
+        </p>
+        <Button onClick={() => router.push("/dashboard")}>
+          Back to Dashboard
+        </Button>
       </div>
-    )
+    );
   }
 
   const adminOptions = [
@@ -99,7 +116,7 @@ export default function AdminDashboardPage() {
       icon: BookOpen,
       href: "/dashboard/admin",
       color: "bg-blue-500 hover:bg-blue-600",
-      iconColor: "text-blue-600"
+      iconColor: "text-blue-600",
     },
     {
       title: "Content Management",
@@ -107,7 +124,7 @@ export default function AdminDashboardPage() {
       icon: FileText,
       href: "/dashboard/admin/content-management",
       color: "bg-orange-500 hover:bg-orange-600",
-      iconColor: "text-orange-600"
+      iconColor: "text-orange-600",
     },
     {
       title: "User Management",
@@ -115,7 +132,7 @@ export default function AdminDashboardPage() {
       icon: Users,
       href: "/dashboard/admin/user-management",
       color: "bg-green-500 hover:bg-green-600",
-      iconColor: "text-green-600"
+      iconColor: "text-green-600",
     },
     {
       title: "Analytics & Reports",
@@ -123,7 +140,7 @@ export default function AdminDashboardPage() {
       icon: BarChart3,
       href: "/dashboard/admin/analytics",
       color: "bg-purple-500 hover:bg-purple-600",
-      iconColor: "text-purple-600"
+      iconColor: "text-purple-600",
     },
     {
       title: "System Settings",
@@ -131,7 +148,7 @@ export default function AdminDashboardPage() {
       icon: Settings,
       href: "/dashboard/admin/settings",
       color: "bg-gray-500 hover:bg-gray-600",
-      iconColor: "text-gray-600"
+      iconColor: "text-gray-600",
     },
     {
       title: "Security & Permissions",
@@ -140,11 +157,11 @@ export default function AdminDashboardPage() {
       href: "/dashboard/admin/security",
       color: "bg-red-500 hover:bg-red-600",
       iconColor: "text-red-600",
-      requiredRole: "OWNER"
-    }
-  ]
+      requiredRole: "OWNER",
+    },
+  ];
 
-  const accessibleOptions = adminOptions.filter(option => {
+  const accessibleOptions = adminOptions.filter((option) => {
     if (!option.requiredRole) return true;
     return option.requiredRole === userRole;
   });
@@ -162,12 +179,15 @@ export default function AdminDashboardPage() {
             Admin Dashboard
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Welcome back, {session?.user?.name}! Manage your course platform from here.
+            Welcome back, {session?.user?.name}! Manage your course platform
+            from here.
           </p>
           <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-500">
             <span className="flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
               <Shield className="h-4 w-4 text-blue-600" />
-              <span className="font-semibold text-blue-700">Role: {userRole}</span>
+              <span className="font-semibold text-blue-700">
+                Role: {userRole}
+              </span>
             </span>
             <span className="flex items-center gap-1 bg-green-50 px-3 py-1 rounded-full border border-green-200">
               <Activity className="h-4 w-4 text-green-600" />
@@ -179,7 +199,7 @@ export default function AdminDashboardPage() {
         {/* Admin Options Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accessibleOptions.map((option, index) => {
-            const IconComponent = option.icon
+            const IconComponent = option.icon;
             return (
               <motion.div
                 key={option.title}
@@ -190,8 +210,12 @@ export default function AdminDashboardPage() {
                 <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group">
                   <CardContent className="p-6">
                     <div className="flex flex-col items-center text-center space-y-4">
-                      <div className={`p-4 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors`}>
-                        <IconComponent className={`h-8 w-8 ${option.iconColor}`} />
+                      <div
+                        className={`p-4 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors`}
+                      >
+                        <IconComponent
+                          className={`h-8 w-8 ${option.iconColor}`}
+                        />
                       </div>
                       <div className="space-y-2">
                         <h3 className="text-xl font-semibold text-gray-900">
@@ -201,7 +225,7 @@ export default function AdminDashboardPage() {
                           {option.description}
                         </p>
                       </div>
-                      <Button 
+                      <Button
                         className={`w-full ${option.color} text-white`}
                         onClick={() => router.push(option.href)}
                       >
@@ -221,7 +245,7 @@ export default function AdminDashboardPage() {
                   </CardContent>
                 </Card>
               </motion.div>
-            )
+            );
           })}
         </div>
 
@@ -287,5 +311,5 @@ export default function AdminDashboardPage() {
         </motion.div>
       </div>
     </div>
-  )
-} 
+  );
+}

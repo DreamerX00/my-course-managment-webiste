@@ -1,38 +1,15 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
-import Table from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import { common, createLowlight } from "lowlight";
-import javascript from "highlight.js/lib/languages/javascript";
-import xml from "highlight.js/lib/languages/xml";
 import {
   DragDropContext,
   Droppable,
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import {
-  SimpleEditor,
-  SimpleEditorHandle,
-} from "@/components/tiptap-templates/simple/simple-editor";
-import { importFileToTiptapJSON } from "@/lib/tiptap-utils";
-
-// If TypeScript still complains, add the following at the top or in a .d.ts file:
-// declare module 'lowlight/lib/core';
-// declare module 'highlight.js/lib/languages/javascript';
-// declare module 'highlight.js/lib/languages/xml';
-
-const lowlight = createLowlight(common);
-lowlight.register("javascript", javascript);
-lowlight.register("xml", xml);
+import { ToastEditor, ToastEditorHandle } from "@/components/ui/toast-editor";
+import { importFileToMarkdown } from "@/lib/toast-utils";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Chapter {
   id: string;
@@ -54,6 +31,7 @@ interface Subchapter {
 export default function CourseContentManagerPage() {
   const params = useParams();
   const courseId = params.courseId as string;
+  const { toast } = useToast();
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
@@ -93,8 +71,8 @@ export default function CourseContentManagerPage() {
   const [pendingSubchapterContent, setPendingSubchapterContent] =
     useState<unknown>(null);
 
-  // Add a ref to SimpleEditor to allow setting content
-  const simpleEditorRef = React.useRef<SimpleEditorHandle | null>(null);
+  // Add a ref to ToastEditor to allow setting content
+  const editorRef = React.useRef<ToastEditorHandle | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const subChapterFileInputRef = React.useRef<HTMLInputElement>(null);
@@ -109,8 +87,13 @@ export default function CourseContentManagerPage() {
       })
       .catch((err) => {
         console.error("Failed to load chapters:", err);
+        toast({
+          title: "Error",
+          description: "Failed to load chapters. Please refresh the page.",
+          variant: "destructive",
+        });
       });
-  }, [courseId]);
+  }, [courseId, toast]);
 
   // Fetch subchapters when selectedChapter changes
   useEffect(() => {
@@ -122,40 +105,22 @@ export default function CourseContentManagerPage() {
       })
       .catch((err) => {
         console.error("Failed to load subchapters:", err);
+        toast({
+          title: "Error",
+          description: "Failed to load subchapters. Please try again.",
+          variant: "destructive",
+        });
       });
-  }, [selectedChapter, courseId]);
-
-  // Tiptap editor instance
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Link,
-      Image,
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableCell,
-      TableHeader,
-      CodeBlockLowlight.configure({ lowlight }),
-    ],
-    content: selectedChapter?.content || "<p>Edit chapter content here...</p>",
-    onUpdate: () => {
-      // Optionally handle live preview or autosave
-    },
-    editable: !!selectedChapter,
-  });
-
-  // Update editor content when chapter changes
-  useEffect(() => {
-    if (editor && selectedChapter) {
-      editor.commands.setContent(
-        selectedChapter.content || "<p>Edit chapter content here...</p>"
-      );
-    }
-  }, [selectedChapter, editor]);
+  }, [selectedChapter, courseId, toast]);
 
   // Save chapter content
   const handleSave = async () => {
     if (!selectedChapter || !pendingChapterContent) {
+      toast({
+        title: "Warning",
+        description: "No changes to save.",
+        variant: "destructive",
+      });
       return;
     }
     setSaving(true);
@@ -184,8 +149,21 @@ export default function CourseContentManagerPage() {
         prev.map((ch) => (ch.id === updated.id ? updated : ch))
       );
       setPendingChapterContent(null);
+
+      toast({
+        title: "Success",
+        description: "Chapter content saved successfully!",
+      });
     } catch (err: unknown) {
       console.error("An error occurred during chapter save:", err);
+      toast({
+        title: "Error",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Failed to save chapter content.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -212,8 +190,18 @@ export default function CourseContentManagerPage() {
       setNewChapterTitle("");
       setNewChapterContent("");
       setSelectedChapter(created);
+
+      toast({
+        title: "Success",
+        description: `Chapter "${created.title}" created successfully!`,
+      });
     } catch {
       setCreateError("Failed to create chapter");
+      toast({
+        title: "Error",
+        description: "Failed to create chapter. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setCreating(false);
     }
@@ -235,8 +223,18 @@ export default function CourseContentManagerPage() {
       setChapters((prev) => prev.filter((ch) => ch.id !== chapterId));
       if (selectedChapter?.id === chapterId) setSelectedChapter(null);
       setDeleteChapterId(null);
+
+      toast({
+        title: "Success",
+        description: "Chapter deleted successfully!",
+      });
     } catch {
       setDeleteError("Failed to delete chapter");
+      toast({
+        title: "Error",
+        description: "Failed to delete chapter. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setDeleting(false);
     }
@@ -259,8 +257,18 @@ export default function CourseContentManagerPage() {
         body: JSON.stringify({ chapterIds }),
       });
       if (!res.ok) throw new Error("Failed to reorder chapters");
+
+      toast({
+        title: "Success",
+        description: "Chapter order updated successfully!",
+      });
     } catch {
       setReorderError("Failed to save chapter order");
+      toast({
+        title: "Error",
+        description: "Failed to save chapter order. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setReorderLoading(false);
     }
@@ -287,8 +295,18 @@ export default function CourseContentManagerPage() {
       setNewSubTitle("");
       setNewSubContent("");
       setSelectedSubchapter(created);
+
+      toast({
+        title: "Success",
+        description: `Subchapter "${created.title}" created successfully!`,
+      });
     } catch {
       setSubCreateError("Failed to create subchapter");
+      toast({
+        title: "Error",
+        description: "Failed to create subchapter. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setSubCreating(false);
     }
@@ -310,8 +328,18 @@ export default function CourseContentManagerPage() {
       setSubchapters((prev) => prev.filter((sc) => sc.id !== subId));
       if (selectedSubchapter?.id === subId) setSelectedSubchapter(null);
       setDeleteSubId(null);
+
+      toast({
+        title: "Success",
+        description: "Subchapter deleted successfully!",
+      });
     } catch {
       setSubDeleteError("Failed to delete subchapter");
+      toast({
+        title: "Error",
+        description: "Failed to delete subchapter. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setSubDeleting(false);
     }
@@ -338,41 +366,31 @@ export default function CourseContentManagerPage() {
         }
       );
       if (!res.ok) throw new Error("Failed to reorder subchapters");
+
+      toast({
+        title: "Success",
+        description: "Subchapter order updated successfully!",
+      });
     } catch {
       setSubReorderError("Failed to save subchapter order");
+      toast({
+        title: "Error",
+        description: "Failed to save subchapter order. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setSubReorderLoading(false);
     }
   };
 
-  const subEditor = useEditor({
-    extensions: [
-      StarterKit,
-      Link,
-      Image,
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableCell,
-      TableHeader,
-      CodeBlockLowlight.configure({ lowlight }),
-    ],
-    content:
-      selectedSubchapter?.content || "<p>Edit subchapter content here...</p>",
-    editable: !!selectedSubchapter,
-  });
-
-  // Update subEditor content when subchapter changes
-  useEffect(() => {
-    if (subEditor && selectedSubchapter) {
-      subEditor.commands.setContent(
-        selectedSubchapter.content || "<p>Edit subchapter content here...</p>"
-      );
-    }
-  }, [selectedSubchapter, subEditor]);
-
   // Update handleSaveSubchapter to save JSON
   const handleSaveSubchapter = async () => {
     if (!selectedSubchapter || !pendingSubchapterContent) {
+      toast({
+        title: "Warning",
+        description: "No changes to save.",
+        variant: "destructive",
+      });
       return;
     }
     setSaving(true);
@@ -396,8 +414,21 @@ export default function CourseContentManagerPage() {
       setSubchapters((prev) =>
         prev.map((sc) => (sc.id === updated.id ? updated : sc))
       );
+
+      toast({
+        title: "Success",
+        description: "Subchapter content saved successfully!",
+      });
     } catch (err: unknown) {
       console.error("Failed to save subchapter:", err);
+      toast({
+        title: "Error",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Failed to save subchapter content.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -410,12 +441,25 @@ export default function CourseContentManagerPage() {
     if (!file || !selectedChapter) return;
 
     try {
-      const jsonContent = await importFileToTiptapJSON(file);
-      setPendingChapterContent(jsonContent);
-      // Optionally, update the editor view immediately
-      simpleEditorRef.current?.setContent(jsonContent);
+      const markdownContent = await importFileToMarkdown(file);
+      setPendingChapterContent(markdownContent);
+      // Update the editor view immediately
+      editorRef.current?.setContent(markdownContent);
+
+      toast({
+        title: "Success",
+        description: `File "${file.name}" imported successfully!`,
+      });
     } catch (error: unknown) {
       console.error("Failed to import file:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to import file. Please ensure it's a valid format.",
+        variant: "destructive",
+      });
     } finally {
       // Reset file input
       if (fileInputRef.current) {
@@ -431,12 +475,25 @@ export default function CourseContentManagerPage() {
     if (!file || !selectedSubchapter) return;
 
     try {
-      const jsonContent = await importFileToTiptapJSON(file);
-      setPendingSubchapterContent(jsonContent);
-      // Optionally, update the editor view immediately
-      simpleEditorRef.current?.setContent(jsonContent);
+      const markdownContent = await importFileToMarkdown(file);
+      setPendingSubchapterContent(markdownContent);
+      // Update the editor view immediately
+      editorRef.current?.setContent(markdownContent);
+
+      toast({
+        title: "Success",
+        description: `File "${file.name}" imported successfully!`,
+      });
     } catch (error: unknown) {
       console.error("Failed to import file:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to import file. Please ensure it's a valid format.",
+        variant: "destructive",
+      });
     } finally {
       // Reset file input
       if (subChapterFileInputRef.current) {
@@ -542,7 +599,10 @@ export default function CourseContentManagerPage() {
                                 ? "bg-blue-100 text-blue-900"
                                 : "bg-gray-100 text-gray-800"
                             }`}
-                            onClick={() => setSelectedChapter(chapter)}
+                            onClick={() => {
+                              setSelectedChapter(chapter);
+                              setSelectedSubchapter(null); // Clear subchapter when selecting chapter
+                            }}
                           >
                             {chapter.title}
                           </button>
@@ -675,7 +735,10 @@ export default function CourseContentManagerPage() {
                                     ? "bg-blue-50 text-blue-900"
                                     : "bg-gray-50 text-gray-800"
                                 }`}
-                                onClick={() => setSelectedSubchapter(sub)}
+                                onClick={() => {
+                                  setSelectedSubchapter(sub);
+                                  // Keep the chapter selected to show subchapters, but editor will show subchapter
+                                }}
                               >
                                 {sub.title}
                               </button>
@@ -741,12 +804,17 @@ export default function CourseContentManagerPage() {
         </div>
         {/* Main: Tiptap Editor */}
         <div className="w-full">
-          {selectedChapter && (
+          {!selectedChapter && !selectedSubchapter && (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <p>Select a chapter or subchapter to edit its content</p>
+            </div>
+          )}
+          {selectedChapter && !selectedSubchapter && (
             <>
               <div className="grow flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold text-gray-800">
-                    Chapter Content
+                    Chapter Content: {selectedChapter.title}
                   </h3>
                   <div className="flex items-center gap-2">
                     <button
@@ -771,11 +839,15 @@ export default function CourseContentManagerPage() {
                     />
                   </div>
                 </div>
-                <div className="border rounded-lg overflow-hidden grow">
-                  <SimpleEditor
-                    ref={simpleEditorRef}
-                    content={parseContent(selectedChapter.content)}
-                    onSave={setPendingChapterContent}
+                <div className="border rounded-lg overflow-hidden grow bg-gray-900">
+                  <ToastEditor
+                    ref={editorRef}
+                    content={parseContentToMarkdown(selectedChapter.content)}
+                    onSave={(content) =>
+                      setPendingChapterContent(content.markdown)
+                    }
+                    theme="dark"
+                    height="600px"
                   />
                 </div>
               </div>
@@ -786,7 +858,7 @@ export default function CourseContentManagerPage() {
               <div className="grow flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold text-gray-800">
-                    Subchapter Content
+                    Subchapter Content: {selectedSubchapter.title}
                   </h3>
                   <div className="flex items-center gap-2">
                     <button
@@ -811,11 +883,15 @@ export default function CourseContentManagerPage() {
                     />
                   </div>
                 </div>
-                <div className="border rounded-lg overflow-hidden grow">
-                  <SimpleEditor
-                    ref={simpleEditorRef}
-                    content={parseContent(selectedSubchapter.content)}
-                    onSave={setPendingSubchapterContent}
+                <div className="border rounded-lg overflow-hidden grow bg-gray-900">
+                  <ToastEditor
+                    ref={editorRef}
+                    content={parseContentToMarkdown(selectedSubchapter.content)}
+                    onSave={(content) =>
+                      setPendingSubchapterContent(content.markdown)
+                    }
+                    theme="dark"
+                    height="600px"
                   />
                 </div>
               </div>
@@ -828,15 +904,12 @@ export default function CourseContentManagerPage() {
 }
 
 // Add this utility function at the top or near the handlers
-function parseContent(content: unknown): unknown {
-  if (!content) return undefined;
+function parseContentToMarkdown(content: unknown): string {
+  if (!content) return "";
   if (typeof content === "string") {
-    try {
-      return JSON.parse(content);
-    } catch {
-      // fallback for legacy HTML string content
-      return content;
-    }
+    // If it's already a string, assume it's Markdown or plain text
+    return content;
   }
-  return content;
+  // If it's JSON from TipTap, return empty for now (we'll handle migration separately)
+  return "";
 }

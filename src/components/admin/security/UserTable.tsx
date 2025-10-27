@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   ColumnDef,
@@ -8,7 +8,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 import {
   Table,
   TableBody,
@@ -16,11 +16,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { UserRole, UserStatus } from '@prisma/client';
+} from "@/components/ui/table";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { UserRole, UserStatus } from "@prisma/client";
 import {
   ArrowUpDown,
   MoreHorizontal,
@@ -28,7 +28,7 @@ import {
   Trash2,
   UserX,
   UserCheck,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,9 +36,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
+import { useToast } from "@/components/ui/use-toast";
 
 export type User = {
   id: string;
@@ -51,19 +52,20 @@ export type User = {
 };
 
 const roleColors: Record<UserRole, string> = {
-  OWNER: 'bg-red-500',
-  ADMIN: 'bg-green-500',
-  INSTRUCTOR: 'bg-blue-500',
-  STUDENT: 'bg-gray-500',
-  GUEST: 'bg-yellow-500',
+  OWNER: "bg-red-500",
+  ADMIN: "bg-green-500",
+  INSTRUCTOR: "bg-blue-500",
+  STUDENT: "bg-gray-500",
+  GUEST: "bg-yellow-500",
 };
 
 export function UserTable() {
+  const { toast } = useToast();
   const [data, setData] = useState<User[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [totalUsers, setTotalUsers] = useState(0);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   const totalPages = Math.ceil(totalUsers / pagination.pageSize);
@@ -75,16 +77,21 @@ export function UserTable() {
         page: (pagination.pageIndex + 1).toString(),
         limit: pagination.pageSize.toString(),
         search: searchQuery,
-        sortBy: sorting[0]?.id ?? 'createdAt',
-        sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
+        sortBy: sorting[0]?.id ?? "createdAt",
+        sortOrder: sorting[0]?.desc ? "desc" : "asc",
       });
       const response = await fetch(`/api/admin/users?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch users');
+      if (!response.ok) throw new Error("Failed to fetch users");
       const result = await response.json();
       setData(result.users);
       setTotalUsers(result.pagination.totalUsers);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load users. Please refresh the page.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -111,26 +118,37 @@ export function UserTable() {
 
     try {
       const response = await fetch(`/api/admin/users/${user.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'changeRole', role: newRole }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "changeRole", role: newRole }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update role');
+        throw new Error(error.error || "Failed to update role");
       }
 
       const updatedUser = await response.json();
-      setData(prev => prev.map(u => u.id === user.id ? updatedUser : u));
+      setData((prev) => prev.map((u) => (u.id === user.id ? updatedUser : u)));
+
+      toast({
+        title: "Success",
+        description: `User role updated to ${newRole}.`,
+      });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update role';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update role";
       console.error(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
   const handleToggleStatus = async (user: User) => {
-    const action = user.status === 'ACTIVE' ? 'block' : 'unblock';
+    const action = user.status === "ACTIVE" ? "block" : "unblock";
     const confirmed = confirm(
       `Are you sure you want to ${action} ${user.name} (${user.email})?`
     );
@@ -139,21 +157,34 @@ export function UserTable() {
 
     try {
       const response = await fetch(`/api/admin/users/${user.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'toggleStatus' }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "toggleStatus" }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update status');
+        throw new Error(error.error || "Failed to update status");
       }
 
       const updatedUser = await response.json();
-      setData(prev => prev.map(u => u.id === user.id ? updatedUser : u));
+      setData((prev) => prev.map((u) => (u.id === user.id ? updatedUser : u)));
+
+      toast({
+        title: "Success",
+        description: `User ${
+          updatedUser.status === "ACTIVE" ? "unblocked" : "blocked"
+        } successfully.`,
+      });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update status';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update status";
       console.error(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
@@ -166,34 +197,45 @@ export function UserTable() {
 
     try {
       const response = await fetch(`/api/admin/users/${user.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to delete user');
+        throw new Error(error.error || "Failed to delete user");
       }
 
-      setData(prev => prev.filter(u => u.id !== user.id));
-      setTotalUsers(prev => prev - 1);
+      setData((prev) => prev.filter((u) => u.id !== user.id));
+      setTotalUsers((prev) => prev - 1);
+
+      toast({
+        title: "Success",
+        description: `User ${user.name} deleted successfully.`,
+      });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete user';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete user";
       console.error(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
   // Define columns with access to handler functions
   const columns: ColumnDef<User>[] = [
     {
-      accessorKey: 'name',
-      header: 'User',
+      accessorKey: "name",
+      header: "User",
       cell: ({ row }) => {
         const user = row.original;
         return (
           <div className="flex items-center gap-3">
             <Image
-              src={user.image || '/default-avatar.png'}
-              alt={user.name || 'User Avatar'}
+              src={user.image || "/default-avatar.png"}
+              alt={user.name || "User Avatar"}
               width={40}
               height={40}
               className="rounded-full"
@@ -207,44 +249,44 @@ export function UserTable() {
       },
     },
     {
-      accessorKey: 'role',
-      header: 'Role',
+      accessorKey: "role",
+      header: "Role",
       cell: ({ row }) => {
-        const role = row.getValue('role') as UserRole;
+        const role = row.getValue("role") as UserRole;
         return (
           <Badge className={`${roleColors[role]} text-white`}>{role}</Badge>
         );
       },
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
+      accessorKey: "status",
+      header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue('status') as UserStatus;
+        const status = row.getValue("status") as UserStatus;
         return (
-          <Badge variant={status === 'ACTIVE' ? 'default' : 'destructive'}>
+          <Badge variant={status === "ACTIVE" ? "default" : "destructive"}>
             {status}
           </Badge>
         );
       },
     },
     {
-      accessorKey: 'createdAt',
+      accessorKey: "createdAt",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Joined Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
       cell: ({ row }) => {
-        return new Date(row.getValue('createdAt')).toLocaleDateString();
+        return new Date(row.getValue("createdAt")).toLocaleDateString();
       },
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({ row }) => {
         const user = row.original;
         return (
@@ -262,7 +304,7 @@ export function UserTable() {
                 <Pencil className="mr-2 h-4 w-4" />
                 Change Role
               </DropdownMenuItem>
-              {user.status === 'ACTIVE' ? (
+              {user.status === "ACTIVE" ? (
                 <DropdownMenuItem onClick={() => handleToggleStatus(user)}>
                   <UserX className="mr-2 h-4 w-4" />
                   Block User
@@ -273,8 +315,8 @@ export function UserTable() {
                   Unblock User
                 </DropdownMenuItem>
               )}
-              {user.role !== 'OWNER' && (
-                <DropdownMenuItem 
+              {user.role !== "OWNER" && (
+                <DropdownMenuItem
                   className="text-red-600"
                   onClick={() => handleDeleteUser(user)}
                 >
@@ -337,7 +379,10 @@ export function UserTable() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                     <span className="ml-2">Loading users...</span>
@@ -348,7 +393,7 @@ export function UserTable() {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -362,7 +407,10 @@ export function UserTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No users found.
                 </TableCell>
               </TableRow>
@@ -372,7 +420,8 @@ export function UserTable() {
       </div>
       <div className="flex items-center justify-between space-x-2 py-4">
         <span className="text-sm text-gray-700">
-          Page {table.getState().pagination.pageIndex + 1} of {totalPages} ({totalUsers} total users)
+          Page {table.getState().pagination.pageIndex + 1} of {totalPages} (
+          {totalUsers} total users)
         </span>
         <div className="space-x-2">
           <Button
@@ -395,4 +444,4 @@ export function UserTable() {
       </div>
     </div>
   );
-} 
+}

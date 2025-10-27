@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import {
   Star,
   Users,
@@ -21,8 +23,6 @@ import {
   Smartphone,
   Lock,
 } from "lucide-react";
-import { EditorContent, useEditor } from "@tiptap/react";
-import { editorExtensions } from "@/lib/tiptap-extensions";
 import { motion } from "framer-motion";
 
 // Data structures from DB
@@ -135,18 +135,6 @@ const defaultContentDetails: ContentDetails = {
   ],
 };
 
-// Icon mapping for features
-import Image from "next/image";
-
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Video,
-  FileText,
-  FileCode,
-  MessageSquare,
-  Smartphone,
-  Trophy,
-};
-
 function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
   return (
     <div className="relative bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 py-12 sm:py-16 lg:py-20">
@@ -251,13 +239,6 @@ function CourseDescription({
 }: {
   contentDetails: ContentDetails;
 }) {
-  const editor = useEditor({
-    extensions: editorExtensions,
-    content: contentDetails.description,
-    editable: false,
-    immediatelyRender: false,
-  });
-
   return (
     <div className="py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -265,14 +246,29 @@ function CourseDescription({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="prose prose-lg max-w-none"
+          className="prose dark:prose-invert prose-lg max-w-none"
         >
-          <EditorContent editor={editor} />
+          <MarkdownDisplay content={contentDetails.description} />
         </motion.div>
       </div>
     </div>
   );
 }
+
+// Icon mapping for features
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Video,
+  FileCode,
+  Trophy,
+  MessageSquare,
+  Smartphone,
+  Lock,
+  FileText,
+  Clock,
+  CheckCircle,
+  Users,
+  Star,
+};
 
 function CourseFeatures({
   contentDetails,

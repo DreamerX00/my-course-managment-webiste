@@ -2,12 +2,18 @@
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { RichTextDisplay } from "@/components/ui/rich-text-display";
-import { EditorContent, useEditor } from '@tiptap/react';
-import { editorExtensions } from '@/lib/tiptap-extensions';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToastEditor, ToastEditorHandle } from "@/components/ui/toast-editor";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Course {
   id: string;
@@ -31,6 +37,7 @@ export default function AdminPanelPage() {
   const { data: session } = useSession();
   const userRole = session?.user?.role || "STUDENT";
   const isAdmin = ["ADMIN", "INSTRUCTOR", "OWNER"].includes(userRole);
+  const { toast } = useToast();
 
   // State for courses
   const [courses, setCourses] = useState<Course[]>([]);
@@ -43,7 +50,6 @@ export default function AdminPanelPage() {
 
   // State for new course form
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number>(0);
   const [imageUrl, setImageUrl] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -64,39 +70,9 @@ export default function AdminPanelPage() {
   const [editCourseLoading, setEditCourseLoading] = useState(false);
   const [editCourseError, setEditCourseError] = useState<string | null>(null);
 
-  // TipTap editor for course description editing
-  const editCourseEditor = useEditor({
-    extensions: editorExtensions,
-    content: editCourseDescription,
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      setEditCourseDescription(editor.getHTML());
-    }
-  });
-
-  // Update editor content when description changes
-  useEffect(() => {
-    if (editCourseEditor) {
-      editCourseEditor.commands.setContent(editCourseDescription);
-    }
-  }, [editCourseDescription, editCourseEditor]);
-
-  // TipTap editor for course creation
-  const createCourseEditor = useEditor({
-    extensions: editorExtensions,
-    content: description,
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      setDescription(editor.getHTML());
-    }
-  });
-
-  // Update editor content when description changes
-  useEffect(() => {
-    if (createCourseEditor) {
-      createCourseEditor.commands.setContent(description);
-    }
-  }, [description, createCourseEditor]);
+  // Editor refs for Toast UI Editor
+  const editCourseEditorRef = useRef<ToastEditorHandle>(null);
+  const createCourseEditorRef = useRef<ToastEditorHandle>(null);
 
   // Add state for publish loading and error
   const [publishLoadingId, setPublishLoadingId] = useState<string | null>(null);
@@ -109,18 +85,18 @@ export default function AdminPanelPage() {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true);
-        const response = await fetch('/api/content-settings', {
-          cache: 'no-store' // Prevent caching
+        const response = await fetch("/api/content-settings", {
+          cache: "no-store", // Prevent caching
         });
         if (response.ok) {
           const data = await response.json();
           const filterCategories = data.filterCategories || [];
           setCategories(filterCategories);
         } else {
-          console.error('Failed to fetch categories');
+          console.error("Failed to fetch categories");
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", error);
       } finally {
         setCategoriesLoading(false);
       }
@@ -138,10 +114,10 @@ export default function AdminPanelPage() {
       fetchCategories();
     }, 30000);
 
-    window.addEventListener('focus', handleFocus);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("focus", handleFocus);
       clearInterval(intervalId);
     };
   }, []);
@@ -150,18 +126,18 @@ export default function AdminPanelPage() {
   const refreshCategories = async () => {
     try {
       setCategoriesLoading(true);
-      const response = await fetch('/api/content-settings', {
-        cache: 'no-store'
+      const response = await fetch("/api/content-settings", {
+        cache: "no-store",
       });
       if (response.ok) {
         const data = await response.json();
         const filterCategories = data.filterCategories || [];
         setCategories(filterCategories);
       } else {
-        console.error('Failed to refresh categories');
+        console.error("Failed to refresh categories");
       }
     } catch (error) {
-      console.error('Error refreshing categories:', error);
+      console.error("Error refreshing categories:", error);
     } finally {
       setCategoriesLoading(false);
     }
@@ -176,26 +152,36 @@ export default function AdminPanelPage() {
         setCourses(data);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
         setError("Failed to load courses");
         setLoading(false);
+        toast({
+          title: "Error",
+          description: "Failed to load courses. Please refresh the page.",
+          variant: "destructive",
+        });
+        console.error("Error loading courses:", error);
       });
-  }, [isAdmin]);
+  }, [isAdmin, toast]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
     setCreateError(null);
+
+    // Get markdown content from editor
+    const markdownContent = createCourseEditorRef.current?.getMarkdown() || "";
+
     try {
       const res = await fetch("/api/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          title, 
-          description, 
-          price, 
+        body: JSON.stringify({
+          title,
+          description: markdownContent,
+          price,
           imageUrl,
-          category: selectedCategory 
+          category: selectedCategory,
         }),
       });
       if (!res.ok) {
@@ -205,13 +191,26 @@ export default function AdminPanelPage() {
       const newCourse = await res.json();
       setCourses([newCourse, ...courses]);
       setTitle("");
-      setDescription("");
       setPrice(0);
       setImageUrl("");
       setSelectedCategory("");
+
+      // Reset editor content
+      createCourseEditorRef.current?.setContent("");
+
+      toast({
+        title: "Success",
+        description: `Course "${newCourse.title}" created successfully!`,
+      });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create course';
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to create course";
       setCreateError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setCreating(false);
     }
@@ -239,7 +238,7 @@ export default function AdminPanelPage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching course details:', error);
+      console.error("Error fetching course details:", error);
       setEditCourseCategory("");
     }
   };
@@ -259,13 +258,18 @@ export default function AdminPanelPage() {
   const handleEditCourse = async (courseId: string) => {
     setEditCourseLoading(true);
     setEditCourseError(null);
+
+    // Get markdown content from editor
+    const markdownContent =
+      editCourseEditorRef.current?.getMarkdown() || editCourseDescription;
+
     try {
       const res = await fetch(`/api/courses/${courseId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: editCourseTitle,
-          description: editCourseDescription,
+          description: markdownContent,
           price: editCoursePrice,
           thumbnail: editCourseThumbnail,
           category: editCourseCategory,
@@ -274,7 +278,7 @@ export default function AdminPanelPage() {
       });
       if (!res.ok) throw new Error("Failed to update course");
       const updatedCourse = await res.json();
-      setCourses(courses.map(c => c.id === courseId ? updatedCourse : c));
+      setCourses(courses.map((c) => (c.id === courseId ? updatedCourse : c)));
       setEditingCourseId(null);
       setEditCourseTitle("");
       setEditCourseDescription("");
@@ -282,8 +286,18 @@ export default function AdminPanelPage() {
       setEditCourseThumbnail("");
       setEditCourseCategory("");
       setEditCoursePublished(false);
+
+      toast({
+        title: "Success",
+        description: `Course "${updatedCourse.title}" updated successfully!`,
+      });
     } catch {
       setEditCourseError("Failed to update course");
+      toast({
+        title: "Error",
+        description: "Failed to update course. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setEditCourseLoading(false);
     }
@@ -300,9 +314,21 @@ export default function AdminPanelPage() {
       });
       if (!res.ok) throw new Error("Failed to update publish status");
       const updatedCourse = await res.json();
-      setCourses(courses.map(c => c.id === course.id ? updatedCourse : c));
+      setCourses(courses.map((c) => (c.id === course.id ? updatedCourse : c)));
+
+      toast({
+        title: "Success",
+        description: `Course "${course.title}" ${
+          updatedCourse.isPublished ? "published" : "unpublished"
+        } successfully!`,
+      });
     } catch {
       setPublishError("Failed to update publish status");
+      toast({
+        title: "Error",
+        description: "Failed to update publish status. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setPublishLoadingId(null);
     }
@@ -312,8 +338,15 @@ export default function AdminPanelPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
         <h1 className="text-3xl font-bold text-red-600 mb-4">Access Denied</h1>
-        <p className="mb-6 text-gray-700">You do not have permission to view this page.</p>
-        <Link href="/dashboard" className="px-6 py-2 rounded bg-blue-500 text-white font-semibold">Back to Dashboard</Link>
+        <p className="mb-6 text-gray-700">
+          You do not have permission to view this page.
+        </p>
+        <Link
+          href="/dashboard"
+          className="px-6 py-2 rounded bg-blue-500 text-white font-semibold"
+        >
+          Back to Dashboard
+        </Link>
       </div>
     );
   }
@@ -321,29 +354,53 @@ export default function AdminPanelPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-yellow-50 to-pink-50 p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-4xl font-extrabold text-blue-900 mb-6">Admin Panel</h1>
-        <p className="text-lg text-gray-800 mb-8">Manage courses, sessions, and content here.</p>
+        <h1 className="text-4xl font-extrabold text-blue-900 mb-6">
+          Admin Panel
+        </h1>
+        <p className="text-lg text-gray-800 mb-8">
+          Manage courses, sessions, and content here.
+        </p>
         {/* Create Course Form */}
-        <form onSubmit={handleCreate} className="mb-10 space-y-4 bg-blue-100 rounded-lg p-6 shadow border border-blue-200">
-          <h2 className="text-2xl font-bold text-blue-800 mb-2">Add New Course</h2>
+        <form
+          onSubmit={handleCreate}
+          className="mb-10 space-y-4 bg-blue-100 rounded-lg p-6 shadow border border-blue-200"
+        >
+          <h2 className="text-2xl font-bold text-blue-800 mb-2">
+            Add New Course
+          </h2>
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1">Title</label>
-            <input className="w-full border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" value={title} onChange={e => setTitle(e.target.value)} required disabled={creating} />
+            <label className="block text-sm font-semibold text-gray-900 mb-1">
+              Title
+            </label>
+            <input
+              className="w-full border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              disabled={creating}
+            />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1">Description</label>
-            <div className="border border-black rounded overflow-hidden">
-              <EditorContent 
-                editor={createCourseEditor} 
-                className="min-h-[200px] p-3 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Description
+            </label>
+            <ToastEditor
+              ref={createCourseEditorRef}
+              height="300px"
+              placeholder="Enter course description in Markdown..."
+            />
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm font-semibold text-gray-900">Course Type:</span>
+            <span className="text-sm font-semibold text-gray-900">
+              Course Type:
+            </span>
             <button
               type="button"
-              className={`px-4 py-1 rounded-l bg-${isFree ? 'blue-700' : 'gray-200'} text-${isFree ? 'white' : 'gray-900'} font-bold border border-black focus:outline-none`}
+              className={`px-4 py-1 rounded-l bg-${
+                isFree ? "blue-700" : "gray-200"
+              } text-${
+                isFree ? "white" : "gray-900"
+              } font-bold border border-black focus:outline-none`}
               onClick={() => setIsFree(true)}
               disabled={creating}
             >
@@ -351,7 +408,11 @@ export default function AdminPanelPage() {
             </button>
             <button
               type="button"
-              className={`px-4 py-1 rounded-r bg-${!isFree ? 'blue-700' : 'gray-200'} text-${!isFree ? 'white' : 'gray-900'} font-bold border border-black focus:outline-none`}
+              className={`px-4 py-1 rounded-r bg-${
+                !isFree ? "blue-700" : "gray-200"
+              } text-${
+                !isFree ? "white" : "gray-900"
+              } font-bold border border-black focus:outline-none`}
               onClick={() => setIsFree(false)}
               disabled={creating}
             >
@@ -360,21 +421,46 @@ export default function AdminPanelPage() {
           </div>
           {!isFree && (
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1">Price ($)</label>
-              <input type="number" className="w-full border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" value={price} onChange={e => setPrice(Number(e.target.value))} min="0" step="0.01" required={!isFree} disabled={creating} />
+              <label className="block text-sm font-semibold text-gray-900 mb-1">
+                Price ($)
+              </label>
+              <input
+                type="number"
+                className="w-full border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={price}
+                onChange={(e) => setPrice(Number(e.target.value))}
+                min="0"
+                step="0.01"
+                required={!isFree}
+                disabled={creating}
+              />
             </div>
           )}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1">Image URL</label>
-            <input className="w-full border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" value={imageUrl} onChange={e => setImageUrl(e.target.value)} required disabled={creating} />
+            <label className="block text-sm font-semibold text-gray-900 mb-1">
+              Image URL
+            </label>
+            <input
+              className="w-full border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              required
+              disabled={creating}
+            />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1">Category</label>
+            <label className="block text-sm font-semibold text-gray-900 mb-1">
+              Category
+            </label>
             <div className="flex gap-2">
               {categoriesLoading ? (
                 <div className="text-gray-600">Loading categories...</div>
               ) : (
-                <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={creating}>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                  disabled={creating}
+                >
                   <SelectTrigger className="flex-1 border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
@@ -382,8 +468,8 @@ export default function AdminPanelPage() {
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.name}>
                         <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
+                          <div
+                            className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: category.color }}
                           />
                           {category.name}
@@ -407,8 +493,16 @@ export default function AdminPanelPage() {
               {categories.length} categories loaded
             </div>
           </div>
-          {createError && <div className="text-red-700 font-bold">{createError}</div>}
-          <button type="submit" className="px-6 py-2 rounded bg-blue-800 text-white font-bold hover:bg-blue-900" disabled={creating}>{creating ? "Creating..." : "Create Course"}</button>
+          {createError && (
+            <div className="text-red-700 font-bold">{createError}</div>
+          )}
+          <button
+            type="submit"
+            className="px-6 py-2 rounded bg-blue-800 text-white font-bold hover:bg-blue-900"
+            disabled={creating}
+          >
+            {creating ? "Creating..." : "Create Course"}
+          </button>
         </form>
         {/* Courses List */}
         <h2 className="text-2xl font-bold text-blue-800 mb-4">All Courses</h2>
@@ -420,62 +514,88 @@ export default function AdminPanelPage() {
           <div className="text-gray-600">No courses found.</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {courses.map(course => (
-              <div key={course.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4 shadow flex flex-col relative mb-8">
+            {courses.map((course) => (
+              <div
+                key={course.id}
+                className="bg-blue-50 border border-blue-200 rounded-lg p-4 shadow flex flex-col relative mb-8"
+              >
                 {editingCourseId === course.id ? (
                   <form
                     className="flex flex-col gap-3"
-                    onSubmit={e => {
+                    onSubmit={(e) => {
                       e.preventDefault();
                       handleEditCourse(course.id);
                     }}
                   >
-                    <label className="text-sm font-semibold text-gray-900">Title</label>
+                    <label className="text-sm font-semibold text-gray-900">
+                      Title
+                    </label>
                     <input
                       className="border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={editCourseTitle}
-                      onChange={e => setEditCourseTitle(e.target.value)}
+                      onChange={(e) => setEditCourseTitle(e.target.value)}
                       required
                     />
-                    <label className="text-sm font-semibold text-gray-900">Description</label>
-                    <div className="border border-black rounded overflow-hidden">
-                      <EditorContent 
-                        editor={editCourseEditor} 
-                        className="min-h-[200px] p-3 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <label className="text-sm font-semibold text-gray-900">Price ($)</label>
+                    <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      Description
+                    </label>
+                    <ToastEditor
+                      ref={editCourseEditorRef}
+                      content={editCourseDescription}
+                      height="300px"
+                      placeholder="Enter course description in Markdown..."
+                      onSave={({ markdown }) =>
+                        setEditCourseDescription(markdown)
+                      }
+                    />
+                    <label className="text-sm font-semibold text-gray-900">
+                      Price ($)
+                    </label>
                     <input
                       type="number"
                       className="border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={editCoursePrice}
-                      onChange={e => setEditCoursePrice(Number(e.target.value))}
+                      onChange={(e) =>
+                        setEditCoursePrice(Number(e.target.value))
+                      }
                       min="0"
                       step="0.01"
                       required
                     />
-                    <label className="text-sm font-semibold text-gray-900">Image URL</label>
+                    <label className="text-sm font-semibold text-gray-900">
+                      Image URL
+                    </label>
                     <input
                       className="border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={editCourseThumbnail}
-                      onChange={e => setEditCourseThumbnail(e.target.value)}
+                      onChange={(e) => setEditCourseThumbnail(e.target.value)}
                       required
                     />
-                    <label className="text-sm font-semibold text-gray-900">Category</label>
+                    <label className="text-sm font-semibold text-gray-900">
+                      Category
+                    </label>
                     <div className="flex gap-2">
                       {categoriesLoading ? (
-                        <div className="text-gray-600">Loading categories...</div>
+                        <div className="text-gray-600">
+                          Loading categories...
+                        </div>
                       ) : (
-                        <Select value={editCourseCategory} onValueChange={setEditCourseCategory}>
+                        <Select
+                          value={editCourseCategory}
+                          onValueChange={setEditCourseCategory}
+                        >
                           <SelectTrigger className="flex-1 border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
                           <SelectContent>
                             {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.name}>
+                              <SelectItem
+                                key={category.id}
+                                value={category.name}
+                              >
                                 <div className="flex items-center gap-2">
-                                  <div 
-                                    className="w-3 h-3 rounded-full" 
+                                  <div
+                                    className="w-3 h-3 rounded-full"
                                     style={{ backgroundColor: category.color }}
                                   />
                                   {category.name}
@@ -503,56 +623,154 @@ export default function AdminPanelPage() {
                         type="checkbox"
                         id={`published-${course.id}`}
                         checked={editCoursePublished}
-                        onChange={e => setEditCoursePublished(e.target.checked)}
+                        onChange={(e) =>
+                          setEditCoursePublished(e.target.checked)
+                        }
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                       />
-                      <label htmlFor={`published-${course.id}`} className="text-sm font-semibold text-gray-900">Published</label>
+                      <label
+                        htmlFor={`published-${course.id}`}
+                        className="text-sm font-semibold text-gray-900"
+                      >
+                        Published
+                      </label>
                     </div>
-                    {editCourseError && <div className="text-red-700 font-bold">{editCourseError}</div>}
+                    {editCourseError && (
+                      <div className="text-red-700 font-bold">
+                        {editCourseError}
+                      </div>
+                    )}
                     <div className="flex gap-2 mt-2">
-                      <button type="submit" className="px-4 py-2 bg-blue-700 text-white rounded font-semibold" disabled={editCourseLoading}>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-700 text-white rounded font-semibold"
+                        disabled={editCourseLoading}
+                      >
                         {editCourseLoading ? "Saving..." : "Save"}
                       </button>
-                      <button type="button" className="px-4 py-2 bg-gray-400 text-white rounded font-semibold" onClick={handleCancelEditCourse} disabled={editCourseLoading}>
+                      <button
+                        type="button"
+                        className="px-4 py-2 bg-gray-400 text-white rounded font-semibold"
+                        onClick={handleCancelEditCourse}
+                        disabled={editCourseLoading}
+                      >
                         Cancel
                       </button>
                     </div>
                   </form>
                 ) : (
                   <>
-                    <Image src={course.thumbnail || "/placeholder.png"} alt={course.title} width={400} height={160} className="w-full h-40 object-cover rounded mb-2" />
-                    <h3 className="text-xl font-bold text-blue-900">{course.title}</h3>
+                    <Image
+                      src={course.thumbnail || "/placeholder.png"}
+                      alt={course.title}
+                      width={400}
+                      height={160}
+                      className="w-full h-40 object-cover rounded mb-2"
+                    />
+                    <h3 className="text-xl font-bold text-blue-900">
+                      {course.title}
+                    </h3>
                     <div className="text-gray-800 mb-2 line-clamp-2">
-                      <RichTextDisplay 
-                        content={course.description} 
+                      <RichTextDisplay
+                        content={course.description}
                         className="text-sm"
                         maxHeight="4rem"
                       />
                     </div>
                     <div className="flex items-center justify-between mt-auto">
-                      <span className="text-blue-800 font-semibold">{course.price === 0 ? "Free" : `$${course.price}`}</span>
+                      <span className="text-blue-800 font-semibold">
+                        {course.price === 0 ? "Free" : `$${course.price}`}
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded ${course.isPublished ? 'bg-green-200 text-green-900' : 'bg-yellow-200 text-yellow-900'}`}>{course.isPublished ? 'Published' : 'Draft'}</span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            course.isPublished
+                              ? "bg-green-200 text-green-900"
+                              : "bg-yellow-200 text-yellow-900"
+                          }`}
+                        >
+                          {course.isPublished ? "Published" : "Draft"}
+                        </span>
                         <button
-                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold border transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400 ${course.isPublished ? 'bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100' : 'bg-green-50 border-green-300 text-green-900 hover:bg-green-100'}`}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold border transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                            course.isPublished
+                              ? "bg-yellow-50 border-yellow-300 text-yellow-900 hover:bg-yellow-100"
+                              : "bg-green-50 border-green-300 text-green-900 hover:bg-green-100"
+                          }`}
                           onClick={() => handleTogglePublish(course)}
-                          disabled={publishLoadingId === course.id || !!editingCourseId}
-                          title={course.isPublished ? 'Unpublish this course' : 'Publish this course'}
-                          aria-label={course.isPublished ? 'Unpublish' : 'Publish'}
+                          disabled={
+                            publishLoadingId === course.id || !!editingCourseId
+                          }
+                          title={
+                            course.isPublished
+                              ? "Unpublish this course"
+                              : "Publish this course"
+                          }
+                          aria-label={
+                            course.isPublished ? "Unpublish" : "Publish"
+                          }
                         >
                           {publishLoadingId === course.id ? (
-                            <svg className="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                            <svg
+                              className="animate-spin h-4 w-4 text-blue-600"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v8z"
+                              ></path>
+                            </svg>
                           ) : course.isPublished ? (
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
                           ) : (
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
                           )}
-                          <span>{course.isPublished ? 'Unpublish' : 'Publish'}</span>
+                          <span>
+                            {course.isPublished ? "Unpublish" : "Publish"}
+                          </span>
                         </button>
                       </div>
                     </div>
-                    <span className="text-xs text-gray-600 mt-1">Created: {new Date(course.createdAt).toLocaleDateString()}</span>
-                    <span className="text-xs text-gray-500 font-mono">ID: {course.id || 'N/A'}</span>
+                    <span className="text-xs text-gray-600 mt-1">
+                      Created: {new Date(course.createdAt).toLocaleDateString()}
+                    </span>
+                    <span className="text-xs text-gray-500 font-mono">
+                      ID: {course.id || "N/A"}
+                    </span>
                     <div className="flex gap-2 mt-3">
                       <button
                         className="px-4 py-2 bg-yellow-400 text-black rounded font-semibold hover:bg-yellow-500"
@@ -563,19 +781,29 @@ export default function AdminPanelPage() {
                       </button>
                     </div>
                     {!editingCourseId && publishError && (
-                      <div className="text-red-700 font-bold mb-2">{publishError}</div>
+                      <div className="text-red-700 font-bold mb-2">
+                        {publishError}
+                      </div>
                     )}
                   </>
                 )}
                 <div className="flex gap-2 mt-3">
                   <button
-                    onClick={() => router.push(`/dashboard/admin/courses/${course.id}/content`)}
+                    onClick={() =>
+                      router.push(
+                        `/dashboard/admin/courses/${course.id}/content`
+                      )
+                    }
                     className="flex-1 px-4 py-2 bg-blue-700 text-white rounded font-semibold hover:bg-blue-800"
                   >
                     Manage Content
                   </button>
                   <button
-                    onClick={() => router.push(`/dashboard/admin/courses/${course.id}/content-details`)}
+                    onClick={() =>
+                      router.push(
+                        `/dashboard/admin/courses/${course.id}/content-details`
+                      )
+                    }
                     className="flex-1 px-4 py-2 bg-green-700 text-white rounded font-semibold hover:bg-green-800"
                   >
                     Manage Content Details
@@ -588,4 +816,4 @@ export default function AdminPanelPage() {
       </div>
     </div>
   );
-} 
+}

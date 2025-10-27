@@ -142,3 +142,6 @@ out/
 
 # Cloudinary
 .cloudinary/
+
+#Documentation
+/documents

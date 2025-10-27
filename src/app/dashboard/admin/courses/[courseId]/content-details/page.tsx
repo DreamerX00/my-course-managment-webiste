@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { useRouter, useParams } from "next/navigation"
-import { useToast } from "@/components/ui/use-toast"
-import { 
-  Save, 
-  RotateCcw, 
+import { useState, useRef } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useRouter, useParams } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Save,
+  RotateCcw,
   ArrowLeft,
   Plus,
   X,
@@ -25,10 +25,9 @@ import {
   MessageSquare,
   Smartphone,
   Trophy,
-  BookOpen
-} from "lucide-react"
-import { EditorContent, useEditor } from '@tiptap/react'
-import { editorExtensions } from "@/lib/tiptap-extensions"
+  BookOpen,
+} from "lucide-react";
+import { ToastEditor, ToastEditorHandle } from "@/components/ui/toast-editor";
 
 // Default content details template
 const defaultContentDetails = {
@@ -37,9 +36,10 @@ const defaultContentDetails = {
   tags: ["DSA", "Beginner", "Interview Prep", "Popular"],
   instructor: {
     name: "Dreamer X",
-    avatar: "https://media.licdn.com/dms/image/v2/D5603AQESvarmSkAJlg/profile-displayphoto-shrink_400_400/B56ZVSx_uRHoAk-/0/1740850594111?e=1755734400&v=beta&t=AJLi2kkgpMLthVAjhaHVKz1i8GTpf-7IlcyeK_cJPy8",
+    avatar:
+      "https://media.licdn.com/dms/image/v2/D5603AQESvarmSkAJlg/profile-displayphoto-shrink_400_400/B56ZVSx_uRHoAk-/0/1740850594111?e=1755734400&v=beta&t=AJLi2kkgpMLthVAjhaHVKz1i8GTpf-7IlcyeK_cJPy8",
     rating: 4.8,
-    students: 15420
+    students: 15420,
   },
   rating: 4.9,
   enrolledCount: 28450,
@@ -82,40 +82,40 @@ const defaultContentDetails = {
       icon: "Video",
       title: "Video Content",
       description: "45 hours of on-demand videos",
-      value: "45 hours"
+      value: "45 hours",
     },
     {
       icon: "FileText",
       title: "Resources",
       description: "Downloadable resources and notes",
-      value: "50+ files"
+      value: "50+ files",
     },
     {
       icon: "FileCode",
       title: "Assignments",
       description: "Practice problems and coding challenges",
-      value: "200+ problems"
+      value: "200+ problems",
     },
     {
       icon: "MessageSquare",
       title: "Instructor Support",
       description: "Direct Q&A and doubt solving",
-      value: "24/7 support"
+      value: "24/7 support",
     },
     {
       icon: "Smartphone",
       title: "Access",
       description: "Full lifetime access on mobile & TV",
-      value: "Lifetime"
+      value: "Lifetime",
     },
     {
       icon: "Trophy",
       title: "Certificate",
       description: "Certificate of Completion included",
-      value: "Included"
-    }
-  ]
-}
+      value: "Included",
+    },
+  ],
+};
 
 const iconMap = {
   Video,
@@ -127,120 +127,117 @@ const iconMap = {
   BookOpen,
   Clock,
   Users,
-  Star
-}
+  Star,
+};
 
 export default function CourseContentDetailsPage() {
   const params = useParams();
   const courseId = params.courseId as string;
-  const router = useRouter()
-  const { toast } = useToast()
-  const [contentDetails, setContentDetails] = useState(defaultContentDetails)
-  const [loading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [newTag, setNewTag] = useState("")
+  const router = useRouter();
+  const { toast } = useToast();
+  const [contentDetails, setContentDetails] = useState(defaultContentDetails);
+  const [loading] = useState(false); // Changed from true to false since we're using default data
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [newTag, setNewTag] = useState("");
   const [newFeature, setNewFeature] = useState({
     icon: "Video",
     title: "",
     description: "",
-    value: ""
-  })
+    value: "",
+  });
 
-  // TipTap editor for description
-  const editor = useEditor({
-    extensions: editorExtensions,
-    content: contentDetails.description,
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      setContentDetails(prev => ({
-        ...prev,
-        description: editor.getHTML()
-      }))
-    }
-  })
+  // Editor ref for Toast UI Editor
+  const editorRef = useRef<ToastEditorHandle>(null);
 
   const handleSave = async () => {
-    if (!courseId) return
-    setSaving(true)
-    setError(null)
+    if (!courseId) return;
+    setSaving(true);
+    setError(null);
+
+    // Get markdown content from editor
+    const markdownContent =
+      editorRef.current?.getMarkdown() || contentDetails.description;
 
     try {
       const response = await fetch(`/api/admin/courses/${courseId}/details`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(contentDetails)
-      })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...contentDetails,
+          description: markdownContent,
+        }),
+      });
 
       if (response.ok) {
         toast({
           title: "Success",
           description: "Content details saved successfully!",
-        })
+        });
       } else {
-        throw new Error('Failed to save content details')
+        throw new Error("Failed to save content details");
       }
     } catch {
-      setError('Failed to save content details')
+      setError("Failed to save content details");
       toast({
         title: "Error",
         description: "Failed to save content details. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleReset = () => {
-    setContentDetails(defaultContentDetails)
-    if (editor) {
-      editor.commands.setContent(defaultContentDetails.description)
+    setContentDetails(defaultContentDetails);
+    if (editorRef.current) {
+      editorRef.current.setContent(defaultContentDetails.description);
     }
     toast({
       title: "Reset",
       description: "Content details reset to default template.",
-    })
-  }
+    });
+  };
 
   const addTag = () => {
     if (newTag.trim() && !contentDetails.tags.includes(newTag.trim())) {
-      setContentDetails(prev => ({
+      setContentDetails((prev) => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }))
-      setNewTag("")
+        tags: [...prev.tags, newTag.trim()],
+      }));
+      setNewTag("");
     }
-  }
+  };
 
   const removeTag = (tagToRemove: string) => {
-    setContentDetails(prev => ({
+    setContentDetails((prev) => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }))
-  }
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
 
   const addFeature = () => {
     if (newFeature.title && newFeature.description && newFeature.value) {
-      setContentDetails(prev => ({
+      setContentDetails((prev) => ({
         ...prev,
-        features: [...prev.features, { ...newFeature }]
-      }))
+        features: [...prev.features, { ...newFeature }],
+      }));
       setNewFeature({
         icon: "Video",
         title: "",
         description: "",
-        value: ""
-      })
+        value: "",
+      });
     }
-  }
+  };
 
   const removeFeature = (index: number) => {
-    setContentDetails(prev => ({
+    setContentDetails((prev) => ({
       ...prev,
-      features: prev.features.filter((_, i) => i !== index)
-    }))
-  }
+      features: prev.features.filter((_, i) => i !== index),
+    }));
+  };
 
   if (loading) {
     return (
@@ -249,7 +246,7 @@ export default function CourseContentDetailsPage() {
           <div className="text-center">Loading content details...</div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -271,7 +268,9 @@ export default function CourseContentDetailsPage() {
               Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Manage Content Details</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Manage Content Details
+              </h1>
               <p className="text-gray-600">Course ID: {courseId}</p>
             </div>
           </div>
@@ -325,7 +324,12 @@ export default function CourseContentDetailsPage() {
                   <Input
                     id="title"
                     value={contentDetails.title}
-                    onChange={(e) => setContentDetails(prev => ({ ...prev, title: e.target.value }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
                     placeholder="Enter course title"
                   />
                 </div>
@@ -334,7 +338,12 @@ export default function CourseContentDetailsPage() {
                   <Input
                     id="category"
                     value={contentDetails.category}
-                    onChange={(e) => setContentDetails(prev => ({ ...prev, category: e.target.value }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., Computer Science"
                   />
                 </div>
@@ -344,7 +353,11 @@ export default function CourseContentDetailsPage() {
                 <Label>Tags</Label>
                 <div className="flex flex-wrap gap-2 mt-2 mb-3">
                   {contentDetails.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
                       {tag}
                       <button
                         onClick={() => removeTag(tag)}
@@ -360,7 +373,7 @@ export default function CourseContentDetailsPage() {
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     placeholder="Add new tag"
-                    onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                    onKeyPress={(e) => e.key === "Enter" && addTag()}
                   />
                   <Button onClick={addTag} variant="outline" size="sm">
                     <Plus className="w-4 h-4" />
@@ -391,10 +404,15 @@ export default function CourseContentDetailsPage() {
                   <Input
                     id="instructorName"
                     value={contentDetails.instructor.name}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      instructor: { ...prev.instructor, name: e.target.value }
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        instructor: {
+                          ...prev.instructor,
+                          name: e.target.value,
+                        },
+                      }))
+                    }
                     placeholder="Instructor name"
                   />
                 </div>
@@ -403,10 +421,15 @@ export default function CourseContentDetailsPage() {
                   <Input
                     id="instructorAvatar"
                     value={contentDetails.instructor.avatar}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      instructor: { ...prev.instructor, avatar: e.target.value }
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        instructor: {
+                          ...prev.instructor,
+                          avatar: e.target.value,
+                        },
+                      }))
+                    }
                     placeholder="Avatar image URL"
                   />
                 </div>
@@ -421,10 +444,15 @@ export default function CourseContentDetailsPage() {
                     min="0"
                     max="5"
                     value={contentDetails.instructor.rating}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      instructor: { ...prev.instructor, rating: parseFloat(e.target.value) }
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        instructor: {
+                          ...prev.instructor,
+                          rating: parseFloat(e.target.value),
+                        },
+                      }))
+                    }
                   />
                 </div>
                 <div>
@@ -433,10 +461,15 @@ export default function CourseContentDetailsPage() {
                     id="instructorStudents"
                     type="number"
                     value={contentDetails.instructor.students}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      instructor: { ...prev.instructor, students: parseInt(e.target.value) }
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        instructor: {
+                          ...prev.instructor,
+                          students: parseInt(e.target.value),
+                        },
+                      }))
+                    }
                   />
                 </div>
                 <div>
@@ -448,10 +481,12 @@ export default function CourseContentDetailsPage() {
                     min="0"
                     max="5"
                     value={contentDetails.rating}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      rating: parseFloat(e.target.value)
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        rating: parseFloat(e.target.value),
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -479,7 +514,12 @@ export default function CourseContentDetailsPage() {
                   <Input
                     id="duration"
                     value={contentDetails.duration}
-                    onChange={(e) => setContentDetails(prev => ({ ...prev, duration: e.target.value }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        duration: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., 45 hours"
                   />
                 </div>
@@ -489,10 +529,12 @@ export default function CourseContentDetailsPage() {
                     id="enrolledCount"
                     type="number"
                     value={contentDetails.enrolledCount}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      enrolledCount: parseInt(e.target.value)
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        enrolledCount: parseInt(e.target.value),
+                      }))
+                    }
                   />
                 </div>
                 <div>
@@ -501,10 +543,12 @@ export default function CourseContentDetailsPage() {
                     id="price"
                     type="number"
                     value={contentDetails.price}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      price: parseInt(e.target.value)
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        price: parseInt(e.target.value),
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -515,10 +559,12 @@ export default function CourseContentDetailsPage() {
                     id="originalPrice"
                     type="number"
                     value={contentDetails.originalPrice}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      originalPrice: parseInt(e.target.value)
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        originalPrice: parseInt(e.target.value),
+                      }))
+                    }
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -526,10 +572,12 @@ export default function CourseContentDetailsPage() {
                     id="isFree"
                     type="checkbox"
                     checked={contentDetails.isFree}
-                    onChange={(e) => setContentDetails(prev => ({
-                      ...prev,
-                      isFree: e.target.checked
-                    }))}
+                    onChange={(e) =>
+                      setContentDetails((prev) => ({
+                        ...prev,
+                        isFree: e.target.checked,
+                      }))
+                    }
                     className="w-4 h-4"
                   />
                   <Label htmlFor="isFree">Free Course</Label>
@@ -555,45 +603,62 @@ export default function CourseContentDetailsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 {contentDetails.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-2">
                       <select
                         value={feature.icon}
                         onChange={(e) => {
-                          const newFeatures = [...contentDetails.features]
-                          newFeatures[index].icon = e.target.value
-                          setContentDetails(prev => ({ ...prev, features: newFeatures }))
+                          const newFeatures = [...contentDetails.features];
+                          newFeatures[index].icon = e.target.value;
+                          setContentDetails((prev) => ({
+                            ...prev,
+                            features: newFeatures,
+                          }));
                         }}
                         className="border rounded px-2 py-1"
                       >
-                        {Object.keys(iconMap).map(iconName => (
-                          <option key={iconName} value={iconName}>{iconName}</option>
+                        {Object.keys(iconMap).map((iconName) => (
+                          <option key={iconName} value={iconName}>
+                            {iconName}
+                          </option>
                         ))}
                       </select>
                       <Input
                         value={feature.title}
                         onChange={(e) => {
-                          const newFeatures = [...contentDetails.features]
-                          newFeatures[index].title = e.target.value
-                          setContentDetails(prev => ({ ...prev, features: newFeatures }))
+                          const newFeatures = [...contentDetails.features];
+                          newFeatures[index].title = e.target.value;
+                          setContentDetails((prev) => ({
+                            ...prev,
+                            features: newFeatures,
+                          }));
                         }}
                         placeholder="Feature title"
                       />
                       <Input
                         value={feature.description}
                         onChange={(e) => {
-                          const newFeatures = [...contentDetails.features]
-                          newFeatures[index].description = e.target.value
-                          setContentDetails(prev => ({ ...prev, features: newFeatures }))
+                          const newFeatures = [...contentDetails.features];
+                          newFeatures[index].description = e.target.value;
+                          setContentDetails((prev) => ({
+                            ...prev,
+                            features: newFeatures,
+                          }));
                         }}
                         placeholder="Feature description"
                       />
                       <Input
                         value={feature.value}
                         onChange={(e) => {
-                          const newFeatures = [...contentDetails.features]
-                          newFeatures[index].value = e.target.value
-                          setContentDetails(prev => ({ ...prev, features: newFeatures }))
+                          const newFeatures = [...contentDetails.features];
+                          newFeatures[index].value = e.target.value;
+                          setContentDetails((prev) => ({
+                            ...prev,
+                            features: newFeatures,
+                          }));
                         }}
                         placeholder="Value (e.g., 45 hours)"
                       />
@@ -609,38 +674,64 @@ export default function CourseContentDetailsPage() {
                   </div>
                 ))}
               </div>
-              
+
               <Separator />
-              
+
               <div className="space-y-3">
                 <h4 className="font-semibold">Add New Feature</h4>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                   <select
                     value={newFeature.icon}
-                    onChange={(e) => setNewFeature(prev => ({ ...prev, icon: e.target.value }))}
+                    onChange={(e) =>
+                      setNewFeature((prev) => ({
+                        ...prev,
+                        icon: e.target.value,
+                      }))
+                    }
                     className="border rounded px-2 py-1"
                   >
-                    {Object.keys(iconMap).map(iconName => (
-                      <option key={iconName} value={iconName}>{iconName}</option>
+                    {Object.keys(iconMap).map((iconName) => (
+                      <option key={iconName} value={iconName}>
+                        {iconName}
+                      </option>
                     ))}
                   </select>
                   <Input
                     value={newFeature.title}
-                    onChange={(e) => setNewFeature(prev => ({ ...prev, title: e.target.value }))}
+                    onChange={(e) =>
+                      setNewFeature((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
                     placeholder="Feature title"
                   />
                   <Input
                     value={newFeature.description}
-                    onChange={(e) => setNewFeature(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setNewFeature((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                     placeholder="Feature description"
                   />
                   <Input
                     value={newFeature.value}
-                    onChange={(e) => setNewFeature(prev => ({ ...prev, value: e.target.value }))}
+                    onChange={(e) =>
+                      setNewFeature((prev) => ({
+                        ...prev,
+                        value: e.target.value,
+                      }))
+                    }
                     placeholder="Value"
                   />
                 </div>
-                <Button onClick={addFeature} variant="outline" className="flex items-center gap-2">
+                <Button
+                  onClick={addFeature}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
                   <Plus className="w-4 h-4" />
                   Add Feature
                 </Button>
@@ -663,13 +754,22 @@ export default function CourseContentDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg overflow-hidden">
-                <EditorContent editor={editor} />
-              </div>
+              <ToastEditor
+                ref={editorRef}
+                content={contentDetails.description}
+                height="400px"
+                placeholder="Enter course description in Markdown..."
+                onSave={({ markdown }) =>
+                  setContentDetails((prev) => ({
+                    ...prev,
+                    description: markdown,
+                  }))
+                }
+              />
             </CardContent>
           </Card>
         </motion.div>
       </div>
     </div>
-  )
-} 
+  );
+}

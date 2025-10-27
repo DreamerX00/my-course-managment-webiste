@@ -1,20 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { UserRole } from '@prisma/client';
-import { UserTable } from './UserTable';
-import { UserRoleTabs } from './UserRoleTabs';
-import { InviteUserForm } from './InviteUserForm';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, Users, Download, Mail } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { UserRole } from "@prisma/client";
+import { UserTable } from "./UserTable";
+import { UserRoleTabs } from "./UserRoleTabs";
+import { InviteUserForm } from "./InviteUserForm";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Users, Download, Mail } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
 
 export type User = {
   id: string;
@@ -30,18 +31,41 @@ export type User = {
 
 export function UserManagementDashboard() {
   const { data: session } = useSession();
+  const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [selectedRole, setSelectedRole] = useState<UserRole | 'ALL'>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole | "ALL">("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
-  const isAdmin = session?.user?.role === UserRole.ADMIN || session?.user?.role === UserRole.OWNER;
+  const isAdmin =
+    session?.user?.role === UserRole.ADMIN ||
+    session?.user?.role === UserRole.OWNER;
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/admin/user-management/users");
+      if (!response.ok) throw new Error("Failed to fetch users");
+      const data = await response.json();
+      setUsers(data.users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load users. Please refresh the page.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -49,34 +73,21 @@ export function UserManagementDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, selectedRole, searchQuery]);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/admin/user-management/users');
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
-      setUsers(data.users);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const filterUsers = () => {
     let filtered = users;
 
     // Filter by role
-    if (selectedRole !== 'ALL') {
-      filtered = filtered.filter(user => user.role === selectedRole);
+    if (selectedRole !== "ALL") {
+      filtered = filtered.filter((user) => user.role === selectedRole);
     }
 
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(user => 
-        user.name?.toLowerCase().includes(query) ||
-        user.email?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (user) =>
+          user.name?.toLowerCase().includes(query) ||
+          user.email?.toLowerCase().includes(query)
       );
     }
 
@@ -85,57 +96,81 @@ export function UserManagementDashboard() {
 
   const handleBulkAction = async (action: string) => {
     if (selectedUsers.length === 0) {
-      alert('Please select users first');
+      toast({
+        title: "No Users Selected",
+        description: "Please select users first.",
+        variant: "destructive",
+      });
       return;
     }
 
     switch (action) {
-      case 'export':
+      case "export":
         exportToCSV();
         break;
-      case 'message':
+      case "message":
         // TODO: Implement bulk messaging
-        alert('Bulk messaging feature coming soon');
+        toast({
+          title: "Coming Soon",
+          description: "Bulk messaging feature is coming soon.",
+        });
         break;
-      case 'assign-course':
+      case "assign-course":
         // TODO: Implement bulk course assignment
-        alert('Bulk course assignment feature coming soon');
+        toast({
+          title: "Coming Soon",
+          description: "Bulk course assignment feature is coming soon.",
+        });
         break;
     }
   };
 
   const exportToCSV = () => {
-    const headers = ['Name', 'Email', 'Role', 'Courses Enrolled', 'Join Date', 'Status'];
+    const headers = [
+      "Name",
+      "Email",
+      "Role",
+      "Courses Enrolled",
+      "Join Date",
+      "Status",
+    ];
     const csvContent = [
-      headers.join(','),
-      ...filteredUsers.map(user => [
-        user.name || '',
-        user.email || '',
-        user.role,
-        user.coursesEnrolled,
-        new Date(user.createdAt).toLocaleDateString(),
-        user.status
-      ].join(','))
-    ].join('\n');
+      headers.join(","),
+      ...filteredUsers.map((user) =>
+        [
+          user.name || "",
+          user.email || "",
+          user.role,
+          user.coursesEnrolled,
+          new Date(user.createdAt).toLocaleDateString(),
+          user.status,
+        ].join(",")
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `users-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `users-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Success",
+      description: `Exported ${filteredUsers.length} users to CSV.`,
+    });
   };
 
   const handleUserUpdate = (updatedUser: User) => {
-    setUsers(prev => prev.map(user => 
-      user.id === updatedUser.id ? updatedUser : user
-    ));
+    setUsers((prev) =>
+      prev.map((user) => (user.id === updatedUser.id ? updatedUser : user))
+    );
   };
 
   const handleUserDelete = (userId: string) => {
-    setUsers(prev => prev.filter(user => user.id !== userId));
-    setSelectedUsers(prev => prev.filter(id => id !== userId));
+    setUsers((prev) => prev.filter((user) => user.id !== userId));
+    setSelectedUsers((prev) => prev.filter((id) => id !== userId));
   };
 
   return (
@@ -168,20 +203,25 @@ export function UserManagementDashboard() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" disabled={selectedUsers.length === 0}>
+                  <Button
+                    variant="outline"
+                    disabled={selectedUsers.length === 0}
+                  >
                     Bulk Actions
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleBulkAction('message')}>
+                  <DropdownMenuItem onClick={() => handleBulkAction("message")}>
                     <Mail className="mr-2 h-4 w-4" />
                     Send Message
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleBulkAction('assign-course')}>
+                  <DropdownMenuItem
+                    onClick={() => handleBulkAction("assign-course")}
+                  >
                     <Users className="mr-2 h-4 w-4" />
                     Assign to Course
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleBulkAction('export')}>
+                  <DropdownMenuItem onClick={() => handleBulkAction("export")}>
                     <Download className="mr-2 h-4 w-4" />
                     Export CSV
                   </DropdownMenuItem>
@@ -198,10 +238,11 @@ export function UserManagementDashboard() {
         onRoleChange={setSelectedRole}
         userCounts={{
           all: users.length,
-          student: users.filter(u => u.role === UserRole.STUDENT).length,
-          instructor: users.filter(u => u.role === UserRole.INSTRUCTOR).length,
-          admin: users.filter(u => u.role === UserRole.ADMIN).length,
-          guest: users.filter(u => u.role === UserRole.GUEST).length,
+          student: users.filter((u) => u.role === UserRole.STUDENT).length,
+          instructor: users.filter((u) => u.role === UserRole.INSTRUCTOR)
+            .length,
+          admin: users.filter((u) => u.role === UserRole.ADMIN).length,
+          guest: users.filter((u) => u.role === UserRole.GUEST).length,
         }}
       />
 
@@ -229,4 +270,4 @@ export function UserManagementDashboard() {
       )}
     </div>
   );
-} 
+}

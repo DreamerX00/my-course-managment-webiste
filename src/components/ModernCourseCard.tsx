@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Star, Clock, User, Play } from "lucide-react"
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Star, Clock, User, Play } from "lucide-react";
 
 interface ModernCourseCardProps {
   course: {
-    id: string
-    title: string
-    description: string
-    instructor: string
-    category: string
-    price: number
-    rating: number
-    enrolledCount: number
-    duration: string
-    chaptersCount: number
-    thumbnail: string
-    isFree: boolean
-  }
-  index: number
+    id: string;
+    title: string;
+    description: string;
+    instructor: string;
+    category: string;
+    price: number;
+    rating: number;
+    enrolledCount: number;
+    duration: string;
+    chaptersCount: number;
+    thumbnail: string;
+    isFree: boolean;
+  };
+  index: number;
 }
 
 export function ModernCourseCard({ course, index }: ModernCourseCardProps) {
@@ -32,11 +32,13 @@ export function ModernCourseCard({ course, index }: ModernCourseCardProps) {
       <Star
         key={i}
         className={`h-3 w-3 ${
-          i < Math.floor(rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+          i < Math.floor(rating)
+            ? "fill-yellow-400 text-yellow-400"
+            : "text-gray-300"
         }`}
       />
-    ))
-  }
+    ));
+  };
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
@@ -44,13 +46,13 @@ export function ModernCourseCard({ course, index }: ModernCourseCardProps) {
       "Mobile Development": "bg-purple-100 text-purple-800",
       "Data Science": "bg-green-100 text-green-800",
       "AI/ML": "bg-orange-100 text-orange-800",
-      "DevOps": "bg-red-100 text-red-800",
-      "Design": "bg-pink-100 text-pink-800",
-      "Business": "bg-indigo-100 text-indigo-800",
-      "Marketing": "bg-teal-100 text-teal-800",
-    }
-    return colors[category] || "bg-gray-100 text-gray-800"
-  }
+      DevOps: "bg-red-100 text-red-800",
+      Design: "bg-pink-100 text-pink-800",
+      Business: "bg-indigo-100 text-indigo-800",
+      Marketing: "bg-teal-100 text-teal-800",
+    };
+    return colors[category] || "bg-gray-100 text-gray-800";
+  };
 
   return (
     <motion.div
@@ -69,9 +71,11 @@ export function ModernCourseCard({ course, index }: ModernCourseCardProps) {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            loading={index < 3 ? "eager" : "lazy"}
+            priority={index === 0}
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
-          
+
           {/* Price Badge */}
           <div className="absolute top-2 right-2">
             <Badge
@@ -99,7 +103,9 @@ export function ModernCourseCard({ course, index }: ModernCourseCardProps) {
           <div className="mb-2">
             <Badge
               variant="secondary"
-              className={`${getCategoryColor(course.category)} text-xs font-medium px-2 py-1`}
+              className={`${getCategoryColor(
+                course.category
+              )} text-xs font-medium px-2 py-1`}
             >
               {course.category}
             </Badge>
@@ -140,13 +146,14 @@ export function ModernCourseCard({ course, index }: ModernCourseCardProps) {
           </div>
 
           {/* View Course Button */}
-          <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2">
-            <Link href={`/courses/${course.id}`}>
-              View Course
-            </Link>
+          <Button
+            asChild
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2"
+          >
+            <Link href={`/courses/${course.id}`}>View Course</Link>
           </Button>
         </CardContent>
       </Card>
     </motion.div>
-  )
-} 
+  );
+}

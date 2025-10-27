@@ -20,6 +20,7 @@ import {
   UserMinus,
 } from "lucide-react";
 import Image from "next/image";
+import { useToast } from "@/components/ui/use-toast";
 
 export type User = {
   id: string;
@@ -48,6 +49,7 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export function UserModal({ user, onClose, isAdmin }: UserModalProps) {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAction = async (action: string) => {
@@ -56,21 +58,33 @@ export function UserModal({ user, onClose, isAdmin }: UserModalProps) {
       switch (action) {
         case "message":
           // TODO: Implement messaging
-          alert("Messaging feature coming soon");
+          toast({
+            title: "Coming Soon",
+            description: "Messaging feature is coming soon.",
+          });
           break;
         case "assign-course":
           // TODO: Implement course assignment
-          alert("Course assignment feature coming soon");
+          toast({
+            title: "Coming Soon",
+            description: "Course assignment feature is coming soon.",
+          });
           break;
         case "remove-user":
-          if (confirm(`Are you sure you want to remove ${user.name}?`)) {
-            // TODO: Implement user removal
-            alert("User removal feature coming soon");
-          }
+          // TODO: Implement user removal
+          toast({
+            title: "Coming Soon",
+            description: "User removal feature is coming soon.",
+          });
           break;
       }
     } catch (error) {
       console.error("Action failed:", error);
+      toast({
+        title: "Error",
+        description: "Action failed. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
-import { motion } from "framer-motion"
-import { BookOpen, Download } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react"
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { BookOpen, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface CourseCardProps {
   course: {
-    id: string
-    title: string
-    description: string
-    tags: string[]
-    topicCount: number
-    resourcesAvailable: boolean
-    imageUrl: string
-  }
-  index: number
+    id: string;
+    title: string;
+    description: string;
+    tags: string[];
+    topicCount: number;
+    resourcesAvailable: boolean;
+    imageUrl: string;
+  };
+  index: number;
 }
 
 export function CourseCard({ course, index }: CourseCardProps) {
@@ -35,17 +35,20 @@ export function CourseCard({ course, index }: CourseCardProps) {
         }
 
         const completedItems = JSON.parse(savedProgress);
-        
+
         // Fetch course structure to get total items count
         const response = await fetch(`/api/courses/${course.id}`);
         if (response.ok) {
           const courseData = await response.json();
-          
+
           // Calculate total items (chapters + subchapters)
-          const totalItems = courseData.chapters.reduce((total: number, chapter: { subchapters?: unknown[] }) => {
-            return total + 1 + (chapter.subchapters?.length || 0); // +1 for the chapter itself
-          }, 0);
-          
+          const totalItems = courseData.chapters.reduce(
+            (total: number, chapter: { subchapters?: unknown[] }) => {
+              return total + 1 + (chapter.subchapters?.length || 0); // +1 for the chapter itself
+            },
+            0
+          );
+
           const calculatedProgress = (completedItems.length / totalItems) * 100;
           setProgress(Math.min(calculatedProgress, 100));
         } else {
@@ -55,7 +58,7 @@ export function CourseCard({ course, index }: CourseCardProps) {
           setProgress(Math.min(calculatedProgress, 100));
         }
       } catch (error) {
-        console.error('Error calculating progress:', error);
+        console.error("Error calculating progress:", error);
         setProgress(0);
       }
     };
@@ -87,6 +90,8 @@ export function CourseCard({ course, index }: CourseCardProps) {
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          loading={index < 3 ? "eager" : "lazy"}
+          priority={index === 0}
         />
         {course.tags.includes("Popular") && (
           <span className="absolute top-2 right-2 bg-yellow-500 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded-full shadow-md">
@@ -161,4 +166,4 @@ export function CourseCard({ course, index }: CourseCardProps) {
       </div>
     </motion.div>
   );
-} 
+}

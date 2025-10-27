@@ -1,57 +1,45 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { CourseCarousel } from "./CourseCarousel"
+import { useMemo } from "react";
+import { CourseCarousel } from "./CourseCarousel";
+import { useCourses, useContentSettings } from "@/hooks/use-cached-fetch";
 
 interface Course {
-  id: string
-  title: string
-  description: string
-  instructor: string
-  category: string
-  price: number
-  rating: number
-  enrolledCount: number
-  duration: string
-  chaptersCount: number
-  thumbnail: string
-  isFree: boolean
-  isPublished: boolean
-  createdAt: string
-  updatedAt: string
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  category: string;
+  price: number;
+  rating: number;
+  enrolledCount: number;
+  duration: string;
+  chaptersCount: number;
+  thumbnail: string;
+  isFree: boolean;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function Courses() {
-  const [loading, setLoading] = useState(true)
-  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
+  const { data: allCourses, isLoading: coursesLoading } = useCourses(false);
+  const { data: settings, isLoading: settingsLoading } = useContentSettings();
 
-  useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        setLoading(true)
-        // Fetch settings and courses in parallel
-        const [settingsRes, coursesRes] = await Promise.all([
-          fetch("/api/content-settings"),
-          fetch("/api/courses")
-        ])
-        if (!settingsRes.ok || !coursesRes.ok) throw new Error("Failed to fetch data")
-        const settings = await settingsRes.json()
-        const allCourses = (await coursesRes.json()).filter((c: Course) => c.isPublished)
-        // Get featured course IDs from settings
-        const featuredIds: string[] = settings.featuredCourses || []
-        // Find the featured course objects in the correct order
-        const featured = featuredIds
-          .map(id => allCourses.find((c: Course) => c.id === id))
-          .filter(Boolean) as Course[]
-        setFeaturedCourses(featured)
-        setLoading(false)
-      } catch (error) {
-        console.error('Error fetching featured courses:', error)
-        setLoading(false)
-      }
-    }
-    fetchFeatured()
-  }, [])
+  const loading = coursesLoading || settingsLoading;
+
+  // Memoize featured courses calculation
+  const featuredCourses = useMemo(() => {
+    if (!allCourses || !settings) return [];
+
+    const publishedCourses = allCourses.filter((c: Course) => c.isPublished);
+    const featuredIds: string[] = settings.featuredCourses || [];
+
+    // Find the featured course objects in the correct order
+    return featuredIds
+      .map((id) => publishedCourses.find((c: Course) => c.id === id))
+      .filter(Boolean) as Course[];
+  }, [allCourses, settings]);
 
   // Show loading state or empty state if no courses
   if (loading) {
@@ -63,7 +51,8 @@ export function Courses() {
               Our Popular Courses
             </h2>
             <p className="mt-2 text-lg leading-8 text-gray-700 font-semibold">
-              Explore our top-rated courses and start your learning journey today.
+              Explore our top-rated courses and start your learning journey
+              today.
             </p>
           </div>
           <div className="text-center">
@@ -72,7 +61,7 @@ export function Courses() {
           </div>
         </div>
       </section>
-    )
+    );
   }
 
   if (featuredCourses.length === 0) {
@@ -84,15 +73,18 @@ export function Courses() {
               Our Popular Courses
             </h2>
             <p className="mt-2 text-lg leading-8 text-gray-700 font-semibold">
-              Explore our top-rated courses and start your learning journey today.
+              Explore our top-rated courses and start your learning journey
+              today.
             </p>
           </div>
           <div className="text-center">
-            <p className="text-gray-600">No featured courses selected by admin.</p>
+            <p className="text-gray-600">
+              No featured courses selected by admin.
+            </p>
           </div>
         </div>
       </section>
-    )
+    );
   }
 
   return (
@@ -101,5 +93,5 @@ export function Courses() {
       title="Our Popular Courses"
       subtitle="Explore our top-rated courses and start your learning journey today."
     />
-  )
-} 
+  );
+}

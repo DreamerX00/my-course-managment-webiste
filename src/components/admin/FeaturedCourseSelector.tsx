@@ -1,89 +1,113 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion, Reorder } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import Image from "next/image"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  Star, 
-  Search, 
-  GripVertical,
-  X,
-  Users,
-  Clock
-} from "lucide-react"
+import { useState, useEffect } from "react";
+import { motion, Reorder } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Star, Search, GripVertical, X, Users, Clock } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Course {
-  id: string
-  title: string
-  description: string
-  instructor: string
-  rating: number
-  enrolledCount: number
-  duration: string
-  thumbnail: string
-  price: number
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  rating: number;
+  enrolledCount: number;
+  duration: string;
+  thumbnail: string;
+  price: number;
 }
 
 interface FeaturedCourseSelectorProps {
-  selectedCourses: string[]
-  onUpdate: (courseIds: string[]) => void
+  selectedCourses: string[];
+  onUpdate: (courseIds: string[]) => void;
 }
 
-export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCourseSelectorProps) {
-  const [courses, setCourses] = useState<Course[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchCourses()
-  }, [])
+export function FeaturedCourseSelector({
+  selectedCourses,
+  onUpdate,
+}: FeaturedCourseSelectorProps) {
+  const { toast } = useToast();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const fetchCourses = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/courses')
+      setLoading(true);
+      const response = await fetch("/api/courses");
       if (response.ok) {
-        const data = await response.json()
-        setCourses(data)
+        const data = await response.json();
+        setCourses(data);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load courses. Please refresh the page.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Error fetching courses:', error)
+      console.error("Error fetching courses:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load courses. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const filteredCourses = courses.filter(course =>
-    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  useEffect(() => {
+    fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const selectedCourseObjects = courses.filter(course => 
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedCourseObjects = courses.filter((course) =>
     selectedCourses.includes(course.id)
-  )
+  );
 
   const addCourse = (courseId: string) => {
     if (selectedCourses.length >= 4) {
-      alert("You can only select 4 featured courses. Remove one first.")
-      return
+      toast({
+        title: "Limit Reached",
+        description:
+          "You can only select 4 featured courses. Remove one first.",
+        variant: "destructive",
+      });
+      return;
     }
     if (!selectedCourses.includes(courseId)) {
-      onUpdate([...selectedCourses, courseId])
+      onUpdate([...selectedCourses, courseId]);
+      toast({
+        title: "Success",
+        description: "Course added to featured list.",
+      });
     }
-  }
+  };
 
   const removeCourse = (courseId: string) => {
-    onUpdate(selectedCourses.filter(id => id !== courseId))
-  }
+    onUpdate(selectedCourses.filter((id) => id !== courseId));
+    toast({
+      title: "Success",
+      description: "Course removed from featured list.",
+    });
+  };
 
   const handleReorder = (newOrder: Course[]) => {
-    const newOrderIds = newOrder.map(course => course.id)
-    onUpdate(newOrderIds)
-  }
+    const newOrderIds = newOrder.map((course) => course.id);
+    onUpdate(newOrderIds);
+  };
 
   return (
     <div className="space-y-6">
@@ -94,7 +118,8 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
             Featured Courses
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Select exactly 4 courses to be featured on the homepage. Drag to reorder.
+            Select exactly 4 courses to be featured on the homepage. Drag to
+            reorder.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -103,7 +128,7 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
             <Label className="text-sm font-medium mb-3 block">
               Selected Featured Courses ({selectedCourseObjects.length}/4)
             </Label>
-            
+
             {selectedCourseObjects.length === 0 ? (
               <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
                 <Star className="h-12 w-12 mx-auto mb-2 text-gray-300" />
@@ -111,9 +136,9 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
                 <p className="text-sm">Choose courses from the list below.</p>
               </div>
             ) : (
-              <Reorder.Group 
-                axis="y" 
-                values={selectedCourseObjects} 
+              <Reorder.Group
+                axis="y"
+                values={selectedCourseObjects}
                 onReorder={handleReorder}
                 className="space-y-3"
               >
@@ -128,15 +153,15 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
                       className="flex items-center gap-4 p-4 bg-linear-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg shadow-sm"
                     >
                       <GripVertical className="h-5 w-5 text-gray-400 cursor-grab active:cursor-grabbing" />
-                      
-                      <Image 
-                        src={course.thumbnail} 
+
+                      <Image
+                        src={course.thumbnail}
                         alt={course.title}
                         width={64}
                         height={48}
                         className="w-16 h-12 object-cover rounded-md"
                       />
-                      
+
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-900 line-clamp-1">
                           {course.title}
@@ -159,7 +184,7 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
                           </span>
                         </div>
                       </div>
-                      
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -204,7 +229,7 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
                 {filteredCourses
-                  .filter(course => !selectedCourses.includes(course.id))
+                  .filter((course) => !selectedCourses.includes(course.id))
                   .map((course) => (
                     <motion.div
                       key={course.id}
@@ -212,8 +237,8 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
                       className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-white"
                       onClick={() => addCourse(course.id)}
                     >
-                      <Image 
-                        src={course.thumbnail} 
+                      <Image
+                        src={course.thumbnail}
                         alt={course.title}
                         width={400}
                         height={96}
@@ -246,16 +271,24 @@ export function FeaturedCourseSelector({ selectedCourses, onUpdate }: FeaturedCo
 
           {/* Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-900 mb-2">Featured Courses Guidelines:</h4>
+            <h4 className="font-medium text-blue-900 mb-2">
+              Featured Courses Guidelines:
+            </h4>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Select exactly 4 courses to be featured on the homepage</li>
               <li>• Drag and drop to reorder the display sequence</li>
-              <li>• Choose courses with high ratings and enrollment for best results</li>
-              <li>• Featured courses appear in the &quot;Our Popular Courses&quot; section</li>
+              <li>
+                • Choose courses with high ratings and enrollment for best
+                results
+              </li>
+              <li>
+                • Featured courses appear in the &quot;Our Popular Courses&quot;
+                section
+              </li>
             </ul>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
-} 
+  );
+}

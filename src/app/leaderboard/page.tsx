@@ -40,6 +40,7 @@ import {
   Calendar,
   BarChart3,
 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface LeaderboardEntry {
   id: string;
@@ -60,6 +61,7 @@ interface LeaderboardData {
 export default function LeaderboardPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { toast } = useToast();
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -84,17 +86,24 @@ export default function LeaderboardPage() {
           ...(search && { search }),
         });
         const response = await fetch(`/api/leaderboard?${params}`);
-        if (!response.ok) throw new Error("Failed");
+        if (!response.ok) {
+          throw new Error("Failed to fetch leaderboard");
+        }
         const leaderboardData = await response.json();
         setData(leaderboardData);
       } catch (error) {
         console.error("Failed:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load leaderboard. Please refresh the page.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
     fetchLeaderboard();
-  }, [search, period]);
+  }, [search, period, toast]);
 
   // Filter and sort leaderboard data
   const filteredLeaderboard = useMemo(() => {
