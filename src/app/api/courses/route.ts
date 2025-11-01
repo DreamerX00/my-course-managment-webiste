@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { db } from "@/lib/db";
 import { createCourseSchema } from "@/lib/validations";
 import { validateRequest } from "@/lib/validation-helpers";
-import { withCache } from "@/lib/cache";
+import { withCache, cache } from "@/lib/cache";
 
 // Enable ISR with 5-minute revalidation instead of forcing dynamic
 export const revalidate = 300;
@@ -270,14 +270,14 @@ export async function POST(req: NextRequest) {
     const { title, description, price, category } = validation.data;
     const { imageUrl } = body; // Optional field not in base schema
 
-    // Create the course
+    // Create the course as unpublished (draft) by default
     const course = await db.course.create({
       data: {
         title,
         description,
         price: price || 0,
         thumbnail: imageUrl,
-        isPublished: true,
+        isPublished: false, // Start as draft
       },
     });
 
@@ -320,6 +320,10 @@ export async function POST(req: NextRequest) {
         },
       });
     }
+
+    // Invalidate cache after course creation
+    cache.delete("courses-all");
+    cache.delete("courses-published");
 
     return NextResponse.json(course, { status: 201 });
   } catch (error) {

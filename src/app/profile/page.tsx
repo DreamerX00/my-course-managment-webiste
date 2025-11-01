@@ -204,31 +204,33 @@ export default function ProfilePage() {
         )}
 
         <div
-          className={`container relative z-10 ${
-            profile.bannerImage ? "-mt-20 md:-mt-24" : "py-12 md:py-16"
+          className={`container relative z-10 px-4 ${
+            profile.bannerImage
+              ? "-mt-16 sm:-mt-20 md:-mt-24"
+              : "py-8 sm:py-12 md:py-16"
           }`}
         >
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row items-start md:items-start gap-8">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 md:gap-8">
               {/* Avatar with Animation */}
               <div className="relative group z-20">
                 <div className="absolute -inset-1 bg-linear-to-r from-primary via-accent to-primary rounded-full blur opacity-25 group-hover:opacity-40 transition duration-1000 animate-pulse"></div>
-                <Avatar className="relative w-32 h-32 md:w-40 md:h-40 border-4 border-background shadow-2xl transition-transform duration-300 group-hover:scale-105 z-20">
+                <Avatar className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 border-4 border-background shadow-2xl transition-transform duration-300 group-hover:scale-105 z-20">
                   <AvatarImage
                     src={profile.avatar || profile.image}
                     alt={profile.name}
                   />
-                  <AvatarFallback className="text-4xl font-bold bg-linear-to-br from-primary to-accent text-primary-foreground">
+                  <AvatarFallback className="text-2xl sm:text-3xl md:text-4xl font-bold bg-linear-to-br from-primary to-accent text-primary-foreground">
                     {getInitials(profile.name)}
                   </AvatarFallback>
                 </Avatar>
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1 space-y-4">
+              <div className="flex-1 space-y-3 sm:space-y-4 text-center sm:text-left">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-4xl md:text-5xl font-bold shimmer bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold shimmer bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-700">
                       {profile.name}
                     </h1>
                     <Badge
@@ -243,26 +245,28 @@ export default function ProfilePage() {
                   </div>
 
                   {profile.title && (
-                    <p className="text-xl font-medium text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+                    <p className="text-lg sm:text-xl font-medium text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                       {profile.title}
                     </p>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-4 text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      <span className="text-sm">{profile.email}</span>
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap items-center sm:items-center gap-2 sm:gap-4 text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                      <Mail className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="truncate max-w-[200px] sm:max-w-none">
+                        {profile.email}
+                      </span>
                     </div>
                     {profile.location && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        <span className="text-sm">{profile.location}</span>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span>{profile.location}</span>
                       </div>
                     )}
                     {profile.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        <span className="text-sm">{profile.phone}</span>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm">
+                        <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span>{profile.phone}</span>
                       </div>
                     )}
                   </div>
@@ -362,10 +366,10 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-350">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-350 justify-center sm:justify-start">
                   <Button
                     onClick={() => router.push("/profile/edit")}
-                    className="group"
+                    className="group w-full sm:w-auto"
                   >
                     <Edit className="w-4 h-4 mr-2 transition-transform group-hover:rotate-12" />
                     Edit Profile
@@ -373,6 +377,7 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     onClick={() => router.push("/courses")}
+                    className="w-full sm:w-auto"
                   >
                     <BookOpen className="w-4 h-4 mr-2" />
                     Browse Courses
@@ -408,10 +413,10 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      <div className="container py-8 md:py-12">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <div className="container py-6 sm:py-8 md:py-12 px-4">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {/* Total Courses */}
             <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700 dashboard-stat-card dashboard-stat-card-animate">
               <CardHeader className="pb-3">

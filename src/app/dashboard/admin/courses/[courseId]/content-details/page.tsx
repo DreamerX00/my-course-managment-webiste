@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useRouter, useParams } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
+import { useSession } from "next-auth/react";
 import {
   Save,
   RotateCcw,
@@ -29,93 +30,53 @@ import {
 } from "lucide-react";
 import { ToastEditor, ToastEditorHandle } from "@/components/ui/toast-editor";
 
-// Default content details template
-const defaultContentDetails = {
-  title: "DSA Cracker 🔥 - Complete Data Structures & Algorithms",
-  category: "Computer Science",
-  tags: ["DSA", "Beginner", "Interview Prep", "Popular"],
+interface Feature {
+  icon: string;
+  title: string;
+  description: string;
+  value: string;
+}
+
+interface ContentDetails {
+  title: string;
+  category: string;
+  tags: string[];
   instructor: {
-    name: "Dreamer X",
-    avatar:
-      "https://media.licdn.com/dms/image/v2/D5603AQESvarmSkAJlg/profile-displayphoto-shrink_400_400/B56ZVSx_uRHoAk-/0/1740850594111?e=1755734400&v=beta&t=AJLi2kkgpMLthVAjhaHVKz1i8GTpf-7IlcyeK_cJPy8",
-    rating: 4.8,
-    students: 15420,
+    name: string;
+    avatar: string;
+    rating: number;
+    students: number;
+  };
+  rating: number;
+  enrolledCount: number;
+  duration: string;
+  price: number;
+  originalPrice: number;
+  isFree: boolean;
+  description: string;
+  features: Feature[];
+}
+
+// Empty template for new courses
+const createEmptyContentDetails = (): ContentDetails => ({
+  title: "",
+  category: "",
+  tags: [],
+  instructor: {
+    name: "",
+    avatar: "",
+    rating: 0,
+    students: 0,
   },
-  rating: 4.9,
-  enrolledCount: 28450,
-  duration: "45 hours",
-  price: 999,
-  originalPrice: 1999,
-  isFree: false,
-  description: `
-    <h2>Master Data Structures and Algorithms</h2>
-    <p>This comprehensive course will take you from a complete beginner to an advanced DSA expert. Perfect for:</p>
-    <ul>
-      <li>🎯 <strong>Interview Preparation:</strong> Crack coding interviews at top tech companies</li>
-      <li>🏆 <strong>Competitive Programming:</strong> Excel in coding competitions</li>
-      <li>💼 <strong>Career Growth:</strong> Build a strong foundation for software development</li>
-      <li>🧠 <strong>Problem Solving:</strong> Develop analytical thinking skills</li>
-    </ul>
-    
-    <h3>What You'll Learn</h3>
-    <p>By the end of this course, you'll be able to:</p>
-    <ul>
-      <li>Implement all major data structures from scratch</li>
-      <li>Solve complex algorithmic problems efficiently</li>
-      <li>Analyze time and space complexity of solutions</li>
-      <li>Apply DSA concepts to real-world problems</li>
-      <li>Ace technical interviews with confidence</li>
-    </ul>
-    
-    <h3>Course Structure</h3>
-    <p>We'll cover everything systematically:</p>
-    <ol>
-      <li><strong>Arrays & Strings:</strong> Foundation concepts and manipulation</li>
-      <li><strong>Linked Lists:</strong> Dynamic data structures</li>
-      <li><strong>Stacks & Queues:</strong> LIFO and FIFO operations</li>
-      <li><strong>Trees & Graphs:</strong> Hierarchical and network data</li>
-      <li><strong>Dynamic Programming:</strong> Optimization techniques</li>
-    </ol>
-  `,
-  features: [
-    {
-      icon: "Video",
-      title: "Video Content",
-      description: "45 hours of on-demand videos",
-      value: "45 hours",
-    },
-    {
-      icon: "FileText",
-      title: "Resources",
-      description: "Downloadable resources and notes",
-      value: "50+ files",
-    },
-    {
-      icon: "FileCode",
-      title: "Assignments",
-      description: "Practice problems and coding challenges",
-      value: "200+ problems",
-    },
-    {
-      icon: "MessageSquare",
-      title: "Instructor Support",
-      description: "Direct Q&A and doubt solving",
-      value: "24/7 support",
-    },
-    {
-      icon: "Smartphone",
-      title: "Access",
-      description: "Full lifetime access on mobile & TV",
-      value: "Lifetime",
-    },
-    {
-      icon: "Trophy",
-      title: "Certificate",
-      description: "Certificate of Completion included",
-      value: "Included",
-    },
-  ],
-};
+  rating: 0,
+  enrolledCount: 0,
+  duration: "",
+  price: 0,
+  originalPrice: 0,
+  isFree: true,
+  description: "",
+  features: [],
+});
 
 const iconMap = {
   Video,
@@ -135,8 +96,12 @@ export default function CourseContentDetailsPage() {
   const courseId = params.courseId as string;
   const router = useRouter();
   const { toast } = useToast();
-  const [contentDetails, setContentDetails] = useState(defaultContentDetails);
-  const [loading] = useState(false); // Changed from true to false since we're using default data
+  const { data: session } = useSession();
+  const [contentDetails, setContentDetails] = useState(
+    createEmptyContentDetails()
+  );
+  const [courseThumbnail, setCourseThumbnail] = useState<string>("");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newTag, setNewTag] = useState("");
@@ -150,6 +115,70 @@ export default function CourseContentDetailsPage() {
   // Editor ref for Toast UI Editor
   const editorRef = useRef<ToastEditorHandle>(null);
 
+  // Fetch course details on mount
+  useEffect(() => {
+    const fetchCourseDetails = async () => {
+      if (!courseId) return;
+
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/courses/${courseId}`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch course details");
+        }
+
+        const data = await response.json();
+
+        // Set course thumbnail
+        setCourseThumbnail(data.thumbnail || "");
+
+        // Use courseDetails if available, otherwise use empty template
+        if (data.courseDetails) {
+          setContentDetails(data.courseDetails);
+          // Editor content will be updated via props, no need to manually set
+        } else {
+          // Use basic course data to pre-fill some fields
+          // Auto-populate instructor from current session if available
+          const instructorInfo = session?.user
+            ? {
+                name: session.user.name || "Instructor",
+                avatar: session.user.image || "https://via.placeholder.com/150",
+                rating: 4.8,
+                students: 0,
+              }
+            : {
+                name: "",
+                avatar: "https://via.placeholder.com/150",
+                rating: 0,
+                students: 0,
+              };
+
+          setContentDetails({
+            ...createEmptyContentDetails(),
+            title: data.title || "",
+            price: data.price || 0,
+            isFree: !data.price || data.price === 0,
+            instructor: instructorInfo,
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching course details:", err);
+        setError("Failed to load course details");
+        toast({
+          title: "Error",
+          description: "Failed to load course details. Using empty template.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourseDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId, toast]);
+
   const handleSave = async () => {
     if (!courseId) return;
     setSaving(true);
@@ -160,6 +189,7 @@ export default function CourseContentDetailsPage() {
       editorRef.current?.getMarkdown() || contentDetails.description;
 
     try {
+      // Save content details
       const response = await fetch(`/api/admin/courses/${courseId}/details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,14 +199,29 @@ export default function CourseContentDetailsPage() {
         }),
       });
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Content details saved successfully!",
-        });
-      } else {
+      if (!response.ok) {
         throw new Error("Failed to save content details");
       }
+
+      // Update course thumbnail if changed
+      if (courseThumbnail) {
+        const courseResponse = await fetch(`/api/courses/${courseId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            thumbnail: courseThumbnail,
+          }),
+        });
+
+        if (!courseResponse.ok) {
+          throw new Error("Failed to update course thumbnail");
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: "Content details saved successfully!",
+      });
     } catch {
       setError("Failed to save content details");
       toast({
@@ -190,13 +235,12 @@ export default function CourseContentDetailsPage() {
   };
 
   const handleReset = () => {
-    setContentDetails(defaultContentDetails);
-    if (editorRef.current) {
-      editorRef.current.setContent(defaultContentDetails.description);
-    }
+    const emptyDetails = createEmptyContentDetails();
+    setContentDetails(emptyDetails);
+    // Editor content will update via props, no need to manually set
     toast({
       title: "Reset",
-      description: "Content details reset to default template.",
+      description: "Content details reset to empty template.",
     });
   };
 
@@ -347,6 +391,27 @@ export default function CourseContentDetailsPage() {
                     placeholder="e.g., Computer Science"
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="thumbnail">Course Thumbnail URL</Label>
+                <Input
+                  id="thumbnail"
+                  value={courseThumbnail}
+                  onChange={(e) => setCourseThumbnail(e.target.value)}
+                  placeholder="https://example.com/image.jpg or https://www.youtube.com/watch?v=VIDEO_ID"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Supported formats:
+                  <br />• Direct image URL (e.g., https://example.com/image.jpg)
+                  <br />• YouTube watch URL (e.g.,
+                  https://www.youtube.com/watch?v=nNnc1gLUgp4)
+                  <br />• YouTube embed URL (e.g.,
+                  https://www.youtube.com/embed/nNnc1gLUgp4)
+                  <br />• YouTube short URL (e.g., https://youtu.be/nNnc1gLUgp4)
+                  <br />• YouTube iframe embed code (will extract thumbnail
+                  automatically)
+                </p>
               </div>
 
               <div>
@@ -755,6 +820,7 @@ export default function CourseContentDetailsPage() {
             </CardHeader>
             <CardContent>
               <ToastEditor
+                key={courseId}
                 ref={editorRef}
                 content={contentDetails.description}
                 height="400px"

@@ -25,6 +25,61 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
+// Utility function to extract YouTube video ID and generate thumbnail URL
+function getYouTubeThumbnail(input: string | null): string | null {
+  if (!input) return null;
+
+  // If it's already an image URL, return it
+  if (input.match(/\.(jpg|jpeg|png|gif|webp)/i)) {
+    return input;
+  }
+
+  let videoId: string | null = null;
+
+  // Extract from iframe embed code
+  const iframeMatch = input.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
+  if (iframeMatch) {
+    videoId = iframeMatch[1];
+  }
+
+  // Extract from regular YouTube URL (watch?v=)
+  if (!videoId) {
+    const urlMatch = input.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+    if (urlMatch) {
+      videoId = urlMatch[1];
+    }
+  }
+
+  // Extract from youtu.be short URL
+  if (!videoId) {
+    const shortMatch = input.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+    if (shortMatch) {
+      videoId = shortMatch[1];
+    }
+  }
+
+  // Extract from embed URL directly
+  if (!videoId) {
+    const embedMatch = input.match(/\/embed\/([a-zA-Z0-9_-]+)/);
+    if (embedMatch) {
+      videoId = embedMatch[1];
+    }
+  }
+
+  // If we found a video ID, return the thumbnail URL
+  if (videoId) {
+    // Use maxresdefault for best quality, fallback to hqdefault
+    return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+  }
+
+  // If it looks like a URL, return it as-is
+  if (input.startsWith("http")) {
+    return input;
+  }
+
+  return null;
+}
+
 // Data structures from DB
 interface Subchapter {
   id: string;
@@ -45,6 +100,7 @@ interface Course {
   title: string;
   chapters: Chapter[];
   price: number | null;
+  thumbnail: string | null;
 }
 
 // Content details interface
@@ -95,21 +151,49 @@ const createEmptyContentDetails = (courseTitle: string): ContentDetails => ({
   features: [],
 });
 
-function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
+function CourseHero({
+  contentDetails,
+  courseThumbnail,
+}: {
+  contentDetails: ContentDetails;
+  courseThumbnail: string | null;
+}) {
+  // Process the thumbnail to handle YouTube URLs/embeds
+  const thumbnailUrl =
+    getYouTubeThumbnail(courseThumbnail) ||
+    "https://images.unsplash.com/photo-1517694712202-14dd953bb09f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+
   return (
-    <div className="relative bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 py-12 sm:py-16 lg:py-20">
+    <div className="relative bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 py-8 sm:py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Mobile: Thumbnail First, Content Below */}
+        {/* Desktop: Side by Side */}
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+          {/* Course Thumbnail - Show First on Mobile */}
+          <div className="w-full lg:hidden order-first">
+            <div className="relative rounded-xl overflow-hidden shadow-2xl">
+              <Image
+                src={thumbnailUrl}
+                alt={contentDetails.title}
+                width={600}
+                height={400}
+                className="w-full h-56 sm:h-64 object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
+            </div>
+          </div>
+
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="space-y-4">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 order-2 lg:order-1">
+            <div className="space-y-3 sm:space-y-4">
               {contentDetails.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {contentDetails.tags.map((tag: string, index: number) => (
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      className="bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs sm:text-sm"
                     >
                       {tag}
                     </Badge>
@@ -121,7 +205,7 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight"
+                className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 leading-tight"
               >
                 {contentDetails.title}
               </motion.h1>
@@ -129,10 +213,10 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
               {contentDetails.description &&
                 contentDetails.description !==
                   "<p>No description available.</p>" && (
-                  <p className="text-lg text-gray-600">
+                  <p className="text-base sm:text-lg text-gray-600 line-clamp-3">
                     {contentDetails.description
                       .replaceAll(/<[^>]*>/g, "")
-                      .substring(0, 150)}
+                      .substring(0, 200)}
                     ...
                   </p>
                 )}
@@ -140,28 +224,30 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
 
             {/* Instructor Info */}
             {contentDetails.instructor.name !== "N/A" && (
-              <div className="flex items-center gap-4">
-                <Image
-                  src={contentDetails.instructor.avatar}
-                  alt={contentDetails.instructor.name}
-                  width={48}
-                  height={48}
-                  className="rounded-full object-cover"
-                />
-                <div>
-                  <p className="font-semibold text-gray-900">
+              <div className="flex items-center gap-3 sm:gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-lg">
+                {contentDetails.instructor.avatar && (
+                  <Image
+                    src={contentDetails.instructor.avatar}
+                    alt={contentDetails.instructor.name}
+                    width={56}
+                    height={56}
+                    className="rounded-full object-cover w-12 h-12 sm:w-14 sm:h-14 border-2 border-white shadow-md"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                     {contentDetails.instructor.name}
                   </p>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 flex-wrap">
                     {contentDetails.instructor.rating > 0 && (
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
                         <span>{contentDetails.instructor.rating}</span>
                       </div>
                     )}
                     {contentDetails.instructor.students > 0 && (
                       <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
+                        <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span>
                           {contentDetails.instructor.students.toLocaleString()}{" "}
                           students
@@ -174,10 +260,10 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
             )}
 
             {/* Course Stats */}
-            <div className="flex flex-wrap gap-6 text-sm">
+            <div className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm">
               {contentDetails.rating > 0 && (
                 <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-400 text-yellow-400" />
                   <span className="font-semibold">{contentDetails.rating}</span>
                   {contentDetails.enrolledCount > 0 && (
                     <span className="text-gray-600">
@@ -188,24 +274,26 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
               )}
               {contentDetails.duration !== "N/A" && (
                 <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-gray-500" />
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                   <span>{contentDetails.duration}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Course Thumbnail */}
-          <div className="lg:col-span-1">
-            <div className="relative rounded-xl overflow-hidden shadow-lg">
-              <Image
-                src="https://images.unsplash.com/photo-1517694712202-14dd953bb09f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt={contentDetails.title}
-                width={400}
-                height={256}
-                className="w-full h-48 lg:h-64 object-cover"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+          {/* Course Thumbnail - Desktop Only (Hidden on Mobile) */}
+          <div className="hidden lg:block lg:col-span-1 order-3 lg:order-2">
+            <div className="sticky top-24">
+              <div className="relative rounded-xl overflow-hidden shadow-2xl">
+                <Image
+                  src={thumbnailUrl}
+                  alt={contentDetails.title}
+                  width={400}
+                  height={256}
+                  className="w-full h-48 lg:h-64 object-cover"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+              </div>
             </div>
           </div>
         </div>
@@ -220,13 +308,13 @@ function CourseDescription({
   contentDetails: ContentDetails;
 }) {
   return (
-    <div className="py-12">
+    <div className="py-8 sm:py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="prose dark:prose-invert prose-lg max-w-none"
+          className="prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg max-w-none"
         >
           <MarkdownDisplay content={contentDetails.description} />
         </motion.div>
@@ -261,23 +349,23 @@ function CourseFeatures({
   }
 
   return (
-    <div className="py-12 bg-gray-50">
+    <div className="py-8 sm:py-12 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-12"
         >
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">
             What&apos;s Included
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-base sm:text-lg text-gray-600">
             Everything you need to master this course
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {contentDetails.features.map((feature, index) => {
             const IconComponent = iconMap[feature.icon] || Star;
             return (
@@ -288,21 +376,21 @@ function CourseFeatures({
                 transition={{ duration: 0.6, delay: 0.1 * index }}
               >
                 <Card className="h-full hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start gap-3 sm:gap-4">
                       <div className="shrink-0">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <IconComponent className="w-6 h-6 text-blue-600" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                         </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">
                           {feature.title}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-2">
                           {feature.description}
                         </p>
-                        <p className="text-sm font-medium text-blue-600">
+                        <p className="text-xs sm:text-sm font-medium text-blue-600">
                           {feature.value}
                         </p>
                       </div>
@@ -320,23 +408,23 @@ function CourseFeatures({
 
 function CourseCurriculum({ course }: { course: Course }) {
   return (
-    <div className="py-12">
+    <div className="py-8 sm:py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-12"
         >
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">
             Course Curriculum
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-base sm:text-lg text-gray-600">
             What you&apos;ll learn in this course
           </p>
         </motion.div>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {course.chapters.map((chapter, index) => (
             <motion.div
               key={chapter.id}
@@ -345,35 +433,35 @@ function CourseCurriculum({ course }: { course: Course }) {
               transition={{ duration: 0.6, delay: 0.1 * index }}
             >
               <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="font-semibold text-blue-600">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between gap-3 sm:gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                        <span className="font-semibold text-blue-600 text-sm sm:text-base">
                           {index + 1}
                         </span>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {chapter.title}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600">
                           {chapter.subchapters.length} lessons
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {chapter.isFree ? (
                         <Badge
                           variant="secondary"
-                          className="bg-green-100 text-green-800"
+                          className="bg-green-100 text-green-800 text-xs"
                         >
                           Free
                         </Badge>
                       ) : (
-                        <Lock className="w-5 h-5 text-gray-400" />
+                        <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                       )}
-                      <ArrowRight className="w-5 h-5 text-gray-400" />
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hidden sm:block" />
                     </div>
                   </div>
                 </CardContent>
@@ -478,33 +566,35 @@ function PricingCard({
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center space-y-8 border border-gray-100">
-      <div className="w-full text-center mb-4">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+    <div className="w-full max-w-sm mx-auto bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col items-center space-y-6 sm:space-y-8 border border-gray-100">
+      <div className="w-full text-center mb-2 sm:mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
           Ready to Get Started?
         </h2>
-        <p className="text-base text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600">
           Join thousands of students learning this course
         </p>
       </div>
 
-      <div className="w-full flex flex-col items-center space-y-6">
+      <div className="w-full flex flex-col items-center space-y-4 sm:space-y-6">
         <div className="w-full text-center">
           {contentDetails.isFree || contentDetails.price === 0 ? (
-            <div className="text-3xl font-bold text-green-600 mb-2">Free</div>
+            <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-2">
+              Free
+            </div>
           ) : contentDetails.price > 0 ? (
             <div className="space-y-1">
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                 ₹{contentDetails.price}
               </div>
               {contentDetails.originalPrice > contentDetails.price && (
-                <div className="text-lg text-gray-500 line-through">
+                <div className="text-base sm:text-lg text-gray-500 line-through">
                   ₹{contentDetails.originalPrice}
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-xl font-semibold text-gray-600 mb-2">
+            <div className="text-lg sm:text-xl font-semibold text-gray-600 mb-2">
               Price Not Set
             </div>
           )}
@@ -513,21 +603,21 @@ function PricingCard({
           </p>
         </div>
 
-        <div className="w-full space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <CheckCircle className="w-5 h-5 text-green-500" />
+        <div className="w-full space-y-2 sm:space-y-3">
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 shrink-0" />
             <span>Full lifetime access</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <CheckCircle className="w-5 h-5 text-green-500" />
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 shrink-0" />
             <span>Access on mobile and TV</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <CheckCircle className="w-5 h-5 text-green-500" />
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 shrink-0" />
             <span>Certificate of completion</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <CheckCircle className="w-5 h-5 text-green-500" />
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 shrink-0" />
             <span>30-day money-back guarantee</span>
           </div>
         </div>
@@ -665,7 +755,10 @@ export default function CourseDetailsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <CourseHero contentDetails={contentDetails} />
+      <CourseHero
+        contentDetails={contentDetails}
+        courseThumbnail={course.thumbnail}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}

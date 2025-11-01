@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { db } from "@/lib/db";
 import { contentSettingsSchema } from "@/lib/validations";
 import { validateRequest } from "@/lib/validation-helpers";
+import { cache } from "@/lib/cache";
 
 // Force dynamic rendering for Next.js 15+
 export const dynamic = "force-dynamic";
@@ -138,6 +139,12 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    // Invalidate content-settings cache after update
+    cache.delete("content-settings");
+    // Also invalidate courses cache since they depend on categories
+    cache.delete("courses-all");
+    cache.delete("courses-published");
 
     return NextResponse.json(settings.settings);
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { db } from "@/lib/db";
+import { cache } from "@/lib/cache";
 
 interface CourseUpdateData {
   title?: string;
@@ -85,6 +86,11 @@ export async function DELETE(
     }
 
     await db.course.delete({ where: { id: courseId } });
+
+    // Invalidate cache after deletion
+    cache.delete("courses-all");
+    cache.delete("courses-published");
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete course:", error);
@@ -191,6 +197,10 @@ export async function PATCH(
         });
       }
     }
+
+    // Invalidate cache after update
+    cache.delete("courses-all");
+    cache.delete("courses-published");
 
     return NextResponse.json(course);
   } catch (error) {

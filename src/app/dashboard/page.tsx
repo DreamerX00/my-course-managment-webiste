@@ -69,16 +69,16 @@ export default function DashboardPage() {
     .toUpperCase();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-blue-100 via-yellow-100 to-pink-100 relative px-2 py-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-blue-100 via-yellow-100 to-pink-100 relative px-4 py-8 sm:py-12">
       {/* Floating Action Button */}
       <motion.button
         whileTap={{ scale: 0.93 }}
         whileHover={{ scale: 1.08 }}
-        className="fixed bottom-6 right-6 z-40 bg-blue-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-400 md:hidden"
+        className="fixed bottom-6 right-6 z-40 bg-blue-600 text-white rounded-full shadow-lg p-3 sm:p-4 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-400 md:hidden"
         aria-label="Quick Action"
         onClick={() => (window.location.href = "/courses")}
       >
-        <span className="text-2xl">➕</span>
+        <span className="text-xl sm:text-2xl">➕</span>
       </motion.button>
 
       {/* User Avatar/Initials */}
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.7, type: "spring" }}
-        className="mb-4 select-none"
+        className="mb-3 sm:mb-4 select-none"
       >
         {userImage ? (
           <Image
@@ -94,11 +94,11 @@ export default function DashboardPage() {
             alt={userName}
             width={80}
             height={80}
-            className="w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-lg object-cover"
             priority
           />
         ) : (
-          <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-400 via-pink-400 to-yellow-300 flex items-center justify-center text-3xl font-bold text-white shadow-lg">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-linear-to-br from-blue-400 via-pink-400 to-yellow-300 flex items-center justify-center text-2xl sm:text-3xl font-bold text-white shadow-lg">
             {initials}
           </div>
         )}
@@ -109,7 +109,7 @@ export default function DashboardPage() {
         initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, delay: 0.2, type: "spring" }}
-        className="text-4xl font-extrabold shimmer mb-2 text-center"
+        className="text-3xl sm:text-4xl font-extrabold shimmer mb-2 text-center px-4"
       >
         Welcome, {userName}!
       </motion.h1>
@@ -117,13 +117,13 @@ export default function DashboardPage() {
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, delay: 0.4, type: "spring" }}
-        className="text-lg text-pink-700 mb-8 animate-pulse text-center"
+        className="text-base sm:text-lg text-pink-700 mb-6 sm:mb-8 animate-pulse text-center px-4"
       >
         Ready to continue your learning journey? 🚀
       </motion.p>
 
       {/* Animated Stat Cards */}
-      <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 px-4">
         {loading
           ? // Loading skeleton
             [1, 2, 3].map((i) => (
@@ -148,9 +148,11 @@ export default function DashboardPage() {
                 }}
                 className="dashboard-stat-card dashboard-stat-card-animate"
               >
-                <div className="text-3xl mb-2">{stat.icon}</div>
-                <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                <div className="text-sm text-gray-500 text-center">
+                <div className="text-2xl sm:text-3xl mb-2">{stat.icon}</div>
+                <div className="text-xl sm:text-2xl font-bold mb-1">
+                  {stat.value}
+                </div>
+                <div className="text-xs sm:text-sm text-gray-500 text-center">
                   {stat.label}
                 </div>
               </motion.div>
@@ -161,25 +163,26 @@ export default function DashboardPage() {
       <motion.div
         whileHover={{ scale: 1.05, rotate: 2 }}
         whileTap={{ scale: 0.95, rotate: -2 }}
+        className="w-full max-w-xs px-4"
       >
         <Link
           href="/courses"
-          className="px-8 py-3 rounded-lg bg-linear-to-r from-yellow-400 to-pink-400 text-white font-bold text-lg shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-200 flex items-center gap-2"
+          className="w-full px-6 sm:px-8 py-3 rounded-lg bg-linear-to-r from-yellow-400 to-pink-400 text-white font-bold text-base sm:text-lg shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-200 flex items-center justify-center gap-2"
         >
-          <span className="text-2xl">📚</span> Explore Courses
+          <span className="text-xl sm:text-2xl">📚</span> Explore Courses
         </Link>
       </motion.div>
       {isAdmin && (
         <motion.div
-          className="mt-8"
+          className="mt-4 sm:mt-8 w-full max-w-xs px-4"
           whileHover={{ scale: 1.05, rotate: -2 }}
           whileTap={{ scale: 0.95, rotate: 2 }}
         >
           <Link
             href="/dashboard/admin"
-            className="px-8 py-3 rounded-lg bg-linear-to-r from-blue-600 to-blue-400 text-white font-bold text-lg shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-200 flex items-center gap-2"
+            className="w-full px-6 sm:px-8 py-3 rounded-lg bg-linear-to-r from-blue-600 to-blue-400 text-white font-bold text-base sm:text-lg shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-200 flex items-center justify-center gap-2"
           >
-            <span className="text-2xl">🛠️</span> Admin Panel
+            <span className="text-xl sm:text-2xl">🛠️</span> Admin Panel
           </Link>
         </motion.div>
       )}
