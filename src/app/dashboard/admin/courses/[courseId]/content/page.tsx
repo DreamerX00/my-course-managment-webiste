@@ -843,126 +843,130 @@ export default function CourseContentManagerPage() {
             </div>
           )}
           {selectedChapter && !selectedSubchapter && (
-            <>
-              <div className="grow flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-gray-800">
-                    Chapter Content: {selectedChapter.title}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-                      onClick={handleSave}
-                      disabled={saving}
-                    >
-                      {saving ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold border border-gray-300 hover:bg-gray-200 transition-colors"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      Import
-                    </button>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      onChange={handleFileImport}
-                      accept=".md,.markdown,.txt,.doc,.docx"
-                    />
-                  </div>
-                </div>
-                {/* Video URL input */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Video URL (MP4 or YouTube embed link)
-                  </label>
+            <div className="grow flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Chapter Content: {selectedChapter.title}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold border border-gray-300 hover:bg-gray-200 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Import
+                  </button>
                   <input
-                    type="text"
-                    className="w-full border border-gray-300 rounded px-2 py-1 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://..."
-                    value={chapterVideoUrl}
-                    onChange={(e) => setChapterVideoUrl(e.target.value)}
-                  />
-                  <span className="text-xs text-gray-500">
-                    Leave blank for no video. YouTube links must be embed URLs
-                    (see docs).
-                  </span>
-                </div>
-                <div className="border rounded-lg overflow-hidden grow bg-gray-900">
-                  <ToastEditor
-                    ref={editorRef}
-                    content={parseContentToMarkdown(selectedChapter.content)}
-                    onSave={(content) =>
-                      setPendingChapterContent(content.markdown)
-                    }
-                    theme="dark"
-                    height="600px"
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileImport}
+                    accept=".md,.markdown,.txt,.doc,.docx"
                   />
                 </div>
               </div>
-            </>
+              {/* Video URL input */}
+              <div className="mb-4">
+                <label
+                  htmlFor="chapter-video-url"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Video URL (MP4 or YouTube embed link)
+                </label>
+                <input
+                  id="chapter-video-url"
+                  type="text"
+                  className="w-full border border-gray-300 rounded px-2 py-1 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://..."
+                  value={chapterVideoUrl}
+                  onChange={(e) => setChapterVideoUrl(e.target.value)}
+                />
+                <span className="text-xs text-gray-500">
+                  Leave blank for no video. YouTube links must be embed URLs
+                  (see docs).
+                </span>
+              </div>
+              <div className="border rounded-lg overflow-hidden grow bg-gray-900">
+                <ToastEditor
+                  ref={editorRef}
+                  content={parseContentToMarkdown(selectedChapter.content)}
+                  onSave={(content) =>
+                    setPendingChapterContent(content.markdown)
+                  }
+                  theme="dark"
+                  height="600px"
+                />
+              </div>
+            </div>
           )}
           {selectedSubchapter && (
-            <>
-              <div className="grow flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-gray-800">
-                    Subchapter Content: {selectedSubchapter.title}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-                      onClick={handleSaveSubchapter}
-                      disabled={saving}
-                    >
-                      {saving ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold border border-gray-300 hover:bg-gray-200 transition-colors"
-                      onClick={() => subChapterFileInputRef.current?.click()}
-                    >
-                      Import
-                    </button>
-                    <input
-                      type="file"
-                      ref={subChapterFileInputRef}
-                      className="hidden"
-                      onChange={handleSubchapterFileImport}
-                      accept=".md,.markdown,.txt,.doc,.docx"
-                    />
-                  </div>
-                </div>
-                {/* Video URL input for subchapter */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Video URL (MP4 or YouTube embed link)
-                  </label>
+            <div className="grow flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Subchapter Content: {selectedSubchapter.title}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    onClick={handleSaveSubchapter}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold border border-gray-300 hover:bg-gray-200 transition-colors"
+                    onClick={() => subChapterFileInputRef.current?.click()}
+                  >
+                    Import
+                  </button>
                   <input
-                    type="text"
-                    className="w-full border border-gray-300 rounded px-2 py-1 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://..."
-                    value={subchapterVideoUrl}
-                    onChange={(e) => setSubchapterVideoUrl(e.target.value)}
-                  />
-                  <span className="text-xs text-gray-500">
-                    Leave blank for no video. YouTube links must be embed URLs
-                    (see docs).
-                  </span>
-                </div>
-                <div className="border rounded-lg overflow-hidden grow bg-gray-900">
-                  <ToastEditor
-                    ref={editorRef}
-                    content={parseContentToMarkdown(selectedSubchapter.content)}
-                    onSave={(content) =>
-                      setPendingSubchapterContent(content.markdown)
-                    }
-                    theme="dark"
-                    height="600px"
+                    type="file"
+                    ref={subChapterFileInputRef}
+                    className="hidden"
+                    onChange={handleSubchapterFileImport}
+                    accept=".md,.markdown,.txt,.doc,.docx"
                   />
                 </div>
               </div>
-            </>
+              {/* Video URL input for subchapter */}
+              <div className="mb-4">
+                <label
+                  htmlFor="subchapter-video-url"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Video URL (MP4 or YouTube embed link)
+                </label>
+                <input
+                  id="subchapter-video-url"
+                  type="text"
+                  className="w-full border border-gray-300 rounded px-2 py-1 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://..."
+                  value={subchapterVideoUrl}
+                  onChange={(e) => setSubchapterVideoUrl(e.target.value)}
+                />
+                <span className="text-xs text-gray-500">
+                  Leave blank for no video. YouTube links must be embed URLs
+                  (see docs).
+                </span>
+              </div>
+              <div className="border rounded-lg overflow-hidden grow bg-gray-900">
+                <ToastEditor
+                  ref={editorRef}
+                  content={parseContentToMarkdown(selectedSubchapter.content)}
+                  onSave={(content) =>
+                    setPendingSubchapterContent(content.markdown)
+                  }
+                  theme="dark"
+                  height="600px"
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>

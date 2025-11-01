@@ -15,7 +15,7 @@ export default function TestToastEditorPage() {
 
   useEffect(() => {
     if (
-      typeof globalThis.window !== "undefined" &&
+      globalThis.window !== undefined &&
       editorRef.current &&
       !editorInstance
     ) {

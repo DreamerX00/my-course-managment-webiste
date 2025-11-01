@@ -1,12 +1,12 @@
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email configuration
 const emailConfig = {
-  fromEmail: process.env.EMAIL_FROM || 'onboarding@resend.dev',
-  fromName: 'Learning Platform',
+  fromEmail: process.env.EMAIL_FROM || "onboarding@resend.dev",
+  fromName: "Learning Platform",
 };
 
 // Email template for user invitations
@@ -18,9 +18,10 @@ export function generateInvitationEmail(
   message: string | null,
   signupUrl: string
 ) {
-  const userName = name || email.split('@')[0];
-  const roleDisplay = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
-  
+  const userName = name || email.split("@")[0];
+  const roleDisplay =
+    role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+
   return {
     subject: `You're invited to join our learning platform!`,
     html: `
@@ -133,19 +134,27 @@ export function generateInvitationEmail(
             
             <p>You've been invited to join our learning platform as a <span class="role-badge">${roleDisplay}</span>.</p>
             
-            ${courseName ? `
+            ${
+              courseName
+                ? `
             <div class="course-info">
               <strong>📚 Course Assignment:</strong><br>
               You've been assigned to: <strong>${courseName}</strong>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
             
-            ${message ? `
+            ${
+              message
+                ? `
             <div class="personal-message">
               <strong>💬 Personal Message:</strong><br>
               "${message}"
             </div>
-            ` : ''}
+            `
+                : ""
+            }
             
             <p>To get started, please click the button below to complete your account setup:</p>
             
@@ -177,9 +186,9 @@ Hello ${userName}!
 
 You've been invited to join our learning platform as a ${roleDisplay}.
 
-${courseName ? `Course Assignment: You've been assigned to ${courseName}` : ''}
+${courseName ? `Course Assignment: You've been assigned to ${courseName}` : ""}
 
-${message ? `Personal Message: "${message}"` : ''}
+${message ? `Personal Message: "${message}"` : ""}
 
 To get started, please visit this link to complete your account setup:
 ${signupUrl}
@@ -190,7 +199,7 @@ If you have any questions, please contact our support team.
 
 Best regards,
 The Learning Platform Team
-    `
+    `,
   };
 }
 
@@ -214,15 +223,14 @@ export async function sendInvitationEmail(
     );
 
     return await sendWithResend(email, emailContent);
-  } catch (error) {
-    console.error('Failed to send invitation email:', error);
-    throw new Error('Failed to send invitation email');
+  } catch {
+    throw new Error("Failed to send invitation email");
   }
 }
 
 // Send email using Resend
 async function sendWithResend(
-  email: string, 
+  email: string,
   emailContent: { subject: string; html: string; text: string }
 ) {
   try {
@@ -240,8 +248,10 @@ async function sendWithResend(
 
     return { success: true, messageId: result.data?.id };
   } catch (error) {
-    console.error('Resend email error:', error);
-    throw error;
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Failed to send email");
   }
 }
 
@@ -249,15 +259,13 @@ async function sendWithResend(
 export async function testEmailConfiguration() {
   try {
     if (!process.env.RESEND_API_KEY) {
-      console.error('RESEND_API_KEY is not configured');
-      return false;
+      throw new Error("RESEND_API_KEY is not configured");
     }
-    
+
     // Test by sending a test email to a verified address
     // In production, you should verify domains with Resend
     return true;
-  } catch (error) {
-    console.error('Email configuration error:', error);
+  } catch {
     return false;
   }
-} 
+}

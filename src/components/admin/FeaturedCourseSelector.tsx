@@ -23,8 +23,8 @@ interface Course {
 }
 
 interface FeaturedCourseSelectorProps {
-  selectedCourses: string[];
-  onUpdate: (courseIds: string[]) => void;
+  readonly selectedCourses: string[];
+  readonly onUpdate: (courseIds: string[]) => void;
 }
 
 export function FeaturedCourseSelector({
@@ -50,8 +50,7 @@ export function FeaturedCourseSelector({
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error("Error fetching courses:", error);
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load courses. Please try again.",

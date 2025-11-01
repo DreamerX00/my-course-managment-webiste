@@ -6,18 +6,18 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Home, RefreshCw } from "lucide-react";
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  readonly error: Error & { digest?: string };
+  readonly reset: () => void;
 }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error);
+    // TODO: Log the error to an error reporting service (e.g., Sentry)
+    // Example: Sentry.captureException(error);
   }, [error]);
 
   // Determine error code from error message or default to 500
@@ -106,10 +106,10 @@ export default function Error({
   const errorInfo = errorMessages[errorCode] || errorMessages["500"];
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-linear-to-br from-gray-50 via-blue-50 to-purple-50 p-4">
       {/* Error Image - Full Width */}
       <div className="w-full max-w-4xl mb-8">
-        <div className="relative w-full aspect-[16/9] md:aspect-[21/9]">
+        <div className="relative w-full aspect-video md:aspect-[21/9]">
           <Image
             src={errorImagePath}
             alt={`Error ${errorCode}`}
@@ -138,11 +138,7 @@ export default function Error({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 mt-4">
-        <Button
-          onClick={() => reset()}
-          size="lg"
-          className="gap-2 min-w-[160px]"
-        >
+        <Button onClick={() => reset()} size="lg" className="gap-2 min-w-40">
           <RefreshCw className="w-5 h-5" />
           Try Again
         </Button>
@@ -150,7 +146,7 @@ export default function Error({
           onClick={() => router.push("/")}
           variant="outline"
           size="lg"
-          className="gap-2 min-w-[160px]"
+          className="gap-2 min-w-40"
         >
           <Home className="w-5 h-5" />
           Go Home

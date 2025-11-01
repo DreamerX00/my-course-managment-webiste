@@ -1,7 +1,7 @@
-import { NextAuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import CredentialsProvider from "next-auth/providers/credentials"
-import type { UserRole } from "@prisma/client"
+import { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import type { UserRole } from "@prisma/client";
 // import { PrismaAdapter } from "@auth/prisma-adapter"
 // import { db } from "./db"
 
@@ -27,23 +27,34 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // This is a temporary mock for authorization without a database
-        if (credentials?.email === "test@example.com" && credentials?.password === "password") {
-          return {
-            id: "mock_user_id",
-            name: "Mock User",
-            email: "test@example.com",
-            role: "STUDENT", // Or 'INSTRUCTOR'
-            image: "",
-          };
+        if (!credentials?.email || !credentials?.password) {
+          return null;
         }
+
+        // TODO: Implement real database authentication
+        // Example implementation:
+        // const user = await db.user.findUnique({
+        //   where: { email: credentials.email }
+        // });
+        // if (!user || !await bcrypt.compare(credentials.password, user.password)) {
+        //   return null;
+        // }
+        // return {
+        //   id: user.id,
+        //   name: user.name,
+        //   email: user.email,
+        //   role: user.role,
+        //   image: user.image,
+        // };
+
+        // For now, return null to disable credentials login until DB is properly configured
         return null;
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user && 'role' in user) {
+      if (user && "role" in user) {
         token.id = user.id;
         token.role = user.role as UserRole;
       }
@@ -57,4 +68,4 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-}; 
+};

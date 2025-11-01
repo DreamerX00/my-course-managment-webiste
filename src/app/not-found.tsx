@@ -9,10 +9,10 @@ export default function NotFound() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-linear-to-br from-gray-50 via-blue-50 to-purple-50 p-4">
       {/* 404 Error Image - Full Width */}
       <div className="w-full max-w-4xl mb-8">
-        <div className="relative w-full aspect-[16/9] md:aspect-[21/9]">
+        <div className="relative w-full aspect-video md:aspect-[21/9]">
           <Image
             src="/Errors/404.png"
             alt="404 - Page Not Found"
@@ -42,7 +42,7 @@ export default function NotFound() {
         <Button
           onClick={() => router.back()}
           size="lg"
-          className="gap-2 min-w-[160px]"
+          className="gap-2 min-w-40"
         >
           <RefreshCw className="w-5 h-5" />
           Go Back
@@ -51,7 +51,7 @@ export default function NotFound() {
           onClick={() => router.push("/")}
           variant="outline"
           size="lg"
-          className="gap-2 min-w-[160px]"
+          className="gap-2 min-w-40"
         >
           <Home className="w-5 h-5" />
           Go Home

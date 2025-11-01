@@ -82,7 +82,7 @@ export default function AdminDashboardPage() {
   // Show loading state while session is loading
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -167,7 +167,7 @@ export default function AdminDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div

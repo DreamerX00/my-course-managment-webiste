@@ -85,8 +85,7 @@ export function UserTable() {
       const result = await response.json();
       setData(result.users);
       setTotalUsers(result.pagination.totalUsers);
-    } catch (error) {
-      console.error("Error fetching users:", error);
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load users. Please refresh the page.",
@@ -138,7 +137,6 @@ export function UserTable() {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to update role";
-      console.error(errorMessage);
       toast({
         title: "Error",
         description: errorMessage,
@@ -179,7 +177,6 @@ export function UserTable() {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to update status";
-      console.error(errorMessage);
       toast({
         title: "Error",
         description: errorMessage,
@@ -215,7 +212,6 @@ export function UserTable() {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to delete user";
-      console.error(errorMessage);
       toast({
         title: "Error",
         description: errorMessage,

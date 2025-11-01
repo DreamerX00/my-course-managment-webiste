@@ -1,10 +1,10 @@
-import { randomBytes } from 'crypto';
-import { db } from '@/lib/db';
-import { UserRole } from '@prisma/client';
+import { randomBytes } from "crypto";
+import { db } from "@/lib/db";
+import { UserRole } from "@prisma/client";
 
 // Generate a secure invitation token
 export function generateInvitationToken(): string {
-  return randomBytes(32).toString('hex');
+  return randomBytes(32).toString("hex");
 }
 
 // Create an invitation record
@@ -40,15 +40,15 @@ export async function validateInvitationToken(token: string) {
   });
 
   if (!invitation) {
-    return { valid: false, error: 'Invalid invitation token' };
+    return { valid: false, error: "Invalid invitation token" };
   }
 
   if (invitation.used) {
-    return { valid: false, error: 'Invitation has already been used' };
+    return { valid: false, error: "Invitation has already been used" };
   }
 
   if (invitation.expiresAt < new Date()) {
-    return { valid: false, error: 'Invitation has expired' };
+    return { valid: false, error: "Invitation has expired" };
   }
 
   return { valid: true, invitation };
@@ -63,17 +63,19 @@ export async function markInvitationAsUsed(token: string) {
 }
 
 // Get course name by ID
-export async function getCourseName(courseId: string | null): Promise<string | null> {
+export async function getCourseName(
+  courseId: string | null
+): Promise<string | null> {
   if (!courseId) return null;
-  
+
   try {
     const course = await db.course.findUnique({
       where: { id: courseId },
       select: { title: true },
     });
     return course?.title || null;
-  } catch (error) {
-    console.error('Error fetching course name:', error);
+  } catch {
+    // Error fetching course name - return null
     return null;
   }
 }
@@ -82,7 +84,9 @@ export async function getCourseName(courseId: string | null): Promise<string | n
 export async function getInvitationStats() {
   const totalInvitations = await db.invitation.count();
   const usedInvitations = await db.invitation.count({ where: { used: true } });
-  const pendingInvitations = await db.invitation.count({ where: { used: false } });
+  const pendingInvitations = await db.invitation.count({
+    where: { used: false },
+  });
   const expiredInvitations = await db.invitation.count({
     where: {
       expiresAt: { lt: new Date() },
@@ -96,4 +100,4 @@ export async function getInvitationStats() {
     pending: pendingInvitations,
     expired: expiredInvitations,
   };
-} 
+}

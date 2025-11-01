@@ -51,8 +51,7 @@ export function UserManagementDashboard() {
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       setUsers(data.users);
-    } catch (error) {
-      console.error("Error fetching users:", error);
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load users. Please refresh the page.",

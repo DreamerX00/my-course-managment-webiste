@@ -91,8 +91,7 @@ export default function LeaderboardPage() {
         }
         const leaderboardData = await response.json();
         setData(leaderboardData);
-      } catch (error) {
-        console.error("Failed:", error);
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load leaderboard. Please refresh the page.",
@@ -142,13 +141,13 @@ export default function LeaderboardPage() {
 
   const getRankBadgeColor = (rank: number) => {
     if (rank === 1)
-      return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white";
+      return "bg-linear-to-r from-yellow-400 to-yellow-600 text-white";
     if (rank === 2)
-      return "bg-gradient-to-r from-gray-300 to-gray-500 text-white";
+      return "bg-linear-to-r from-gray-300 to-gray-500 text-white";
     if (rank === 3)
-      return "bg-gradient-to-r from-orange-400 to-orange-600 text-white";
+      return "bg-linear-to-r from-orange-400 to-orange-600 text-white";
     if (rank <= 10)
-      return "bg-gradient-to-r from-blue-400 to-blue-600 text-white";
+      return "bg-linear-to-r from-blue-400 to-blue-600 text-white";
     return "bg-muted text-muted-foreground";
   };
 
@@ -217,7 +216,7 @@ export default function LeaderboardPage() {
             <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full"></div>
             <Trophy className="w-20 h-20 mx-auto text-primary relative animate-bounce" />
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent mb-3">
+          <h1 className="text-5xl md:text-6xl font-bold bg-linear-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent mb-3">
             Leaderboard
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -457,7 +456,7 @@ export default function LeaderboardPage() {
                 className="md:mt-8"
               >
                 <Card className="relative overflow-hidden border-2 border-gray-400/50 hover:border-gray-400 transition-all hover:shadow-xl">
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-200/20 to-gray-400/20"></div>
+                  <div className="absolute inset-0 bg-linear-to-br from-gray-200/20 to-gray-400/20"></div>
                   <CardContent className="pt-6 text-center relative z-10">
                     <div className="mb-4 relative inline-block">
                       <div className="absolute inset-0 bg-gray-400/20 blur-xl rounded-full"></div>
@@ -497,7 +496,7 @@ export default function LeaderboardPage() {
                 transition={{ duration: 0.5, delay: 0.6 }}
               >
                 <Card className="relative overflow-hidden border-4 border-yellow-500/50 hover:border-yellow-500 transition-all hover:shadow-2xl shadow-yellow-500/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/30 to-yellow-500/30 animate-pulse"></div>
+                  <div className="absolute inset-0 bg-linear-to-br from-yellow-200/30 to-yellow-500/30 animate-pulse"></div>
                   <CardContent className="pt-8 text-center relative z-10">
                     <div className="mb-4 relative inline-block">
                       <div className="absolute inset-0 bg-yellow-400/40 blur-2xl rounded-full animate-pulse"></div>
@@ -520,7 +519,7 @@ export default function LeaderboardPage() {
                         {filteredLeaderboard[0].title}
                       </p>
                     )}
-                    <div className="text-5xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-400 bg-clip-text text-transparent mb-3">
+                    <div className="text-5xl font-bold bg-linear-to-r from-yellow-600 to-yellow-400 bg-clip-text text-transparent mb-3">
                       {filteredLeaderboard[0].totalScore}
                     </div>
                     <Badge variant="outline" className="text-xs">
@@ -538,7 +537,7 @@ export default function LeaderboardPage() {
                 className="md:mt-8"
               >
                 <Card className="relative overflow-hidden border-2 border-orange-400/50 hover:border-orange-500 transition-all hover:shadow-xl">
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-200/20 to-orange-500/20"></div>
+                  <div className="absolute inset-0 bg-linear-to-br from-orange-200/20 to-orange-500/20"></div>
                   <CardContent className="pt-6 text-center relative z-10">
                     <div className="mb-4 relative inline-block">
                       <div className="absolute inset-0 bg-orange-400/20 blur-xl rounded-full"></div>

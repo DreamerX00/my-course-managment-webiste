@@ -13,7 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Chrome, Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
+import { SiGoogle } from "@icons-pack/react-simple-icons";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function LoginPage() {
@@ -45,7 +46,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div
+    <main
+      role="main"
+      aria-label="Login page"
       onMouseMove={handleMouseMove}
       className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 px-4 py-12 relative overflow-hidden"
     >
@@ -177,7 +180,7 @@ export default function LoginPage() {
                       whileHover={{ x: "100%" }}
                       transition={{ duration: 0.6 }}
                     />
-                    <Chrome className="w-5 h-5 mr-3 relative z-10" />
+                    <SiGoogle className="w-5 h-5 mr-3 relative z-10" />
                     <span className="relative z-10">
                       {isLoading ? "Signing in..." : "Continue with Google"}
                     </span>
@@ -263,6 +266,6 @@ export default function LoginPage() {
           </Link>
         </motion.p>
       </motion.div>
-    </div>
+    </main>
   );
 }

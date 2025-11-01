@@ -13,7 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Chrome, ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
+import { SiGoogle } from "@icons-pack/react-simple-icons";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function SignupPage() {
@@ -54,9 +55,10 @@ export default function SignupPage() {
   ];
 
   return (
-    <div
+    <main
       onMouseMove={handleMouseMove}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 px-4 py-12 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 px-4 py-12 relative overflow-hidden"
+      aria-label="Sign up page"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.5 }}
@@ -132,7 +134,7 @@ export default function SignupPage() {
                 className="w-12 h-12"
               />
             </motion.div>
-            <span className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-pink-500 to-yellow-500 bg-clip-text text-transparent">
+            <span className="text-3xl font-extrabold bg-linear-to-r from-blue-600 via-pink-500 to-yellow-500 bg-clip-text text-transparent">
               Dreamer Academy
             </span>
           </Link>
@@ -176,17 +178,17 @@ export default function SignupPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full h-12 text-base font-semibold relative overflow-hidden group bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:via-pink-50 hover:to-yellow-50 border-2 hover:border-blue-400 transition-all duration-300"
+                    className="w-full h-12 text-base font-semibold relative overflow-hidden group bg-white hover:bg-linear-to-r hover:from-blue-50 hover:via-pink-50 hover:to-yellow-50 border-2 hover:border-blue-400 transition-all duration-300"
                     onClick={handleGoogleSignUp}
                     disabled={isLoading}
                   >
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-pink-400/20 to-yellow-400/20"
+                      className="absolute inset-0 bg-linear-to-r from-blue-400/20 via-pink-400/20 to-yellow-400/20"
                       initial={{ x: "-100%" }}
                       whileHover={{ x: "100%" }}
                       transition={{ duration: 0.6 }}
                     />
-                    <Chrome className="w-5 h-5 mr-3 relative z-10" />
+                    <SiGoogle className="w-5 h-5 mr-3 relative z-10" />
                     <span className="relative z-10">
                       {isLoading
                         ? "Creating account..."
@@ -215,11 +217,11 @@ export default function SignupPage() {
                 >
                   {features.map((feature, index) => (
                     <motion.div
-                      key={index}
+                      key={`feature-${feature.text}-${index}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.7 + index * 0.1 }}
-                      className="flex items-center space-x-2 text-sm text-gray-700 bg-gradient-to-r from-blue-50 to-pink-50 rounded-lg p-2"
+                      className="flex items-center space-x-2 text-sm text-gray-700 bg-linear-to-r from-blue-50 to-pink-50 rounded-lg p-2"
                     >
                       <span className="text-lg">{feature.icon}</span>
                       <span className="font-medium text-xs">
@@ -233,7 +235,7 @@ export default function SignupPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.2 }}
-                  className="bg-gradient-to-r from-blue-100 via-pink-100 to-yellow-100 rounded-lg p-4 space-y-2"
+                  className="bg-linear-to-r from-blue-100 via-pink-100 to-yellow-100 rounded-lg p-4 space-y-2"
                 >
                   <div className="flex items-center text-sm font-medium text-gray-700">
                     <Check className="w-5 h-5 mr-2 text-green-600" />
@@ -296,6 +298,6 @@ export default function SignupPage() {
           </Link>
         </motion.p>
       </motion.div>
-    </div>
+    </main>
   );
 }

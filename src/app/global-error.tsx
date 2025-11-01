@@ -13,17 +13,17 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error("Global error:", error);
+    // TODO: Log the error to an error reporting service (e.g., Sentry)
+    // Example: Sentry.captureException(error);
   }, [error]);
 
   return (
     <html>
       <body>
-        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 p-4">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-linear-to-br from-red-50 via-orange-50 to-yellow-50 p-4">
           {/* 500 Error Image - Full Width */}
           <div className="w-full max-w-4xl mb-8">
-            <div className="relative w-full aspect-[16/9] md:aspect-[21/9]">
+            <div className="relative w-full aspect-video md:aspect-[21/9]">
               <Image
                 src="/Errors/500.png"
                 alt="500 - Internal Server Error"
@@ -57,7 +57,7 @@ export default function GlobalError({
             <Button
               onClick={() => reset()}
               size="lg"
-              className="gap-2 min-w-[160px]"
+              className="gap-2 min-w-40"
             >
               <RefreshCw className="w-5 h-5" />
               Try Again
@@ -66,7 +66,7 @@ export default function GlobalError({
               onClick={() => (window.location.href = "/")}
               variant="outline"
               size="lg"
-              className="gap-2 min-w-[160px]"
+              className="gap-2 min-w-40"
             >
               <Home className="w-5 h-5" />
               Go Home

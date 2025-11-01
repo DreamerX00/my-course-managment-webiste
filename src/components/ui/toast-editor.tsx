@@ -35,7 +35,7 @@ export const ToastEditor = forwardRef<ToastEditorHandle, ToastEditorProps>(
 
     useEffect(() => {
       if (
-        typeof globalThis.window !== "undefined" &&
+        globalThis.window !== undefined &&
         editorRef.current &&
         !editorInstanceRef.current
       ) {

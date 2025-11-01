@@ -66,8 +66,7 @@ export function InviteUserForm({ onClose, onSuccess }: InviteUserFormProps) {
         description: `Invitation email sent successfully to ${formData.email}! The invitation will expire in 7 days.`,
       });
       onSuccess();
-    } catch (error) {
-      console.error("Error sending invitation:", error);
+    } catch {
       toast({
         title: "Error",
         description: "Failed to send invitation. Please try again.",

@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 
 interface TypewriterProps {
-  texts: string[];
-  speed?: number;
-  pause?: number;
-  className?: string;
+  readonly texts: string[];
+  readonly speed?: number;
+  readonly pause?: number;
+  readonly className?: string;
 }
 
 export function Typewriter({

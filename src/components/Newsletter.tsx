@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { NEWSLETTER_CONTENT } from "@/lib/constants"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { motion } from "framer-motion";
+import { NEWSLETTER_CONTENT } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function Newsletter() {
   return (
-    <section className="relative isolate overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-500 py-12 sm:py-16 lg:py-20">
+    <section className="relative isolate overflow-hidden bg-linear-to-br from-cyan-500 to-blue-500 py-12 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: 50 }}
@@ -49,5 +49,5 @@ export function Newsletter() {
         </motion.form>
       </div>
     </section>
-  )
-} 
+  );
+}

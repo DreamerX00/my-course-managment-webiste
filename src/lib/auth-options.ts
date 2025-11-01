@@ -43,7 +43,7 @@ export const authOptions: NextAuthOptions = {
       // Update session (e.g., when user updates profile)
       if (trigger === "update") {
         const dbUser = await db.user.findUnique({
-          where: { id: token.id as string },
+          where: { id: String(token.id) },
           select: { role: true, name: true, image: true },
         });
         if (dbUser) {
@@ -57,10 +57,10 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = (token.email as string) || "";
-        session.user.name = (token.name as string) || "";
-        session.user.image = (token.picture as string) || "";
+        session.user.id = String(token.id);
+        session.user.email = String(token.email) || "";
+        session.user.name = String(token.name) || "";
+        session.user.image = String(token.picture) || "";
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         session.user.role = token.role as any;
       }
@@ -82,8 +82,8 @@ export const authOptions: NextAuthOptions = {
               data: { role: "STUDENT" },
             });
           }
-        } catch (error) {
-          console.error("Error in signIn callback:", error);
+        } catch {
+          // Silently fail if user update fails
         }
       }
 

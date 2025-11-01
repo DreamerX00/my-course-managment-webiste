@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Home, RefreshCw } from "lucide-react";
 
 interface ErrorDisplayProps {
-  errorCode?:
+  readonly errorCode?:
     | "400"
     | "401"
     | "403"
@@ -19,12 +19,12 @@ interface ErrorDisplayProps {
     | "502"
     | "503"
     | "504";
-  title?: string;
-  description?: string;
-  message?: string;
-  onRetry?: () => void;
-  showRetry?: boolean;
-  showHome?: boolean;
+  readonly title?: string;
+  readonly description?: string;
+  readonly message?: string;
+  readonly onRetry?: () => void;
+  readonly showRetry?: boolean;
+  readonly showHome?: boolean;
 }
 
 const errorDefaults: Record<string, { title: string; description: string }> = {
@@ -96,10 +96,10 @@ export function ErrorDisplay({
   const displayDescription = description || defaults.description;
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-linear-to-br from-gray-50 via-blue-50 to-purple-50 p-4">
       {/* Error Image - Full Width */}
       <div className="w-full max-w-4xl mb-8">
-        <div className="relative w-full aspect-[16/9] md:aspect-[21/9]">
+        <div className="relative w-full aspect-video md:aspect-[21/9]">
           <Image
             src={errorImagePath}
             alt={`Error ${errorCode}`}
@@ -132,7 +132,7 @@ export function ErrorDisplay({
           <Button
             onClick={onRetry || (() => router.refresh())}
             size="lg"
-            className="gap-2 min-w-[160px]"
+            className="gap-2 min-w-40"
           >
             <RefreshCw className="w-5 h-5" />
             Try Again
@@ -143,7 +143,7 @@ export function ErrorDisplay({
             onClick={() => router.push("/")}
             variant="outline"
             size="lg"
-            className="gap-2 min-w-[160px]"
+            className="gap-2 min-w-40"
           >
             <Home className="w-5 h-5" />
             Go Home

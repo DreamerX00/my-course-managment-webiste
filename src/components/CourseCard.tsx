@@ -57,8 +57,7 @@ export function CourseCard({ course, index }: CourseCardProps) {
           const calculatedProgress = (completedItems.length / totalItems) * 100;
           setProgress(Math.min(calculatedProgress, 100));
         }
-      } catch (error) {
-        console.error("Error calculating progress:", error);
+      } catch {
         setProgress(0);
       }
     };

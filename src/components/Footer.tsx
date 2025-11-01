@@ -87,7 +87,7 @@ export function Footer() {
               <Input
                 type="email"
                 placeholder={NEWSLETTER_CONTENT.placeholder}
-                className="flex-grow bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="grow bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 type="submit"

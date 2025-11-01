@@ -35,9 +35,9 @@ export type User = {
 };
 
 interface UserModalProps {
-  user: User;
-  onClose: () => void;
-  isAdmin: boolean;
+  readonly user: User;
+  readonly onClose: () => void;
+  readonly isAdmin: boolean;
 }
 
 const roleColors: Record<UserRole, string> = {
@@ -78,8 +78,7 @@ export function UserModal({ user, onClose, isAdmin }: UserModalProps) {
           });
           break;
       }
-    } catch (error) {
-      console.error("Action failed:", error);
+    } catch {
       toast({
         title: "Error",
         description: "Action failed. Please try again.",
