@@ -3,24 +3,60 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+
+interface DashboardStats {
+  enrolledCount: number;
+  completedCount: number;
+  badgesEarned: number;
+}
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  // Placeholder role check; replace with real session.user.role
+  const [stats, setStats] = useState<DashboardStats>({
+    enrolledCount: 0,
+    completedCount: 0,
+    badgesEarned: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
   const userRole = session?.user?.role || "STUDENT";
   const isAdmin = ["ADMIN", "INSTRUCTOR", "OWNER"].includes(userRole);
 
-  // Demo stats (replace with real data)
-  const stats = useMemo(
-    () => [
-      { label: "Courses Enrolled", value: 7, icon: "📚" },
-      { label: "Courses Completed", value: 3, icon: "✅" },
-      { label: "Badges Earned", value: 5, icon: "🏅" },
-    ],
-    []
-  );
+  // Fetch real user stats
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/user/stats");
+        if (response.ok) {
+          const data = await response.json();
+          setStats({
+            enrolledCount: data.enrolledCount || 0,
+            completedCount: data.completedCount || 0,
+            badgesEarned: data.badgesEarned || 0,
+          });
+        }
+      } catch {
+        // Silently fail, keep default values
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [session?.user?.id]);
+
+  const statCards = [
+    { label: "Courses Enrolled", value: stats.enrolledCount, icon: "📚" },
+    { label: "Courses Completed", value: stats.completedCount, icon: "✅" },
+    { label: "Badges Earned", value: stats.badgesEarned, icon: "🏅" },
+  ];
 
   // User avatar or initials
   const userName = session?.user?.name || "User";
@@ -66,7 +102,6 @@ export default function DashboardPage() {
             {initials}
           </div>
         )}
-        className={"dashboard-stat-card dashboard-stat-card-animate"}
       </motion.div>
 
       {/* Animated Gradient Header */}
@@ -89,25 +124,37 @@ export default function DashboardPage() {
 
       {/* Animated Stat Cards */}
       <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        {stats.map((stat, idx) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              delay: 0.2 + idx * 0.15,
-              duration: 0.7,
-              type: "spring",
-            }}
-            className="dashboard-stat-card dashboard-stat-card-animate"
-          >
-            <div className="text-3xl mb-2">{stat.icon}</div>
-            <div className="text-2xl font-bold mb-1">{stat.value}</div>
-            <div className="text-sm text-gray-500 text-center">
-              {stat.label}
-            </div>
-          </motion.div>
-        ))}
+        {loading
+          ? // Loading skeleton
+            [1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="dashboard-stat-card dashboard-stat-card-animate animate-pulse"
+              >
+                <div className="h-8 w-8 bg-gray-200 rounded mb-2 mx-auto"></div>
+                <div className="h-6 w-12 bg-gray-200 rounded mb-1 mx-auto"></div>
+                <div className="h-4 w-24 bg-gray-200 rounded mx-auto"></div>
+              </div>
+            ))
+          : statCards.map((stat, idx) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: 0.2 + idx * 0.15,
+                  duration: 0.7,
+                  type: "spring",
+                }}
+                className="dashboard-stat-card dashboard-stat-card-animate"
+              >
+                <div className="text-3xl mb-2">{stat.icon}</div>
+                <div className="text-2xl font-bold mb-1">{stat.value}</div>
+                <div className="text-sm text-gray-500 text-center">
+                  {stat.label}
+                </div>
+              </motion.div>
+            ))}
       </div>
 
       {/* Main Actions */}

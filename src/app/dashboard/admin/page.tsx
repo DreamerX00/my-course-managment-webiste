@@ -78,6 +78,9 @@ export default function AdminPanelPage() {
   const [publishLoadingId, setPublishLoadingId] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
 
+  // Add state for delete loading
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
+
   const router = useRouter();
 
   // Fetch categories from content settings
@@ -331,6 +334,53 @@ export default function AdminPanelPage() {
       });
     } finally {
       setPublishLoadingId(null);
+    }
+  };
+
+  // Handler to delete an unpublished course
+  const handleDeleteCourse = async (course: Course) => {
+    if (course.isPublished) {
+      toast({
+        title: "Cannot Delete",
+        description:
+          "Published courses cannot be deleted. Please unpublish first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const confirmed = globalThis.confirm(
+      `Are you sure you want to delete "${course.title}"? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setDeletingCourseId(course.id);
+    try {
+      const res = await fetch(`/api/courses/${course.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete course");
+      }
+
+      setCourses(courses.filter((c) => c.id !== course.id));
+      toast({
+        title: "Success",
+        description: `Course "${course.title}" deleted successfully!`,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete course";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingCourseId(null);
     }
   };
 
@@ -773,12 +823,27 @@ export default function AdminPanelPage() {
                     </span>
                     <div className="flex gap-2 mt-3">
                       <button
-                        className="px-4 py-2 bg-yellow-400 text-black rounded font-semibold hover:bg-yellow-500"
+                        className="px-4 py-2 bg-yellow-400 text-black rounded font-semibold hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() => handleStartEditCourse(course)}
-                        disabled={editCourseLoading}
+                        disabled={
+                          editCourseLoading || deletingCourseId === course.id
+                        }
                       >
                         Edit
                       </button>
+                      {!course.isPublished && (
+                        <button
+                          className="px-4 py-2 bg-red-600 text-white rounded font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => handleDeleteCourse(course)}
+                          disabled={
+                            deletingCourseId === course.id || editCourseLoading
+                          }
+                        >
+                          {deletingCourseId === course.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      )}
                     </div>
                     {!editingCourseId && publishError && (
                       <div className="text-red-700 font-bold mb-2">

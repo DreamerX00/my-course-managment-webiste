@@ -67,6 +67,23 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
+    // Check if course exists and is unpublished
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+      select: { isPublished: true },
+    });
+
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    if (course.isPublished) {
+      return NextResponse.json(
+        { error: "Cannot delete published courses. Please unpublish first." },
+        { status: 400 }
+      );
+    }
+
     await db.course.delete({ where: { id: courseId } });
     return NextResponse.json({ success: true });
   } catch (error) {

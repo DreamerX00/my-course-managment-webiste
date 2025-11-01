@@ -73,67 +73,27 @@ interface ContentDetails {
   }>;
 }
 
-// Default content details template (fallback)
-const defaultContentDetails: ContentDetails = {
-  title: "DSA Cracker 🔥 - Complete Data Structures & Algorithms",
-  category: "Computer Science",
-  tags: ["DSA", "Beginner", "Interview Prep", "Popular"],
+// Create empty content details (shows N/A for missing data)
+const createEmptyContentDetails = (courseTitle: string): ContentDetails => ({
+  title: courseTitle,
+  category: "N/A",
+  tags: [],
   instructor: {
-    name: "CodeWithHarry",
+    name: "N/A",
     avatar:
       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    rating: 4.8,
-    students: 15420,
+    rating: 0,
+    students: 0,
   },
-  rating: 4.9,
-  enrolledCount: 28450,
-  duration: "45 hours",
-  price: 999,
-  originalPrice: 1999,
-  isFree: false,
-  description: `
-    <h2>Master Data Structures and Algorithms</h2>
-    <p>This comprehensive course will take you from a complete beginner to an advanced DSA expert.</p>
-  `,
-  features: [
-    {
-      icon: "Video",
-      title: "Video Content",
-      description: "45 hours of on-demand videos",
-      value: "45 hours",
-    },
-    {
-      icon: "FileText",
-      title: "Resources",
-      description: "Downloadable resources and notes",
-      value: "50+ files",
-    },
-    {
-      icon: "FileCode",
-      title: "Assignments",
-      description: "Practice problems and coding challenges",
-      value: "200+ problems",
-    },
-    {
-      icon: "MessageSquare",
-      title: "Instructor Support",
-      description: "Direct Q&A and doubt solving",
-      value: "24/7 support",
-    },
-    {
-      icon: "Smartphone",
-      title: "Access",
-      description: "Full lifetime access on mobile & TV",
-      value: "Lifetime",
-    },
-    {
-      icon: "Trophy",
-      title: "Certificate",
-      description: "Certificate of Completion included",
-      value: "Included",
-    },
-  ],
-};
+  rating: 0,
+  enrolledCount: 0,
+  duration: "N/A",
+  price: 0,
+  originalPrice: 0,
+  isFree: true,
+  description: `<p>No description available.</p>`,
+  features: [],
+});
 
 function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
   return (
@@ -143,17 +103,19 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {contentDetails.tags.map((tag: string, index: number) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="bg-blue-100 text-blue-800 hover:bg-blue-200"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
+              {contentDetails.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {contentDetails.tags.map((tag: string, index: number) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -164,54 +126,72 @@ function CourseHero({ contentDetails }: { contentDetails: ContentDetails }) {
                 {contentDetails.title}
               </motion.h1>
 
-              <p className="text-lg text-gray-600">
-                Master Data Structures and Algorithms for interviews and
-                competitive programming
-              </p>
+              {contentDetails.description &&
+                contentDetails.description !==
+                  "<p>No description available.</p>" && (
+                  <p className="text-lg text-gray-600">
+                    {contentDetails.description
+                      .replaceAll(/<[^>]*>/g, "")
+                      .substring(0, 150)}
+                    ...
+                  </p>
+                )}
             </div>
 
             {/* Instructor Info */}
-            <div className="flex items-center gap-4">
-              <Image
-                src={contentDetails.instructor.avatar}
-                alt={contentDetails.instructor.name}
-                width={48}
-                height={48}
-                className="rounded-full object-cover"
-              />
-              <div>
-                <p className="font-semibold text-gray-900">
-                  {contentDetails.instructor.name}
-                </p>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span>{contentDetails.instructor.rating}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>
-                      {contentDetails.instructor.students.toLocaleString()}{" "}
-                      students
-                    </span>
+            {contentDetails.instructor.name !== "N/A" && (
+              <div className="flex items-center gap-4">
+                <Image
+                  src={contentDetails.instructor.avatar}
+                  alt={contentDetails.instructor.name}
+                  width={48}
+                  height={48}
+                  className="rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    {contentDetails.instructor.name}
+                  </p>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    {contentDetails.instructor.rating > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span>{contentDetails.instructor.rating}</span>
+                      </div>
+                    )}
+                    {contentDetails.instructor.students > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        <span>
+                          {contentDetails.instructor.students.toLocaleString()}{" "}
+                          students
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Course Stats */}
             <div className="flex flex-wrap gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                <span className="font-semibold">{contentDetails.rating}</span>
-                <span className="text-gray-600">
-                  ({contentDetails.enrolledCount.toLocaleString()} enrolled)
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-gray-500" />
-                <span>{contentDetails.duration}</span>
-              </div>
+              {contentDetails.rating > 0 && (
+                <div className="flex items-center gap-2">
+                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  <span className="font-semibold">{contentDetails.rating}</span>
+                  {contentDetails.enrolledCount > 0 && (
+                    <span className="text-gray-600">
+                      ({contentDetails.enrolledCount.toLocaleString()} enrolled)
+                    </span>
+                  )}
+                </div>
+              )}
+              {contentDetails.duration !== "N/A" && (
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-gray-500" />
+                  <span>{contentDetails.duration}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -275,6 +255,11 @@ function CourseFeatures({
 }: {
   contentDetails: ContentDetails;
 }) {
+  // Don't render if no features
+  if (!contentDetails.features || contentDetails.features.length === 0) {
+    return null;
+  }
+
   return (
     <div className="py-12 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -505,19 +490,27 @@ function PricingCard({
 
       <div className="w-full flex flex-col items-center space-y-6">
         <div className="w-full text-center">
-          {contentDetails.isFree ? (
+          {contentDetails.isFree || contentDetails.price === 0 ? (
             <div className="text-3xl font-bold text-green-600 mb-2">Free</div>
-          ) : (
+          ) : contentDetails.price > 0 ? (
             <div className="space-y-1">
               <div className="text-3xl font-bold text-gray-900">
                 ₹{contentDetails.price}
               </div>
-              <div className="text-lg text-gray-500 line-through">
-                ₹{contentDetails.originalPrice}
-              </div>
+              {contentDetails.originalPrice > contentDetails.price && (
+                <div className="text-lg text-gray-500 line-through">
+                  ₹{contentDetails.originalPrice}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-xl font-semibold text-gray-600 mb-2">
+              Price Not Set
             </div>
           )}
-          <p className="text-xs text-gray-500 mt-1">One-time payment</p>
+          <p className="text-xs text-gray-500 mt-1">
+            {contentDetails.price > 0 ? "One-time payment" : ""}
+          </p>
         </div>
 
         <div className="w-full space-y-3">
@@ -587,8 +580,8 @@ export default function CourseDetailsPage() {
   const params = useParams();
   const courseId = params.courseId as string;
   const [course, setCourse] = useState<Course | null>(null);
-  const [contentDetails, setContentDetails] = useState<ContentDetails>(
-    defaultContentDetails
+  const [contentDetails, setContentDetails] = useState<ContentDetails | null>(
+    null
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -614,9 +607,13 @@ export default function CourseDetailsPage() {
           if (detailsResponse.ok) {
             const detailsData = await detailsResponse.json();
             setContentDetails(detailsData);
+          } else {
+            // Create empty content details with course title
+            setContentDetails(createEmptyContentDetails(courseData.title));
           }
         } catch {
-          // Use default content details if fetch fails
+          // Create empty content details with course title
+          setContentDetails(createEmptyContentDetails(courseData.title));
         }
       } catch {
         setError("Failed to load course data");
@@ -650,6 +647,17 @@ export default function CourseDetailsPage() {
             {error || "The course you are looking for does not exist."}
           </p>
           <Button onClick={() => window.history.back()}>Go Back</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!contentDetails) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading course details...</p>
         </div>
       </div>
     );

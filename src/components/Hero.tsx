@@ -292,16 +292,6 @@ export function Hero() {
           </motion.span>
           <span className="inline-block ml-2">🌟</span>
         </motion.div>
-
-        {/* Typewriter Effect for Learning Quotes */}
-        <div className="mt-12 sm:mt-16">
-          <Typewriter
-            texts={LEARNING_QUOTES}
-            speed={70}
-            pause={1000}
-            className="text-lg sm:text-xl md:text-2xl font-semibold text-blue-800"
-          />
-        </div>
       </div>
     </section>
   );
