@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
         updatedAt: true,
         _count: {
           select: {
-            courses: true, // Count of courses enrolled
+            enrolledCourses: true, // Count of courses enrolled
           },
         },
       },
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       role: user.role,
       status: user.status,
       createdAt: user.createdAt.toISOString(),
-      coursesEnrolled: user._count.courses,
+      coursesEnrolled: user._count.enrolledCourses,
       lastActive: user.updatedAt.toISOString(),
     }));
 

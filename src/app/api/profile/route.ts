@@ -27,7 +27,7 @@ export async function GET() {
         role: true,
         createdAt: true,
         updatedAt: true,
-        profile: {
+        userProfile: {
           select: {
             bio: true,
             title: true,
@@ -121,19 +121,19 @@ export async function GET() {
       totalScore,
       completedCourses,
       // UserProfile data
-      bio: user.profile?.bio || null,
-      title: user.profile?.title || null,
-      location: user.profile?.location || null,
-      phone: user.profile?.phone || null,
-      linkedin: user.profile?.linkedin || null,
-      github: user.profile?.github || null,
-      twitter: user.profile?.twitter || null,
-      website: user.profile?.website || null,
-      youtube: user.profile?.youtube || null,
-      instagram: user.profile?.instagram || null,
-      avatar: user.profile?.avatar || user.image || "",
-      bannerImage: user.profile?.bannerImage || null,
-      isPublic: user.profile?.isPublic ?? true,
+      bio: user.userProfile?.bio || null,
+      title: user.userProfile?.title || null,
+      location: user.userProfile?.location || null,
+      phone: user.userProfile?.phone || null,
+      linkedin: user.userProfile?.linkedin || null,
+      github: user.userProfile?.github || null,
+      twitter: user.userProfile?.twitter || null,
+      website: user.userProfile?.website || null,
+      youtube: user.userProfile?.youtube || null,
+      instagram: user.userProfile?.instagram || null,
+      avatar: user.userProfile?.avatar || user.image || "",
+      bannerImage: user.userProfile?.bannerImage || null,
+      isPublic: user.userProfile?.isPublic ?? true,
     };
 
     return NextResponse.json(profile);

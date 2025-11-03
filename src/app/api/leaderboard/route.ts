@@ -15,61 +15,155 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const courseId = searchParams.get("courseId"); // null = global leaderboard
+    const period = searchParams.get("period") || "all"; // all, weekly
     const search = searchParams.get("search") || "";
-    const period = searchParams.get("period") || "all"; // all, week, month
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const limit = parseInt(searchParams.get("limit") || "100");
 
-    // Calculate date filter based on period
-    let dateFilter = {};
-    if (period === "week") {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      dateFilter = { gte: weekAgo };
-    } else if (period === "month") {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      dateFilter = { gte: monthAgo };
-    }
+    // Get current week number for weekly leaderboard
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const days = Math.floor(
+      (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
+    );
+    const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
 
-    // Build quiz attempts query
-    const quizAttemptsWhere: {
-      createdAt?: { gte: Date };
-      quiz?: { chapter?: { courseId?: string } };
-      user?: { name?: { contains: string; mode: "insensitive" } };
-    } = {};
+    // Get all rank configurations
+    const ranks = await db.rankConfiguration.findMany({
+      orderBy: { rankNumber: "asc" },
+    });
+    const rankMap = new Map(ranks.map((r) => [r.rankNumber, r]));
 
-    if (Object.keys(dateFilter).length > 0) {
-      quizAttemptsWhere.createdAt = dateFilter as { gte: Date };
-    }
+    let leaderboardData;
 
-    if (courseId) {
-      quizAttemptsWhere.quiz = {
-        chapter: {
-          courseId: courseId,
+    if (period === "weekly") {
+      // Get weekly leaderboard from WeeklyLeaderboard table
+      const weeklyEntries = await db.weeklyLeaderboard.findMany({
+        where: {
+          weekNumber: currentWeek,
+          year: now.getFullYear(),
+          ...(search && {
+            user: {
+              name: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+          }),
         },
-      };
-    }
-
-    if (search) {
-      quizAttemptsWhere.user = {
-        name: {
-          contains: search,
-          mode: "insensitive",
+        include: {
+          user: {
+            include: {
+              userRank: true,
+              userProfile: {
+                select: {
+                  avatar: true,
+                  title: true,
+                },
+              },
+            },
+          },
         },
-      };
+        orderBy: {
+          weeklyPoints: "desc",
+        },
+        take: limit,
+        cacheStrategy: {
+          ttl: 60,
+          swr: 120,
+        },
+      });
+
+      leaderboardData = weeklyEntries.map((entry, index) => {
+        const rank = rankMap.get(entry.user.userRank?.currentRank || 1);
+        return {
+          id: entry.userId,
+          name: entry.user.name || "Unknown User",
+          displayAvatar:
+            entry.user.userProfile?.avatar || entry.user.image || "",
+          title: entry.user.userProfile?.title || null,
+          weeklyPoints: entry.weeklyPoints,
+          totalPoints: entry.user.userRank?.totalPoints || 0,
+          rank: index + 1,
+          currentRank: rank?.name || "Beginner",
+          rankIcon: rank?.icon || "🌱",
+          rankColor: rank?.color || "#10b981",
+          streak: entry.user.userRank?.streakDays || 0,
+          totalCompletions: entry.totalPoints, // Using weeklyLeaderboard totalPoints as completions
+        };
+      });
+    } else {
+      // Get all-time leaderboard from UserRank
+      const whereClause = search
+        ? {
+            user: {
+              name: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+          }
+        : {};
+
+      const allTimeEntries = await db.userRank.findMany({
+        where: whereClause,
+        include: {
+          user: {
+            include: {
+              userProfile: {
+                select: {
+                  avatar: true,
+                  title: true,
+                },
+              },
+            },
+          },
+          completions: {
+            select: {
+              id: true,
+            },
+          },
+        },
+        orderBy: {
+          totalPoints: "desc",
+        },
+        take: limit,
+        cacheStrategy: {
+          ttl: 60,
+          swr: 120,
+        },
+      });
+
+      leaderboardData = allTimeEntries.map((entry, index) => {
+        const rank = rankMap.get(entry.currentRank);
+        // Count completions
+        const totalCompletions = entry.completions?.length || 0;
+
+        return {
+          id: entry.userId,
+          name: entry.user.name || "Unknown User",
+          displayAvatar:
+            entry.user.userProfile?.avatar || entry.user.image || "",
+          title: entry.user.userProfile?.title || null,
+          weeklyPoints: entry.weeklyPoints,
+          totalPoints: entry.totalPoints,
+          rank: index + 1,
+          currentRank: rank?.name || "Beginner",
+          rankIcon: rank?.icon || "🌱",
+          rankColor: rank?.color || "#10b981",
+          streak: entry.streakDays,
+          totalCompletions,
+          lastActive: entry.lastActive,
+        };
+      });
     }
 
-    // Get all quiz attempts with filters
-    const quizAttempts = await db.quizAttempt.findMany({
-      where: quizAttemptsWhere,
+    // Get current user's position
+    const currentUserRank = await db.userRank.findUnique({
+      where: { userId: session.user.id },
       include: {
         user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            profile: {
+          include: {
+            userProfile: {
               select: {
                 avatar: true,
                 title: true,
@@ -77,80 +171,51 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-      },
-      cacheStrategy: {
-        ttl: 60, // 1 minute cache for leaderboard
-        swr: 120, // 2 minutes stale-while-revalidate
+        completions: true,
       },
     });
 
-    // Calculate user scores
-    const userScores: Map<
-      string,
-      {
-        id: string;
-        name: string;
-        image: string;
-        avatar: string | null;
-        title: string | null;
-        totalScore: number;
-        attemptCount: number;
-      }
-    > = new Map();
+    let currentUserData = null;
+    if (currentUserRank) {
+      const rank = rankMap.get(currentUserRank.currentRank);
 
-    quizAttempts.forEach((attempt) => {
-      const userId = attempt.user.id;
-      if (!userScores.has(userId)) {
-        userScores.set(userId, {
-          id: userId,
-          name: attempt.user.name || "Unknown User",
-          image: attempt.user.image || "",
-          avatar: attempt.user.profile?.avatar || null,
-          title: attempt.user.profile?.title || null,
-          totalScore: 0,
-          attemptCount: 0,
-        });
-      }
-      const user = userScores.get(userId)!;
-      user.totalScore += attempt.score;
-      user.attemptCount += 1;
-    });
+      // Get user's position in the leaderboard
+      const userPosition = await db.userRank.count({
+        where: {
+          totalPoints: {
+            gt: currentUserRank.totalPoints,
+          },
+        },
+      });
 
-    // Convert to array and sort by total score
-    const leaderboardData = Array.from(userScores.values())
-      .sort((a, b) => b.totalScore - a.totalScore)
-      .slice(0, limit)
-      .map((user, index) => ({
-        ...user,
-        rank: index + 1,
-        displayAvatar: user.avatar || user.image,
-      }));
-
-    // Get current user's rank if not in top list
-    const currentUserData = leaderboardData.find(
-      (u) => u.id === session.user.id
-    );
-    let currentUserRank = null;
-
-    if (!currentUserData) {
-      const allUsers = Array.from(userScores.values()).sort(
-        (a, b) => b.totalScore - a.totalScore
-      );
-      const userIndex = allUsers.findIndex((u) => u.id === session.user.id);
-      if (userIndex !== -1) {
-        currentUserRank = {
-          ...allUsers[userIndex],
-          rank: userIndex + 1,
-          displayAvatar:
-            allUsers[userIndex].avatar || allUsers[userIndex].image,
-        };
-      }
+      currentUserData = {
+        id: currentUserRank.userId,
+        name: currentUserRank.user.name || "Unknown User",
+        displayAvatar:
+          currentUserRank.user.userProfile?.avatar ||
+          currentUserRank.user.image ||
+          "",
+        title: currentUserRank.user.userProfile?.title || null,
+        weeklyPoints: currentUserRank.weeklyPoints,
+        totalPoints: currentUserRank.totalPoints,
+        rank: userPosition + 1,
+        currentRank: rank?.name || "Beginner",
+        rankIcon: rank?.icon || "🌱",
+        rankColor: rank?.color || "#10b981",
+        streak: currentUserRank.streakDays,
+        totalCompletions: currentUserRank.completions?.length || 0,
+      };
     }
+
+    // Get total number of users
+    const total = await db.userRank.count();
 
     return NextResponse.json({
       leaderboard: leaderboardData,
-      currentUser: currentUserData || currentUserRank,
-      total: userScores.size,
+      currentUser: currentUserData,
+      total,
+      period,
+      week: period === "weekly" ? currentWeek : undefined,
     });
   } catch (error) {
     console.error("Leaderboard error:", error);

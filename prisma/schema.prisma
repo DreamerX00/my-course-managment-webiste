@@ -35,42 +35,57 @@ model Session {
 }
 
 model User {
-  id            String        @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String?       @unique
+  email         String    @unique
   emailVerified DateTime?
   image         String?
   password      String?
-  role          UserRole      @default(STUDENT)
-  status        UserStatus    @default(ACTIVE)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  role          UserRole  @default(STUDENT)
+  status        UserStatus @default(ACTIVE)
+  bio           String?
   accounts      Account[]
-  progress      Progress[]
-  quizAttempts  QuizAttempt[]
   sessions      Session[]
-  courses       Course[]      @relation("CourseEnrollment")
-  profile       UserProfile?
+
+  enrolledCourses Course[] @relation("CourseEnrollment")
+  createdCourses  Course[] @relation("InstructorCourses")
+
+  progress Progress[]
+  quizAttempts QuizAttempt[]
+
+  // Ranking System Relations
+  userRank    UserRank?
+  leaderboardEntries WeeklyLeaderboard[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userProfile UserProfile?
+  invitations Invitation[]
 }
 
 model Course {
-  id          String     @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String
   thumbnail   String?
-  price       Float?
-  isPublished Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  chapters    Chapter[]
-  progress    Progress[]
+  price       Float
+  isPublished Boolean  @default(false)
+  instructor  String?
+  instructorId String?
+
   students    User[]     @relation("CourseEnrollment")
+  creator     User?      @relation("InstructorCourses", fields: [instructorId], references: [id], onDelete: Cascade)
   courseDetails CourseDetails?
 
-  // Performance indexes
-  @@index([isPublished, createdAt(sort: Desc)])
-  @@index([isPublished])
-  @@index([createdAt(sort: Desc)])
+  chapters Chapter[]
+  progress Progress[]
+
+  // Ranking System Relations
+  coursePoints CoursePoints?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CourseDetails {
@@ -209,8 +224,8 @@ model PlatformSettings {
 
 model Invitation {
   id        String   @id @default(cuid())
+  token     String   @unique @default(cuid())
   email     String
-  token     String   @unique
   role      UserRole
   courseId  String?
   message   String?
@@ -218,6 +233,7 @@ model Invitation {
   createdAt DateTime @default(now())
   used      Boolean  @default(false)
   invitedBy String   // ID of the admin who sent the invitation
+  invitedByUser User @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
 }
 
 model UserProfile {
@@ -248,6 +264,273 @@ model UserProfile {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// RANKING SYSTEM MODELS
+// ============================================
+
+model UserRank {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Current Status
+  currentRank     Int      @default(1) // 1-14
+  totalPoints     Int      @default(0)
+  weeklyPoints    Int      @default(0)
+  lastWeekRank    Int?     // Position in leaderboard
+  
+  // Streaks & Activity
+  streakDays      Int      @default(0)
+  lastActive      DateTime @default(now())
+  lastStreakDate  DateTime @default(now())
+  
+  // Historical Data
+  highestRank     Int      @default(1)
+  promotionCount  Int      @default(0)
+  demotionCount   Int      @default(0)
+  
+  // Achievements
+  achievements    String[] // Array of achievement IDs
+  
+  // Protection & Immunity
+  immunityWeeks   Int      @default(2) // New user protection
+  frozenUntil     DateTime? // Rank freeze premium feature
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  completions     ChapterCompletion[]
+  rankHistory     RankHistory[]
+  
+  @@index([currentRank])
+  @@index([totalPoints(sort: Desc)])
+  @@index([weeklyPoints(sort: Desc)])
+}
+
+model CoursePoints {
+  id                String   @id @default(cuid())
+  courseId          String   @unique
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  // Points Configuration
+  totalPoints       Int      // Total points for completing entire course
+  pointsPerChapter  Float    // Auto-calculated: totalPoints / chapter count
+  difficulty        Difficulty @default(BEGINNER)
+  
+  // Metadata
+  assignedBy        String   // Admin user ID who assigned points
+  assignedAt        DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Notes
+  adminNotes        String?  @db.Text
+  
+  @@index([difficulty])
+  @@index([totalPoints(sort: Desc)])
+}
+
+model ChapterCompletion {
+  id              String   @id @default(cuid())
+  userId          String
+  userRank        UserRank @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  chapterId       String
+  courseId        String
+  
+  // Points Breakdown
+  basePoints      Int      // Points from course allocation
+  bonusPoints     Int      @default(0) // All bonuses combined
+  totalPoints     Int      // basePoints + bonusPoints
+  
+  // Completion Details
+  completionTime  Int      // Time taken in seconds
+  isFirstTime     Boolean  @default(true)
+  isPerfectScore  Boolean  @default(false)
+  hasSpeedBonus   Boolean  @default(false)
+  
+  // Multipliers Applied
+  streakMultiplier Float   @default(1.0)
+  finalPoints     Int      // totalPoints × multiplier
+  
+  // Metadata
+  completedAt     DateTime @default(now())
+  
+  @@unique([userId, chapterId])
+  @@index([userId, completedAt(sort: Desc)])
+  @@index([courseId])
+}
+
+model WeeklyLeaderboard {
+  id            String   @id @default(cuid())
+  weekNumber    Int      // Week number in year (1-52)
+  year          Int
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Rankings
+  rank          Int      // Position in leaderboard
+  weeklyPoints  Int      // Points earned this week
+  totalPoints   Int      // Total cumulative points
+  currentRank   Int      // User's rank tier (1-14)
+  
+  // Changes
+  rankChange    Int      @default(0) // +/- position change
+  zone          LeaderboardZone // PROMOTION/SAFE/DEMOTION
+  
+  // Metadata
+  createdAt     DateTime @default(now())
+  
+  @@unique([weekNumber, year, userId])
+  @@index([weekNumber, year, rank])
+  @@index([userId, year, weekNumber(sort: Desc)])
+}
+
+model RankHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  userRank      UserRank @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  
+  // Rank Change
+  previousRank  Int
+  newRank       Int
+  changeType    RankChangeType
+  
+  // Context
+  weekNumber    Int
+  year          Int
+  reason        String?  @db.Text // Explanation of change
+  pointsAtTime  Int      // Total points when change occurred
+  
+  // Metadata
+  createdAt     DateTime @default(now())
+  
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([weekNumber, year])
+}
+
+model RankConfiguration {
+  id            String   @id @default(cuid())
+  rankNumber    Int      @unique // 1-14
+  
+  // Rank Details
+  name          String   // e.g., "Knowledge Seeker"
+  icon          String   // Emoji or icon identifier
+  color         String   // Hex color code
+  description   String   @db.Text
+  
+  // Requirements
+  minPoints     Int
+  maxPoints     Int?     // Null for highest rank
+  estimatedWeeks Int     // Estimated time to reach
+  
+  // Display
+  tier          String   // NOVICE/INTERMEDIATE/ADVANCED/EXPERT/LEGENDARY
+  isAnimated    Boolean  @default(false)
+  
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([rankNumber])
+}
+
+model Achievement {
+  id            String   @id @default(cuid())
+  
+  // Achievement Details
+  code          String   @unique // e.g., "STREAK_MASTER_30"
+  name          String
+  description   String   @db.Text
+  icon          String   // Emoji or icon identifier
+  category      AchievementCategory
+  
+  // Requirements
+  requirement   Json     // Flexible JSON for different conditions
+  pointsReward  Int      @default(0)
+  
+  // Rarity
+  rarity        AchievementRarity
+  
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([category])
+  @@index([rarity])
+}
+
+model WeeklyEvaluationLog {
+  id              String   @id @default(cuid())
+  weekNumber      Int
+  year            Int
+  
+  // Evaluation Stats
+  usersEvaluated  Int
+  promotions      Int
+  demotions       Int
+  maintained      Int
+  
+  // Execution Details
+  startedAt       DateTime
+  completedAt     DateTime
+  status          EvaluationStatus
+  errorLog        String?  @db.Text
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  
+  @@unique([weekNumber, year])
+  @@index([status])
+}
+
+// ============================================
+// ENUMS FOR RANKING SYSTEM
+// ============================================
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum LeaderboardZone {
+  PROMOTION    // Top 10
+  SAFE         // 11-50
+  DEMOTION     // 51+
+}
+
+enum RankChangeType {
+  PROMOTION
+  DEMOTION
+  MAINTAIN
+  MANUAL       // Admin adjustment
+}
+
+enum AchievementCategory {
+  STREAK
+  COMPLETION
+  SPEED
+  PERFECTION
+  MILESTONE
+  SPECIAL
+}
+
+enum AchievementRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum EvaluationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
 }
 
 enum UserRole {

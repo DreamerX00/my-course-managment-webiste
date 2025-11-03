@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       await db.user.update({
         where: { id: user.id },
         data: {
-          courses: {
+          enrolledCourses: {
             connect: { id: invitation.courseId },
           },
         },

@@ -47,15 +47,23 @@ interface LeaderboardEntry {
   name: string;
   displayAvatar: string;
   title: string | null;
-  totalScore: number;
-  attemptCount: number;
+  weeklyPoints: number;
+  totalPoints: number;
   rank: number;
+  currentRank: string;
+  rankIcon: string;
+  rankColor: string;
+  streak: number;
+  totalCompletions: number;
+  lastActive?: Date;
 }
 
 interface LeaderboardData {
   leaderboard: LeaderboardEntry[];
   currentUser: LeaderboardEntry | null;
   total: number;
+  period: string;
+  week?: number;
 }
 
 export default function LeaderboardPage() {
@@ -68,8 +76,8 @@ export default function LeaderboardPage() {
   const [period, setPeriod] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [showFilters, setShowFilters] = useState(false);
-  const [scoreFilter, setScoreFilter] = useState("all"); // all, high (>80), medium (50-80), low (<50)
-  const [sortBy, setSortBy] = useState("rank"); // rank, score, attempts
+  const [pointsFilter, setPointsFilter] = useState("all"); // all, high (>10000), medium (1000-10000), low (<1000)
+  const [sortBy, setSortBy] = useState("rank"); // rank, points, streak
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -110,27 +118,27 @@ export default function LeaderboardPage() {
 
     let filtered = [...data.leaderboard];
 
-    // Score filter
-    if (scoreFilter !== "all") {
+    // Points filter
+    if (pointsFilter !== "all") {
       filtered = filtered.filter((entry) => {
-        if (scoreFilter === "high") return entry.totalScore > 80;
-        if (scoreFilter === "medium")
-          return entry.totalScore >= 50 && entry.totalScore <= 80;
-        if (scoreFilter === "low") return entry.totalScore < 50;
+        if (pointsFilter === "high") return entry.totalPoints > 10000;
+        if (pointsFilter === "medium")
+          return entry.totalPoints >= 1000 && entry.totalPoints <= 10000;
+        if (pointsFilter === "low") return entry.totalPoints < 1000;
         return true;
       });
     }
 
     // Sort
-    if (sortBy === "score") {
-      filtered.sort((a, b) => b.totalScore - a.totalScore);
-    } else if (sortBy === "attempts") {
-      filtered.sort((a, b) => b.attemptCount - a.attemptCount);
+    if (sortBy === "points") {
+      filtered.sort((a, b) => b.totalPoints - a.totalPoints);
+    } else if (sortBy === "streak") {
+      filtered.sort((a, b) => b.streak - a.streak);
     }
     // Default is already sorted by rank
 
     return filtered;
-  }, [data?.leaderboard, scoreFilter, sortBy]);
+  }, [data?.leaderboard, pointsFilter, sortBy]);
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Crown className="w-6 h-6 text-yellow-500" />;
@@ -151,14 +159,30 @@ export default function LeaderboardPage() {
     return "bg-muted text-muted-foreground";
   };
 
-  const getScoreBadgeColor = (score: number) => {
-    if (score >= 90)
+  const getScoreBadgeColor = (points: number) => {
+    if (points >= 10000)
       return "bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/20";
-    if (score >= 70)
+    if (points >= 5000)
       return "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20";
-    if (score >= 50)
+    if (points >= 1000)
       return "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 border-yellow-500/20";
     return "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20";
+  };
+
+  // Helper to render rank badge with icon and color
+  const renderRankBadge = (entry: LeaderboardEntry) => {
+    return (
+      <Badge
+        style={{
+          backgroundColor: entry.rankColor + "20",
+          borderColor: entry.rankColor,
+        }}
+        className="text-sm font-semibold"
+      >
+        <span className="mr-1">{entry.rankIcon}</span>
+        {entry.currentRank}
+      </Badge>
+    );
   };
 
   const getInitials = (name: string) => {
@@ -172,22 +196,22 @@ export default function LeaderboardPage() {
 
   const stats = useMemo(() => {
     if (!data?.leaderboard)
-      return { avgScore: 0, totalAttempts: 0, topScore: 0 };
+      return { avgPoints: 0, totalCompletions: 0, topPoints: 0 };
 
-    const totalScore = data.leaderboard.reduce(
-      (sum, entry) => sum + entry.totalScore,
+    const totalPoints = data.leaderboard.reduce(
+      (sum, entry) => sum + entry.totalPoints,
       0
     );
-    const totalAttempts = data.leaderboard.reduce(
-      (sum, entry) => sum + entry.attemptCount,
+    const totalCompletions = data.leaderboard.reduce(
+      (sum, entry) => sum + entry.totalCompletions,
       0
     );
-    const topScore = data.leaderboard[0]?.totalScore || 0;
+    const topPoints = data.leaderboard[0]?.totalPoints || 0;
 
     return {
-      avgScore: Math.round(totalScore / (data.leaderboard.length || 1)),
-      totalAttempts,
-      topScore,
+      avgPoints: Math.round(totalPoints / (data.leaderboard.length || 1)),
+      totalCompletions,
+      topPoints,
     };
   }, [data?.leaderboard]);
 
@@ -249,9 +273,9 @@ export default function LeaderboardPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Top Score</p>
+                  <p className="text-sm text-muted-foreground">Top Points</p>
                   <p className="text-3xl font-bold text-yellow-600">
-                    {stats.topScore}
+                    {stats.topPoints.toLocaleString()}
                   </p>
                 </div>
                 <Star className="w-12 h-12 text-yellow-500/20" />
@@ -263,9 +287,11 @@ export default function LeaderboardPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Average Score</p>
+                  <p className="text-sm text-muted-foreground">
+                    Average Points
+                  </p>
                   <p className="text-3xl font-bold text-blue-600">
-                    {stats.avgScore}
+                    {stats.avgPoints.toLocaleString()}
                   </p>
                 </div>
                 <BarChart3 className="w-12 h-12 text-blue-500/20" />
@@ -278,10 +304,10 @@ export default function LeaderboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    Total Attempts
+                    Total Completions
                   </p>
                   <p className="text-3xl font-bold text-purple-600">
-                    {stats.totalAttempts}
+                    {stats.totalCompletions.toLocaleString()}
                   </p>
                 </div>
                 <Target className="w-12 h-12 text-purple-500/20" />
@@ -317,8 +343,7 @@ export default function LeaderboardPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">🌐 All Time</SelectItem>
-                      <SelectItem value="month">📅 This Month</SelectItem>
-                      <SelectItem value="week">📆 This Week</SelectItem>
+                      <SelectItem value="weekly">📆 This Week</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -351,27 +376,27 @@ export default function LeaderboardPage() {
                     className="overflow-hidden"
                   >
                     <div className="grid gap-4 md:grid-cols-3 pt-4 border-t">
-                      {/* Score Filter */}
+                      {/* Points Filter */}
                       <div>
                         <label className="text-sm font-medium mb-2 flex items-center gap-2">
                           <Zap className="w-4 h-4 text-primary" />
-                          Score Range
+                          Points Range
                         </label>
                         <Select
-                          value={scoreFilter}
-                          onValueChange={setScoreFilter}
+                          value={pointsFilter}
+                          onValueChange={setPointsFilter}
                         >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">All Scores</SelectItem>
-                            <SelectItem value="high">🔥 High (80+)</SelectItem>
+                            <SelectItem value="all">All Points</SelectItem>
+                            <SelectItem value="high">🔥 High (10k+)</SelectItem>
                             <SelectItem value="medium">
-                              ⚡ Medium (50-80)
+                              ⚡ Medium (1k-10k)
                             </SelectItem>
                             <SelectItem value="low">
-                              💪 Growing (&lt;50)
+                              💪 Growing (&lt;1k)
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -389,10 +414,8 @@ export default function LeaderboardPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="rank">🏆 Rank</SelectItem>
-                            <SelectItem value="score">⭐ Score</SelectItem>
-                            <SelectItem value="attempts">
-                              🎯 Attempts
-                            </SelectItem>
+                            <SelectItem value="points">⭐ Points</SelectItem>
+                            <SelectItem value="streak">🔥 Streak</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -480,10 +503,10 @@ export default function LeaderboardPage() {
                       </p>
                     )}
                     <div className="text-4xl font-bold text-gray-600 mb-2">
-                      {filteredLeaderboard[1].totalScore}
+                      {filteredLeaderboard[1].totalPoints}
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {filteredLeaderboard[1].attemptCount} attempts
+                      {filteredLeaderboard[1].totalCompletions} attempts
                     </Badge>
                   </CardContent>
                 </Card>
@@ -520,10 +543,10 @@ export default function LeaderboardPage() {
                       </p>
                     )}
                     <div className="text-5xl font-bold bg-linear-to-r from-yellow-600 to-yellow-400 bg-clip-text text-transparent mb-3">
-                      {filteredLeaderboard[0].totalScore}
+                      {filteredLeaderboard[0].totalPoints}
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {filteredLeaderboard[0].attemptCount} attempts
+                      {filteredLeaderboard[0].totalCompletions} attempts
                     </Badge>
                   </CardContent>
                 </Card>
@@ -561,10 +584,10 @@ export default function LeaderboardPage() {
                       </p>
                     )}
                     <div className="text-4xl font-bold text-orange-600 mb-2">
-                      {filteredLeaderboard[2].totalScore}
+                      {filteredLeaderboard[2].totalPoints}
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {filteredLeaderboard[2].attemptCount} attempts
+                      {filteredLeaderboard[2].totalCompletions} attempts
                     </Badge>
                   </CardContent>
                 </Card>
@@ -657,15 +680,17 @@ export default function LeaderboardPage() {
                       </div>
                       <div className="text-right">
                         <Badge
-                          className={getScoreBadgeColor(entry.totalScore)}
+                          className={getScoreBadgeColor(entry.totalPoints)}
                           variant="outline"
                         >
                           <Star className="w-3 h-3 mr-1" />
-                          {entry.totalScore} pts
+                          {entry.totalPoints} pts
                         </Badge>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {entry.attemptCount}{" "}
-                          {entry.attemptCount === 1 ? "attempt" : "attempts"}
+                          {entry.totalCompletions}{" "}
+                          {entry.totalCompletions === 1
+                            ? "attempt"
+                            : "attempts"}
                         </p>
                       </div>
                     </motion.div>
@@ -683,7 +708,7 @@ export default function LeaderboardPage() {
                       </p>
                       <Button
                         onClick={() => {
-                          setScoreFilter("all");
+                          setPointsFilter("all");
                           setSearch("");
                         }}
                       >
@@ -734,10 +759,10 @@ export default function LeaderboardPage() {
                             </p>
                           )}
                           <div className="text-2xl font-bold mb-2">
-                            {entry.totalScore}
+                            {entry.totalPoints}
                           </div>
                           <Badge variant="outline" className="text-xs">
-                            {entry.attemptCount} attempts
+                            {entry.totalCompletions} attempts
                           </Badge>
                         </CardContent>
                       </Card>
@@ -791,13 +816,13 @@ export default function LeaderboardPage() {
                     <div className="text-right">
                       <Badge
                         className={getScoreBadgeColor(
-                          data.currentUser.totalScore
+                          data.currentUser.totalPoints
                         )}
                       >
-                        {data.currentUser.totalScore} pts
+                        {data.currentUser.totalPoints} pts
                       </Badge>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {data.currentUser.attemptCount} attempts
+                        {data.currentUser.totalCompletions} attempts
                       </p>
                     </div>
                   </div>

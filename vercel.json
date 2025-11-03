@@ -8,5 +8,10 @@
       "maxDuration": 30
     }
   },
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/weekly-rank-update",
+      "schedule": "59 23 * * 0"
+    }
+  ]
 }
