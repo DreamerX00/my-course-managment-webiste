@@ -51,16 +51,15 @@ export function Navbar() {
       className={cn(
         "fixed inset-x-0 top-0 z-50 w-full transition-all duration-300",
         scrolled
-          ? "bg-white/90 shadow-lg backdrop-blur-md"
-          : "bg-white/70 shadow-sm backdrop-blur-md"
+          ? "bg-white/95 dark:bg-gray-900/95 shadow-xl backdrop-blur-lg border-b border-gray-200 dark:border-gray-800"
+          : "bg-white/80 dark:bg-gray-900/80 shadow-md backdrop-blur-md"
       )}
-      style={{ borderBottomLeftRadius: 18, borderBottomRightRadius: 18 }}
     >
       <div className="w-full max-w-7xl flex h-16 items-center px-4 sm:px-6 lg:px-8 mx-auto">
         {/* Logo */}
         <Link
           href="/"
-          className="font-extrabold text-lg sm:text-xl lg:text-2xl text-blue-800 flex items-center gap-2 select-none"
+          className="font-extrabold text-lg sm:text-xl lg:text-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2 select-none hover:scale-105 transition-transform"
           onClick={closeMobileMenu}
         >
           <Image
@@ -75,42 +74,49 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex ml-auto items-center space-x-2 lg:space-x-4">
+        <div className="hidden md:flex ml-auto items-center space-x-1 lg:space-x-2">
           <Link
             href="/courses"
-            className="text-sm lg:text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-2 lg:px-3 py-1 rounded-md hover:bg-blue-50"
+            className="text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 px-3 lg:px-4 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/50"
           >
             Courses
+          </Link>
+          <Link
+            href="/leaderboard"
+            className="text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 px-3 lg:px-4 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/50"
+          >
+            Leaderboard
           </Link>
           {session ? (
             <>
               <Link
                 href="/dashboard"
-                className="text-sm lg:text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-2 lg:px-3 py-1 rounded-md hover:bg-blue-50"
+                className="text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 px-3 lg:px-4 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/50"
               >
                 Dashboard
               </Link>
               {isAdmin && (
                 <Link
                   href="/dashboard/admin-dashboard"
-                  className="text-sm lg:text-base font-semibold text-purple-700 hover:text-purple-500 transition-colors duration-200 px-2 lg:px-3 py-1 rounded-md hover:bg-purple-50 flex items-center gap-1"
+                  className="text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 px-3 lg:px-4 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/50 flex items-center gap-1.5"
                 >
                   <Shield className="h-4 w-4" />
-                  Admin Panel
+                  <span className="hidden lg:inline">Admin Panel</span>
+                  <span className="lg:hidden">Admin</span>
                 </Link>
               )}
               <NotificationBell />
               <Link
                 href="/profile"
-                className="text-sm lg:text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-2 lg:px-3 py-1 rounded-md hover:bg-blue-50 flex items-center gap-1"
+                className="text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-200 px-3 lg:px-4 py-2 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-950/50 flex items-center gap-1.5"
               >
                 <User className="h-4 w-4" />
-                Profile
+                <span className="hidden lg:inline">Profile</span>
               </Link>
               <Button
                 variant="ghost"
                 onClick={handleSignOut}
-                className="text-sm lg:text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-2 lg:px-3 py-1 rounded-md hover:bg-blue-50"
+                className="text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 px-3 lg:px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50"
               >
                 Sign Out
               </Button>
@@ -120,13 +126,13 @@ export function Navbar() {
               <Button
                 asChild
                 variant="ghost"
-                className="text-sm lg:text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-2 lg:px-3 py-1 rounded-md hover:bg-blue-50"
+                className="text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 px-3 lg:px-4 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/50"
               >
                 <Link href="/login">Login</Link>
               </Button>
               <Button
                 asChild
-                className="text-sm lg:text-base font-semibold text-white bg-pink-500 hover:bg-pink-600 shadow-md px-3 lg:px-4 py-1 rounded-md"
+                className="text-sm lg:text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 px-4 lg:px-6 py-2 rounded-lg"
               >
                 <Link href="/signup">Sign Up</Link>
               </Button>
@@ -140,7 +146,7 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-blue-700 hover:text-pink-500 hover:bg-blue-50"
+            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50"
           >
             {mobileMenuOpen ? (
               <X className="h-6 w-6" />
@@ -158,21 +164,28 @@ export function Navbar() {
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.2 }}
-          className="md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200"
+          className="md:hidden bg-white/98 dark:bg-gray-900/98 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800"
         >
-          <div className="px-4 py-4 space-y-3">
+          <div className="px-4 py-4 space-y-2">
             <Link
               href="/courses"
-              className="block text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-blue-50"
+              className="block text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 px-4 py-3 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/50"
               onClick={closeMobileMenu}
             >
               Courses
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="block text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 px-4 py-3 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/50"
+              onClick={closeMobileMenu}
+            >
+              Leaderboard
             </Link>
             {session ? (
               <>
                 <Link
                   href="/dashboard"
-                  className="block text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-blue-50"
+                  className="block text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 px-4 py-3 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/50"
                   onClick={closeMobileMenu}
                 >
                   Dashboard
@@ -180,7 +193,7 @@ export function Navbar() {
                 {isAdmin && (
                   <Link
                     href="/dashboard/admin-dashboard"
-                    className="flex text-base font-semibold text-purple-700 hover:text-purple-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-purple-50 items-center gap-2"
+                    className="flex text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 px-4 py-3 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/50 items-center gap-2"
                     onClick={closeMobileMenu}
                   >
                     <Shield className="h-4 w-4" />
@@ -189,7 +202,7 @@ export function Navbar() {
                 )}
                 <Link
                   href="/profile"
-                  className="flex text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-blue-50 items-center gap-2"
+                  className="flex text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-200 px-4 py-3 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-950/50 items-center gap-2"
                   onClick={closeMobileMenu}
                 >
                   <User className="h-4 w-4" />
@@ -198,7 +211,7 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   onClick={handleSignOut}
-                  className="w-full justify-start text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-blue-50"
+                  className="w-full justify-start text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 px-4 py-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50"
                 >
                   Sign Out
                 </Button>
@@ -208,7 +221,7 @@ export function Navbar() {
                 <Button
                   asChild
                   variant="ghost"
-                  className="w-full justify-start text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-blue-50"
+                  className="w-full justify-start text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 px-4 py-3 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/50"
                 >
                   <Link href="/login" onClick={closeMobileMenu}>
                     Login
@@ -216,7 +229,7 @@ export function Navbar() {
                 </Button>
                 <Button
                   asChild
-                  className="w-full justify-start text-base font-semibold text-white bg-pink-500 hover:bg-pink-600 shadow-md px-3 py-2 rounded-md"
+                  className="w-full justify-start text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 px-4 py-3 rounded-lg"
                 >
                   <Link href="/signup" onClick={closeMobileMenu}>
                     Sign Up

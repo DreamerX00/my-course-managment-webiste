@@ -259,9 +259,12 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
 
+    console.warn("Profile update request body:", JSON.stringify(body, null, 2));
+
     // Validate request body
     const validation = await validateRequest(body, updateProfileSchema);
     if (!validation.success) {
+      console.error("Validation failed:", validation.error);
       return validation.error;
     }
 
