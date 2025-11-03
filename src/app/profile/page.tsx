@@ -46,6 +46,27 @@ interface Course {
   lastAccessed: string;
 }
 
+interface RankInfo {
+  name: string;
+  icon: string;
+  color: string;
+  description?: string;
+  tier?: string;
+  minPoints: number;
+  maxPoints?: number | null;
+}
+
+interface Achievement {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  rarity: string;
+  pointsReward: number;
+}
+
 interface Profile {
   name: string;
   email: string;
@@ -54,6 +75,29 @@ interface Profile {
   courses: Course[];
   totalScore: number;
   completedCourses: number;
+  rank?: {
+    totalPoints: number;
+    weeklyPoints: number;
+    currentRank: RankInfo | null;
+    nextRank: RankInfo | null;
+    progressToNextRank: number;
+    streakDays: number;
+    highestRank: number;
+    promotionCount: number;
+    demotionCount: number;
+    totalCompletions: number;
+    rankHistory: Array<{
+      id: string;
+      oldRank: number;
+      newRank: number;
+      reason: string;
+      createdAt: Date;
+    }>;
+  } | null;
+  achievements?: {
+    unlocked: Achievement[];
+    total: number;
+  };
   bio?: string;
   title?: string;
   location?: string;
@@ -512,10 +556,14 @@ export default function ProfilePage() {
           <Card className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400">
             <Tabs defaultValue="courses" className="w-full">
               <CardHeader>
-                <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsList className="grid w-full max-w-2xl grid-cols-3">
                   <TabsTrigger value="courses" className="gap-2">
                     <BookOpen className="w-4 h-4" />
                     My Courses
+                  </TabsTrigger>
+                  <TabsTrigger value="rank" className="gap-2">
+                    <Trophy className="w-4 h-4" />
+                    Rank & Progress
                   </TabsTrigger>
                   <TabsTrigger value="activity" className="gap-2">
                     <Clock className="w-4 h-4" />
@@ -642,6 +690,294 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </TabsContent>
+
+                {/* Rank & Progress Tab */}
+                <TabsContent value="rank" className="space-y-6 mt-0">
+                  {profile.rank ? (
+                    <>
+                      {/* Current Rank Card */}
+                      <Card
+                        className="border-2"
+                        style={{
+                          borderColor: profile.rank.currentRank?.color + "40",
+                        }}
+                      >
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="text-5xl">
+                                {profile.rank.currentRank?.icon}
+                              </div>
+                              <div>
+                                <CardTitle
+                                  className="text-2xl"
+                                  style={{
+                                    color: profile.rank.currentRank?.color,
+                                  }}
+                                >
+                                  {profile.rank.currentRank?.name}
+                                </CardTitle>
+                                <CardDescription>
+                                  {profile.rank.currentRank?.description}
+                                </CardDescription>
+                              </div>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className="text-lg px-4 py-2"
+                            >
+                              {profile.rank.totalPoints.toLocaleString()} pts
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          {/* Progress to Next Rank */}
+                          {profile.rank.nextRank && (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium">
+                                  Progress to {profile.rank.nextRank.name}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {profile.rank.progressToNextRank}%
+                                </span>
+                              </div>
+                              <Progress
+                                value={profile.rank.progressToNextRank}
+                                className="h-3"
+                              />
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>
+                                  {profile.rank.totalPoints.toLocaleString()}{" "}
+                                  pts
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Target className="w-3 h-3" />
+                                  {profile.rank.nextRank.minPoints.toLocaleString()}{" "}
+                                  pts needed
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Stats Grid */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                            <div className="text-center p-3 rounded-lg bg-muted/50">
+                              <div className="text-2xl font-bold text-orange-600">
+                                {profile.rank.streakDays}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Day Streak
+                              </div>
+                            </div>
+                            <div className="text-center p-3 rounded-lg bg-muted/50">
+                              <div className="text-2xl font-bold text-blue-600">
+                                {profile.rank.weeklyPoints}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Weekly Points
+                              </div>
+                            </div>
+                            <div className="text-center p-3 rounded-lg bg-muted/50">
+                              <div className="text-2xl font-bold text-green-600">
+                                {profile.rank.totalCompletions}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Completions
+                              </div>
+                            </div>
+                            <div className="text-center p-3 rounded-lg bg-muted/50">
+                              <div className="text-2xl font-bold text-purple-600">
+                                {profile.rank.promotionCount}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Promotions
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Achievements Section */}
+                      {profile.achievements && (
+                        <Card>
+                          <CardHeader>
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="flex items-center gap-2">
+                                <Award className="w-5 h-5" />
+                                Achievements
+                              </CardTitle>
+                              <Badge variant="outline">
+                                {profile.achievements.unlocked.length} /{" "}
+                                {profile.achievements.total}
+                              </Badge>
+                            </div>
+                            <CardDescription>
+                              Unlock achievements by completing challenges and
+                              reaching milestones
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            {profile.achievements.unlocked.length > 0 ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {profile.achievements.unlocked.map(
+                                  (achievement) => (
+                                    <Card
+                                      key={achievement.id}
+                                      className="border-2"
+                                    >
+                                      <CardContent className="pt-4">
+                                        <div className="flex items-start gap-3">
+                                          <div className="text-3xl">
+                                            {achievement.icon}
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="flex items-center justify-between">
+                                              <h4 className="font-semibold">
+                                                {achievement.name}
+                                              </h4>
+                                              <Badge
+                                                variant={
+                                                  achievement.rarity ===
+                                                  "LEGENDARY"
+                                                    ? "default"
+                                                    : "outline"
+                                                }
+                                                className="text-xs"
+                                              >
+                                                {achievement.rarity}
+                                              </Badge>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                              {achievement.description}
+                                            </p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                              <Sparkles className="w-3 h-3 text-yellow-600" />
+                                              <span className="text-xs font-medium text-yellow-600">
+                                                +{achievement.pointsReward}{" "}
+                                                points
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  )
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-center py-8 space-y-3">
+                                <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+                                  <Award className="w-8 h-8 text-muted-foreground" />
+                                </div>
+                                <p className="text-muted-foreground">
+                                  No achievements unlocked yet. Start completing
+                                  chapters to earn your first achievement!
+                                </p>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Rank History */}
+                      {profile.rank.rankHistory.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <TrendingUp className="w-5 h-5" />
+                              Rank History
+                            </CardTitle>
+                            <CardDescription>
+                              Your recent rank changes
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              {profile.rank.rankHistory.map((history) => (
+                                <div
+                                  key={history.id}
+                                  className="flex items-center gap-4 p-3 rounded-lg border"
+                                >
+                                  <div
+                                    className={`p-2 rounded-full ${
+                                      history.newRank > history.oldRank
+                                        ? "bg-green-100 dark:bg-green-900/20"
+                                        : history.newRank < history.oldRank
+                                        ? "bg-red-100 dark:bg-red-900/20"
+                                        : "bg-blue-100 dark:bg-blue-900/20"
+                                    }`}
+                                  >
+                                    {history.newRank > history.oldRank ? (
+                                      <TrendingUp className="w-4 h-4 text-green-600" />
+                                    ) : history.newRank < history.oldRank ? (
+                                      <TrendingUp className="w-4 h-4 text-red-600 rotate-180" />
+                                    ) : (
+                                      <Target className="w-4 h-4 text-blue-600" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="font-medium">
+                                      Rank {history.oldRank} → Rank{" "}
+                                      {history.newRank}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {history.reason}
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {new Date(
+                                      history.createdAt
+                                    ).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </>
+                  ) : (
+                    <Card>
+                      <CardContent className="text-center py-12 space-y-4">
+                        <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
+                          <Trophy className="w-10 h-10 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold mb-2">
+                            Start Your Ranking Journey
+                          </h3>
+                          <p className="text-muted-foreground max-w-md mx-auto">
+                            Complete chapters to earn points and climb the
+                            ranks. Your ranking adventure begins with your first
+                            chapter!
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                {/* Recent Activity Tab */}
+                <TabsContent value="activity" className="space-y-4 mt-0">
+                  <Card>
+                    <CardContent className="text-center py-12 space-y-4">
+                      <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
+                        <Clock className="w-10 h-10 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold mb-2">
+                          Activity Feed Coming Soon
+                        </h3>
+                        <p className="text-muted-foreground max-w-md mx-auto">
+                          Your recent learning activity and milestones will
+                          appear here.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
                 {/* Recent Courses List (outside main .map) */}
                 {profile.courses.length > 0 && (
                   <div className="mt-8">

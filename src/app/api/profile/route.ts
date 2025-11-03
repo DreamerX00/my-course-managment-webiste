@@ -112,6 +112,89 @@ export async function GET() {
       (course) => course.progress === 100
     ).length;
 
+    // Fetch user rank data
+    const userRank = await db.userRank.findUnique({
+      where: { userId: session.user.id },
+      include: {
+        completions: {
+          select: {
+            id: true,
+          },
+        },
+        rankHistory: {
+          orderBy: { createdAt: "desc" },
+          take: 10,
+        },
+      },
+    });
+
+    // Get rank configuration for current rank
+    let rankInfo = null;
+    let nextRankInfo = null;
+    let progressToNextRank = 0;
+
+    if (userRank) {
+      const currentRankConfig = await db.rankConfiguration.findUnique({
+        where: { rankNumber: userRank.currentRank },
+      });
+
+      const nextRankConfig = await db.rankConfiguration.findFirst({
+        where: { rankNumber: userRank.currentRank + 1 },
+        orderBy: { rankNumber: "asc" },
+      });
+
+      rankInfo = currentRankConfig
+        ? {
+            name: currentRankConfig.name,
+            icon: currentRankConfig.icon,
+            color: currentRankConfig.color,
+            description: currentRankConfig.description,
+            tier: currentRankConfig.tier,
+            minPoints: currentRankConfig.minPoints,
+            maxPoints: currentRankConfig.maxPoints,
+          }
+        : null;
+
+      nextRankInfo = nextRankConfig
+        ? {
+            name: nextRankConfig.name,
+            icon: nextRankConfig.icon,
+            color: nextRankConfig.color,
+            minPoints: nextRankConfig.minPoints,
+          }
+        : null;
+
+      // Calculate progress to next rank
+      if (currentRankConfig && nextRankConfig) {
+        const currentPoints = userRank.totalPoints;
+        const pointsNeeded =
+          nextRankConfig.minPoints - currentRankConfig.minPoints;
+        const pointsEarned = currentPoints - currentRankConfig.minPoints;
+        progressToNextRank = Math.min(
+          100,
+          Math.max(0, (pointsEarned / pointsNeeded) * 100)
+        );
+      }
+    }
+
+    // Fetch achievements
+    const allAchievements = await db.achievement.findMany({
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        description: true,
+        icon: true,
+        category: true,
+        rarity: true,
+        pointsReward: true,
+      },
+    });
+
+    const unlockedAchievements = allAchievements.filter((achievement) =>
+      userRank?.achievements.includes(achievement.code)
+    );
+
     const profile = {
       name: user.name || "User",
       email: user.email || "",
@@ -120,6 +203,26 @@ export async function GET() {
       courses: coursesWithProgress,
       totalScore,
       completedCourses,
+      // Rank data
+      rank: userRank
+        ? {
+            totalPoints: userRank.totalPoints,
+            weeklyPoints: userRank.weeklyPoints,
+            currentRank: rankInfo,
+            nextRank: nextRankInfo,
+            progressToNextRank: Math.round(progressToNextRank),
+            streakDays: userRank.streakDays,
+            highestRank: userRank.highestRank,
+            promotionCount: userRank.promotionCount,
+            demotionCount: userRank.demotionCount,
+            totalCompletions: userRank.completions?.length || 0,
+            rankHistory: userRank.rankHistory,
+          }
+        : null,
+      achievements: {
+        unlocked: unlockedAchievements,
+        total: allAchievements.length,
+      },
       // UserProfile data
       bio: user.userProfile?.bio || null,
       title: user.userProfile?.title || null,
