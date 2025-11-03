@@ -195,6 +195,81 @@ export async function GET() {
       userRank?.achievements.includes(achievement.code)
     );
 
+    // Fetch recent activity (last 20 chapter completions)
+    const recentCompletions = await db.chapterCompletion.findMany({
+      where: { userId: session.user.id },
+      orderBy: { completedAt: "desc" },
+      take: 20,
+    });
+
+    // Get course and chapter details for completions
+    const completionActivities = await Promise.all(
+      recentCompletions.map(async (completion) => {
+        const course = await db.course.findUnique({
+          where: { id: completion.courseId },
+          select: { id: true, title: true },
+        });
+        const chapter = await db.chapter.findUnique({
+          where: { id: completion.chapterId },
+          select: { id: true, title: true },
+        });
+
+        return {
+          type: "completion" as const,
+          id: completion.id,
+          title: chapter?.title || "Unknown Chapter",
+          courseTitle: course?.title || "Unknown Course",
+          points: completion.finalPoints,
+          timestamp: completion.completedAt,
+          courseId: completion.courseId,
+          chapterId: completion.chapterId,
+        };
+      })
+    );
+
+    const recentQuizAttempts = await db.quizAttempt.findMany({
+      where: { userId: session.user.id },
+      include: {
+        quiz: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+
+    // Combine and sort activities
+    const activities = [
+      ...completionActivities,
+      ...recentQuizAttempts.map((attempt) => ({
+        type: "quiz" as const,
+        id: attempt.id,
+        title: attempt.quiz.title,
+        score: attempt.score,
+        timestamp: attempt.createdAt,
+        quizId: attempt.quizId,
+      })),
+      ...(userRank?.rankHistory.slice(0, 10).map((history) => ({
+        type:
+          history.changeType === "PROMOTION"
+            ? ("promotion" as const)
+            : ("demotion" as const),
+        id: history.id,
+        previousRank: history.previousRank,
+        newRank: history.newRank,
+        reason: history.reason,
+        timestamp: history.createdAt,
+      })) || []),
+    ]
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )
+      .slice(0, 20);
+
     const profile = {
       name: user.name || "User",
       email: user.email || "",
@@ -223,6 +298,8 @@ export async function GET() {
         unlocked: unlockedAchievements,
         total: allAchievements.length,
       },
+      // Recent activity
+      recentActivity: activities,
       // UserProfile data
       bio: user.userProfile?.bio || null,
       title: user.userProfile?.title || null,

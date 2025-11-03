@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +23,7 @@ import {
   BookOpen,
   Trophy,
   TrendingUp,
+  TrendingDown,
   Award,
   Clock,
   Target,
@@ -31,6 +35,9 @@ import {
   Phone,
   Globe,
   Mail,
+  CheckCircle,
+  FileText,
+  Star,
 } from "lucide-react";
 import {
   SiGithub,
@@ -65,6 +72,24 @@ interface Achievement {
   category: string;
   rarity: string;
   pointsReward: number;
+}
+
+type ActivityType = "completion" | "quiz" | "promotion" | "demotion";
+
+interface Activity {
+  id: string;
+  type: ActivityType;
+  title?: string;
+  courseTitle?: string;
+  points?: number;
+  score?: number;
+  previousRank?: number;
+  newRank?: number;
+  reason?: string;
+  timestamp: Date | string;
+  courseId?: string;
+  chapterId?: string;
+  quizId?: string;
 }
 
 interface Profile {
@@ -110,6 +135,7 @@ interface Profile {
   instagram?: string;
   avatar?: string;
   bannerImage?: string;
+  recentActivity?: Activity[];
 }
 
 export default function ProfilePage() {
@@ -960,22 +986,150 @@ export default function ProfilePage() {
 
                 {/* Recent Activity Tab */}
                 <TabsContent value="activity" className="space-y-4 mt-0">
-                  <Card>
-                    <CardContent className="text-center py-12 space-y-4">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
-                        <Clock className="w-10 h-10 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold mb-2">
-                          Activity Feed Coming Soon
-                        </h3>
-                        <p className="text-muted-foreground max-w-md mx-auto">
-                          Your recent learning activity and milestones will
-                          appear here.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {profile.recentActivity &&
+                  profile.recentActivity.length > 0 ? (
+                    <div className="space-y-3">
+                      {profile.recentActivity.map(
+                        (activity: Activity, index: number) => (
+                          <motion.div
+                            key={activity.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <Card className="hover:shadow-md transition-shadow">
+                              <CardContent className="p-4">
+                                <div className="flex items-start gap-4">
+                                  {/* Icon based on activity type */}
+                                  <div
+                                    className={cn(
+                                      "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
+                                      activity.type === "completion" &&
+                                        "bg-green-100 dark:bg-green-950",
+                                      activity.type === "quiz" &&
+                                        "bg-blue-100 dark:bg-blue-950",
+                                      activity.type === "promotion" &&
+                                        "bg-amber-100 dark:bg-amber-950",
+                                      activity.type === "demotion" &&
+                                        "bg-red-100 dark:bg-red-950"
+                                    )}
+                                  >
+                                    {activity.type === "completion" && (
+                                      <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                    )}
+                                    {activity.type === "quiz" && (
+                                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                    )}
+                                    {activity.type === "promotion" && (
+                                      <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                                    )}
+                                    {activity.type === "demotion" && (
+                                      <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                    )}
+                                  </div>
+
+                                  {/* Activity Details */}
+                                  <div className="flex-1 min-w-0">
+                                    {activity.type === "completion" && (
+                                      <>
+                                        <p className="font-semibold text-foreground">
+                                          Completed{" "}
+                                          <span className="text-green-600 dark:text-green-400">
+                                            {activity.title}
+                                          </span>
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                          {activity.courseTitle}
+                                        </p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <Trophy className="w-4 h-4 text-amber-500" />
+                                          <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                                            +{activity.points} points
+                                          </span>
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {activity.type === "quiz" && (
+                                      <>
+                                        <p className="font-semibold text-foreground">
+                                          Attempted Quiz:{" "}
+                                          <span className="text-blue-600 dark:text-blue-400">
+                                            {activity.title}
+                                          </span>
+                                        </p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <Star className="w-4 h-4 text-blue-500" />
+                                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                                            Score: {activity.score}%
+                                          </span>
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {activity.type === "promotion" && (
+                                      <>
+                                        <p className="font-semibold text-foreground">
+                                          <span className="text-amber-600 dark:text-amber-400">
+                                            Promoted!
+                                          </span>{" "}
+                                          Rank {activity.previousRank} → Rank{" "}
+                                          {activity.newRank}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                          {activity.reason}
+                                        </p>
+                                      </>
+                                    )}
+
+                                    {activity.type === "demotion" && (
+                                      <>
+                                        <p className="font-semibold text-foreground">
+                                          <span className="text-red-600 dark:text-red-400">
+                                            Demoted
+                                          </span>{" "}
+                                          Rank {activity.previousRank} → Rank{" "}
+                                          {activity.newRank}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                          {activity.reason}
+                                        </p>
+                                      </>
+                                    )}
+
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                      {formatDistanceToNow(
+                                        new Date(activity.timestamp),
+                                        { addSuffix: true }
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <Card>
+                      <CardContent className="text-center py-12 space-y-4">
+                        <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
+                          <Clock className="w-10 h-10 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold mb-2">
+                            No Activity Yet
+                          </h3>
+                          <p className="text-muted-foreground max-w-md mx-auto">
+                            Start learning to see your activity feed here.
+                            Complete chapters, take quizzes, and track your
+                            progress!
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </TabsContent>
 
                 {/* Recent Courses List (outside main .map) */}
