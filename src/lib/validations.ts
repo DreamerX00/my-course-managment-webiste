@@ -45,8 +45,11 @@ export const updateProfileSchema = z.object({
   github: z.string().optional(),
   linkedin: z.string().optional(),
   twitter: z.string().optional(),
-  avatar: z.string().url().optional(),
-  banner: z.string().url().optional(),
+  youtube: z.string().optional(),
+  instagram: z.string().optional(),
+  avatar: z.string().url().optional().or(z.literal("")),
+  bannerImage: z.string().url().optional().or(z.literal("")),
+  isPublic: z.boolean().optional(),
 });
 
 // ============================================================================

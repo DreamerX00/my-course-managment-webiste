@@ -275,8 +275,11 @@ export async function PATCH(request: Request) {
       github,
       twitter,
       website,
+      youtube,
+      instagram,
       avatar,
-      banner,
+      bannerImage,
+      isPublic,
     } = validation.data;
 
     // Update user name if provided
@@ -300,9 +303,11 @@ export async function PATCH(request: Request) {
         github,
         twitter,
         website,
+        youtube,
+        instagram,
         avatar,
-        bannerImage: banner,
-        isPublic: true,
+        bannerImage,
+        isPublic: isPublic ?? true,
       },
       update: {
         bio,
@@ -313,8 +318,11 @@ export async function PATCH(request: Request) {
         github,
         twitter,
         website,
+        youtube,
+        instagram,
         avatar,
-        bannerImage: banner,
+        bannerImage,
+        ...(isPublic !== undefined && { isPublic }),
       },
     });
 

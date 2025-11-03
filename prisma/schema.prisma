@@ -56,6 +56,7 @@ model User {
   // Ranking System Relations
   userRank    UserRank?
   leaderboardEntries WeeklyLeaderboard[]
+  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -462,6 +463,33 @@ model Achievement {
   @@index([rarity])
 }
 
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Notification Details
+  type        NotificationType
+  title       String
+  message     String   @db.Text
+  
+  // Related Data
+  relatedId   String?  // e.g., achievementId, rankConfigId, etc.
+  metadata    Json?    // Additional flexible data
+  
+  // Status
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([type])
+}
+
 model WeeklyEvaluationLog {
   id              String   @id @default(cuid())
   weekNumber      Int
@@ -531,6 +559,15 @@ enum EvaluationStatus {
   RUNNING
   COMPLETED
   FAILED
+}
+
+enum NotificationType {
+  RANK_PROMOTION
+  RANK_DEMOTION
+  ACHIEVEMENT_UNLOCKED
+  WEEKLY_LEADERBOARD
+  MILESTONE
+  SYSTEM
 }
 
 enum UserRole {

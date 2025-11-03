@@ -1,5 +1,10 @@
 import { db } from "@/lib/db";
 import { LeaderboardZone, RankChangeType } from "@prisma/client";
+import {
+  createRankPromotionNotification,
+  createRankDemotionNotification,
+  createWeeklyLeaderboardNotification,
+} from "@/lib/notifications";
 
 interface WeeklyRankUpdateResult {
   success: boolean;
@@ -235,6 +240,62 @@ export async function weeklyRankUpdate(): Promise<WeeklyRankUpdateResult> {
               pointsAtTime: userRank.totalPoints,
             },
           });
+
+          // Send notification for rank change
+          try {
+            const oldRankConfig = currentRankConfig;
+            const newRankConfig = await db.rankConfiguration.findUnique({
+              where: { rankNumber: newRank },
+            });
+
+            if (newRankConfig) {
+              if (changeType === "PROMOTION") {
+                await createRankPromotionNotification(
+                  userRank.userId,
+                  {
+                    name: oldRankConfig.name,
+                    icon: oldRankConfig.icon,
+                  },
+                  {
+                    name: newRankConfig.name,
+                    icon: newRankConfig.icon,
+                  }
+                );
+              } else if (changeType === "DEMOTION") {
+                await createRankDemotionNotification(
+                  userRank.userId,
+                  {
+                    name: oldRankConfig.name,
+                    icon: oldRankConfig.icon,
+                  },
+                  {
+                    name: newRankConfig.name,
+                    icon: newRankConfig.icon,
+                  }
+                );
+              }
+            }
+          } catch (notifError) {
+            console.error(
+              `Error sending rank change notification for user ${userRank.userId}:`,
+              notifError
+            );
+          }
+        }
+
+        // Send weekly leaderboard notification
+        try {
+          await createWeeklyLeaderboardNotification(
+            userRank.userId,
+            leaderboardPosition,
+            zone,
+            userRank.weeklyPoints
+          );
+        } catch (notifError) {
+          console.error(
+            `Error sending weekly leaderboard notification for user ${userRank.userId}:`,
+            notifError
+          );
         }
 
         stats.usersEvaluated++;

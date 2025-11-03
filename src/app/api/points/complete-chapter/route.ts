@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { db } from "@/lib/db";
+import { createRankPromotionNotification } from "@/lib/notifications";
 
 interface CompleteChapterBody {
   chapterId: string;
@@ -248,6 +249,33 @@ export async function POST(req: NextRequest) {
             pointsAtTime: newTotalPoints,
           },
         });
+
+        // Send promotion notification
+        try {
+          const oldRankConfig = currentRankConfig;
+          const newRankConfig = await tx.rankConfiguration.findUnique({
+            where: { rankNumber: newRank },
+          });
+
+          if (oldRankConfig && newRankConfig) {
+            await createRankPromotionNotification(
+              user.id,
+              {
+                name: oldRankConfig.name,
+                icon: oldRankConfig.icon,
+              },
+              {
+                name: newRankConfig.name,
+                icon: newRankConfig.icon,
+              }
+            );
+          }
+        } catch (notifError) {
+          console.error(
+            `Error sending rank promotion notification for user ${user.id}:`,
+            notifError
+          );
+        }
       }
 
       // Mark progress as completed

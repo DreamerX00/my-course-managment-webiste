@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Menu, X, Shield, User } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -98,6 +99,7 @@ export function Navbar() {
                   Admin Panel
                 </Link>
               )}
+              <NotificationBell />
               <Link
                 href="/profile"
                 className="text-sm lg:text-base font-semibold text-blue-700 hover:text-pink-500 transition-colors duration-200 px-2 lg:px-3 py-1 rounded-md hover:bg-blue-50 flex items-center gap-1"

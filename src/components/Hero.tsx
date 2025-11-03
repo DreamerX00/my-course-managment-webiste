@@ -239,7 +239,7 @@ export function Hero() {
           className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <motion.a
-            href="#courses"
+            href="/courses"
             whileHover={{ scale: 1.08, boxShadow: "0 0 24px #fbbf24" }}
             whileTap={{ scale: 0.97 }}
             className="px-8 py-4 rounded-xl bg-linear-to-r from-yellow-400 to-pink-400 text-white font-bold text-lg shadow-lg hover:from-pink-400 hover:to-blue-400 transition-all duration-200 flex items-center gap-2 animate-glow"
@@ -247,12 +247,12 @@ export function Hero() {
             <span>Browse Courses ✨</span>
           </motion.a>
           <motion.a
-            href="#community"
+            href="/leaderboard"
             whileHover={{ scale: 1.08, boxShadow: "0 0 24px #60a5fa" }}
             whileTap={{ scale: 0.97 }}
             className="px-8 py-4 rounded-xl bg-white text-blue-800 font-bold text-lg shadow-lg border border-blue-200 hover:bg-blue-50 transition-all duration-200 flex items-center gap-2 animate-glow"
           >
-            <span>Join Community 🌈</span>
+            <span>View Leaderboard �</span>
           </motion.a>
         </motion.div>
 
