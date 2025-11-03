@@ -169,22 +169,6 @@ export default function LeaderboardPage() {
     return "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20";
   };
 
-  // Helper to render rank badge with icon and color
-  const renderRankBadge = (entry: LeaderboardEntry) => {
-    return (
-      <Badge
-        style={{
-          backgroundColor: entry.rankColor + "20",
-          borderColor: entry.rankColor,
-        }}
-        className="text-sm font-semibold"
-      >
-        <span className="mr-1">{entry.rankIcon}</span>
-        {entry.currentRank}
-      </Badge>
-    );
-  };
-
   const getInitials = (name: string) => {
     return name
       .split(" ")
