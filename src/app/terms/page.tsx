@@ -13,6 +13,7 @@ import {
   FileCheck,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { CONTACT_INFO } from "@/lib/constants";
 
 export default function TermsPage() {
   const lastUpdated = "November 3, 2025";
@@ -298,7 +299,21 @@ export default function TermsPage() {
                     <div className="space-y-2 text-sm">
                       <p className="text-foreground">
                         <span className="font-semibold">Email:</span>{" "}
-                        legal@courseplatform.com
+                        <a
+                          href={`mailto:${CONTACT_INFO.email}`}
+                          className="text-orange-600 dark:text-orange-400 hover:underline"
+                        >
+                          {CONTACT_INFO.email}
+                        </a>
+                      </p>
+                      <p className="text-foreground">
+                        <span className="font-semibold">Phone:</span>{" "}
+                        <a
+                          href={`tel:${CONTACT_INFO.phone}`}
+                          className="text-orange-600 dark:text-orange-400 hover:underline"
+                        >
+                          {CONTACT_INFO.phone}
+                        </a>
                       </p>
                       <p className="text-foreground">
                         <span className="font-semibold">Response Time:</span>{" "}

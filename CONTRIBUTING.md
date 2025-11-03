@@ -473,7 +473,9 @@ When adding features, update:
 
 ## Questions?
 
-- 📧 Email: support@yourplatform.com
+- 📧 Email: myviewrs123@gmail.com
+- 📱 Phone: +91 8851819851
+- 👤 Contact: DreamerX
 - 💬 Discord: [Join our community](https://discord.gg/your-server)
 - 📖 Documentation: [Full Docs](./documents)
 - 🐛 Issues: [GitHub Issues](https://github.com/DreamerX00/my-course-managment-webiste/issues)

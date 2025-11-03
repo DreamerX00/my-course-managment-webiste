@@ -13,6 +13,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { CONTACT_INFO } from "@/lib/constants";
 
 export default function PrivacyPolicyPage() {
   const lastUpdated = "November 3, 2025";
@@ -264,7 +265,21 @@ export default function PrivacyPolicyPage() {
                     <div className="space-y-2 text-sm">
                       <p className="text-foreground">
                         <span className="font-semibold">Email:</span>{" "}
-                        privacy@courseplatform.com
+                        <a
+                          href={`mailto:${CONTACT_INFO.email}`}
+                          className="text-purple-600 dark:text-purple-400 hover:underline"
+                        >
+                          {CONTACT_INFO.email}
+                        </a>
+                      </p>
+                      <p className="text-foreground">
+                        <span className="font-semibold">Phone:</span>{" "}
+                        <a
+                          href={`tel:${CONTACT_INFO.phone}`}
+                          className="text-purple-600 dark:text-purple-400 hover:underline"
+                        >
+                          {CONTACT_INFO.phone}
+                        </a>
                       </p>
                       <p className="text-foreground">
                         <span className="font-semibold">Response Time:</span>{" "}

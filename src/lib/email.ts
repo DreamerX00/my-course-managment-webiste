@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { CONTACT_INFO } from "./constants";
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -6,7 +7,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // Email configuration
 const emailConfig = {
   fromEmail: process.env.EMAIL_FROM || "onboarding@resend.dev",
-  fromName: "Learning Platform",
+  fromName: "Dreamer Academy",
+  supportEmail: CONTACT_INFO.email,
+  supportName: CONTACT_INFO.name,
 };
 
 // Email template for user invitations
@@ -168,12 +171,17 @@ export function generateInvitationEmail(
               ⚠️ <strong>Important:</strong> This invitation link will expire in 7 days for security reasons.
             </div>
             
-            <p>If you have any questions or need assistance, please don't hesitate to reach out to our support team.</p>
+            <p>If you have any questions or need assistance, please don't hesitate to reach out to our support team at <a href="mailto:${
+              emailConfig.supportEmail
+            }">${emailConfig.supportEmail}</a> or call ${
+      CONTACT_INFO.phone
+    }.</p>
           </div>
           
           <div class="footer">
-            <p>Best regards,<br>The Learning Platform Team</p>
+            <p>Best regards,<br>The ${emailConfig.fromName} Team</p>
             <p>This is an automated message. Please do not reply to this email.</p>
+            <p>For support, contact us at ${emailConfig.supportEmail}</p>
           </div>
         </div>
       </body>
@@ -195,9 +203,12 @@ ${signupUrl}
 
 Important: This invitation link will expire in 7 days for security reasons.
 
-If you have any questions, please contact our support team.
+If you have any questions, please contact our support team:
+Email: ${emailConfig.supportEmail}
+Phone: ${CONTACT_INFO.phone}
 
 Best regards,
+The ${emailConfig.fromName} Team
 The Learning Platform Team
     `,
   };
