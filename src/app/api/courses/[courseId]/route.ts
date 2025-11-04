@@ -154,7 +154,12 @@ export async function PATCH(
           },
         });
       } else {
-        // Create new CourseDetails
+        // Create new CourseDetails with actual user data
+        const creatorName = session.user.name || "Instructor";
+        const creatorAvatar =
+          session.user.image ||
+          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face";
+
         await db.courseDetails.create({
           data: {
             courseId: courseId,
@@ -162,11 +167,10 @@ export async function PATCH(
             category: category,
             tags: ["Updated Course"],
             instructor: {
-              name: "CodeWithHarry",
-              avatar:
-                "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
+              name: creatorName,
+              avatar: creatorAvatar,
               rating: 4.8,
-              students: 15000,
+              students: 0,
             },
             rating: 4.5,
             enrolledCount: 0,

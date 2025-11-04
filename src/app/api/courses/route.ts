@@ -144,7 +144,7 @@ export async function GET(req: NextRequest) {
             title: details?.title || course.title,
             description: details?.description || course.description,
             instructor:
-              (details?.instructor as InstructorData)?.name || "CodeWithHarry",
+              (details?.instructor as InstructorData)?.name || "Instructor",
             category: assignedCategory,
             price: details?.price ?? course.price ?? 0,
             rating: details?.rating
@@ -283,6 +283,11 @@ export async function POST(req: NextRequest) {
 
     // Create CourseDetails with the selected category
     if (category) {
+      const userName = session.user.name || "Instructor";
+      const userAvatar =
+        session.user.image ||
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face";
+
       await db.courseDetails.create({
         data: {
           courseId: course.id,
@@ -290,11 +295,10 @@ export async function POST(req: NextRequest) {
           category: category,
           tags: ["New Course"],
           instructor: {
-            name: "CodeWithHarry",
-            avatar:
-              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
+            name: userName,
+            avatar: userAvatar,
             rating: 4.8,
-            students: 15000,
+            students: 0,
           },
           rating: 4.5,
           enrolledCount: 0,

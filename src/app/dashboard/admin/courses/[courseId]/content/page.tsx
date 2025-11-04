@@ -67,6 +67,23 @@ export default function CourseContentManagerPage() {
     null
   );
 
+  // Add state for context menu
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    chapterId?: string;
+    subchapterId?: string;
+    type: "chapter" | "subchapter";
+  } | null>(null);
+
+  // Add state for parent selection modal
+  const [showParentSelector, setShowParentSelector] = useState<{
+    chapterId: string;
+    chapterTitle: string;
+  } | null>(null);
+  const [selectedParentId, setSelectedParentId] = useState<string>("");
+  const [convertingToSub, setConvertingToSub] = useState(false);
+
   // Add state to hold pending content for chapter and subchapter
   const [pendingChapterContent, setPendingChapterContent] =
     useState<unknown>(null);
@@ -118,6 +135,25 @@ export default function CourseContentManagerPage() {
         });
       });
   }, [selectedChapter, courseId, toast]);
+
+  // Fetch subchapters when expandedChapterId changes (for viewing)
+  useEffect(() => {
+    if (!expandedChapterId) return;
+    const expandedChapter = chapters.find((ch) => ch.id === expandedChapterId);
+    if (!expandedChapter) return;
+
+    fetch(`/api/courses/${courseId}/chapters/${expandedChapterId}/subchapters`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Update subchapters only if this is still the expanded chapter
+        if (expandedChapterId === expandedChapter.id) {
+          setSubchapters(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load subchapters:", err);
+      });
+  }, [expandedChapterId, chapters, courseId]);
 
   // Update video URL when chapter/subchapter changes
   useEffect(() => {
@@ -535,6 +571,116 @@ export default function CourseContentManagerPage() {
     }
   };
 
+  // Handle converting chapter to subchapter
+  const handleConvertToSubchapter = async (
+    chapterId: string,
+    parentChapterId: string
+  ) => {
+    setConvertingToSub(true);
+    try {
+      const res = await fetch(
+        `/api/courses/${courseId}/chapters/${chapterId}/convert-to-subchapter`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ parentChapterId }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to convert chapter");
+
+      // Refresh chapters list
+      const chaptersRes = await fetch(`/api/courses/${courseId}/chapters`);
+      const updatedChapters = await chaptersRes.json();
+      setChapters(updatedChapters);
+
+      // Refresh subchapters if we're viewing the parent chapter
+      if (expandedChapterId === parentChapterId) {
+        const subRes = await fetch(
+          `/api/courses/${courseId}/chapters/${parentChapterId}/subchapters`
+        );
+        const updatedSubs = await subRes.json();
+        setSubchapters(updatedSubs);
+      }
+
+      // Clear selections
+      setShowParentSelector(null);
+      setSelectedParentId("");
+      if (selectedChapter?.id === chapterId) {
+        setSelectedChapter(null);
+      }
+
+      toast({
+        title: "Success",
+        description: "Chapter converted to subchapter successfully!",
+      });
+    } catch (error) {
+      console.error("Error converting chapter:", error);
+      toast({
+        title: "Error",
+        description: "Failed to convert chapter to subchapter.",
+        variant: "destructive",
+      });
+    } finally {
+      setConvertingToSub(false);
+    }
+  };
+
+  // Handle promoting subchapter to chapter
+  const handlePromoteToChapter = async (
+    chapterId: string,
+    subchapterId: string
+  ) => {
+    try {
+      const res = await fetch(
+        `/api/courses/${courseId}/chapters/${chapterId}/subchapters/${subchapterId}/promote-to-chapter`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to promote subchapter");
+
+      // Refresh chapters list
+      const chaptersRes = await fetch(`/api/courses/${courseId}/chapters`);
+      const updatedChapters = await chaptersRes.json();
+      setChapters(updatedChapters);
+
+      // Refresh subchapters
+      const subRes = await fetch(
+        `/api/courses/${courseId}/chapters/${chapterId}/subchapters`
+      );
+      const updatedSubs = await subRes.json();
+      setSubchapters(updatedSubs);
+
+      // Clear selection if this was selected
+      if (selectedSubchapter?.id === subchapterId) {
+        setSelectedSubchapter(null);
+      }
+
+      toast({
+        title: "Success",
+        description: "Subchapter promoted to chapter successfully!",
+      });
+    } catch (error) {
+      console.error("Error promoting subchapter:", error);
+      toast({
+        title: "Error",
+        description: "Failed to promote subchapter to chapter.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    if (contextMenu) {
+      document.addEventListener("click", handleClick);
+      return () => document.removeEventListener("click", handleClick);
+    }
+  }, [contextMenu]);
+
   if (!courseId) {
     return <div className="p-8 text-center">Loading course...</div>;
   }
@@ -640,7 +786,19 @@ export default function CourseContentManagerPage() {
                             {chapter.title}
                           </button>
                           <button
-                            className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700 ml-2"
+                            className="px-2 py-1 bg-purple-600 text-white rounded text-xs font-semibold hover:bg-purple-700"
+                            onClick={() =>
+                              setShowParentSelector({
+                                chapterId: chapter.id,
+                                chapterTitle: chapter.title,
+                              })
+                            }
+                            title="Convert to subchapter"
+                          >
+                            ↘️
+                          </button>
+                          <button
+                            className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700"
                             onClick={() => setDeleteChapterId(chapter.id)}
                             disabled={deleting}
                           >
@@ -776,7 +934,20 @@ export default function CourseContentManagerPage() {
                                 {sub.title}
                               </button>
                               <button
-                                className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700 ml-2"
+                                className="px-2 py-1 bg-green-600 text-white rounded text-xs font-semibold hover:bg-green-700"
+                                onClick={() =>
+                                  selectedChapter &&
+                                  handlePromoteToChapter(
+                                    selectedChapter.id,
+                                    sub.id
+                                  )
+                                }
+                                title="Promote to chapter"
+                              >
+                                ↗️
+                              </button>
+                              <button
+                                className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700"
                                 onClick={() => setDeleteSubId(sub.id)}
                                 disabled={subDeleting}
                               >
@@ -970,6 +1141,60 @@ export default function CourseContentManagerPage() {
           )}
         </div>
       </div>
+
+      {/* Parent Selector Modal */}
+      {showParentSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Convert &ldquo;{showParentSelector.chapterTitle}&rdquo; to
+              Subchapter
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Select a parent chapter to nest this chapter under:
+            </p>
+            <select
+              className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedParentId}
+              onChange={(e) => setSelectedParentId(e.target.value)}
+            >
+              <option value="">-- Select Parent Chapter --</option>
+              {chapters
+                .filter((ch) => ch.id !== showParentSelector.chapterId)
+                .map((ch) => (
+                  <option key={ch.id} value={ch.id}>
+                    {ch.title}
+                  </option>
+                ))}
+            </select>
+            <div className="flex gap-2 justify-end">
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded font-semibold hover:bg-gray-300"
+                onClick={() => {
+                  setShowParentSelector(null);
+                  setSelectedParentId("");
+                }}
+                disabled={convertingToSub}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-purple-600 text-white rounded font-semibold hover:bg-purple-700 disabled:opacity-50"
+                onClick={() =>
+                  selectedParentId &&
+                  handleConvertToSubchapter(
+                    showParentSelector.chapterId,
+                    selectedParentId
+                  )
+                }
+                disabled={!selectedParentId || convertingToSub}
+              >
+                {convertingToSub ? "Converting..." : "Convert"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
