@@ -112,8 +112,64 @@ export default function CourseContentDetailsPage() {
     value: "",
   });
 
+  // Points management state
+  const [pointsData, setPointsData] = useState<{
+    totalPoints: number;
+    pointsPerItem: number;
+    difficulty: string;
+    chapterCount: number;
+    subchapterCount: number;
+    totalItems: number;
+  } | null>(null);
+  const [loadingPoints, setLoadingPoints] = useState(false);
+  const [savingPoints, setSavingPoints] = useState(false);
+  const [pointsForm, setPointsForm] = useState({
+    totalPoints: 1000,
+    difficulty: "BEGINNER",
+    adminNotes: "",
+  });
+
   // Editor ref for Toast UI Editor
   const editorRef = useRef<ToastEditorHandle>(null);
+
+  // Fetch points configuration
+  const fetchPointsData = async () => {
+    try {
+      setLoadingPoints(true);
+      const response = await fetch(`/api/admin/course-points`, {
+        cache: "no-store",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const coursePoints = data.courses.find(
+          (c: { id: string }) => c.id === courseId
+        );
+
+        if (coursePoints && coursePoints.pointsConfiguration) {
+          setPointsData({
+            totalPoints: coursePoints.pointsConfiguration.totalPoints,
+            pointsPerItem: coursePoints.pointsConfiguration.pointsPerChapter,
+            difficulty: coursePoints.pointsConfiguration.difficulty,
+            chapterCount: coursePoints.chapterCount,
+            subchapterCount: coursePoints.subchapterCount,
+            totalItems: coursePoints.totalItems,
+          });
+          setPointsForm({
+            totalPoints: coursePoints.pointsConfiguration.totalPoints,
+            difficulty: coursePoints.pointsConfiguration.difficulty,
+            adminNotes: "",
+          });
+        } else {
+          setPointsData(null);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching points:", error);
+    } finally {
+      setLoadingPoints(false);
+    }
+  };
 
   // Fetch course details on mount
   useEffect(() => {
@@ -213,6 +269,7 @@ export default function CourseContentDetailsPage() {
     };
 
     fetchCourseDetails();
+    fetchPointsData(); // Also fetch points configuration
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, toast]);
 
@@ -318,6 +375,96 @@ export default function CourseContentDetailsPage() {
       ...prev,
       features: prev.features.filter((_, i) => i !== index),
     }));
+  };
+
+  const handleAssignPoints = async () => {
+    if (!courseId) return;
+    setSavingPoints(true);
+
+    try {
+      const response = await fetch(`/api/admin/course-points`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseId,
+          totalPoints: pointsForm.totalPoints,
+          difficulty: pointsForm.difficulty,
+          adminNotes: pointsForm.adminNotes || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Points assigned successfully!",
+        });
+        await fetchPointsData(); // Refresh points data
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to assign points",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error assigning points:", error);
+      toast({
+        title: "Error",
+        description: "Failed to assign points",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingPoints(false);
+    }
+  };
+
+  const handleRecalculatePoints = async () => {
+    if (!courseId) return;
+    setSavingPoints(true);
+
+    try {
+      const response = await fetch(`/api/admin/course-points/recalculate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: `Points recalculated! Now ${data.data.newPointsPerItem.toFixed(
+            2
+          )} points per item.`,
+        });
+        await fetchPointsData(); // Refresh points data
+      } else {
+        toast({
+          title: "Error",
+          description:
+            data.error || data.message || "Failed to recalculate points",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error recalculating points:", error);
+      toast({
+        title: "Error",
+        description: "Failed to recalculate points",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingPoints(false);
+    }
   };
 
   if (loading) {
@@ -592,6 +739,274 @@ export default function CourseContentDetailsPage() {
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Points Management Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="border-2 border-purple-200 bg-linear-to-br from-purple-50 to-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-purple-600" />
+                Points & Gamification
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-2">
+                Assign points to this course for the gamification system. Points
+                are distributed equally across all chapters and subchapters.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {loadingPoints ? (
+                <div className="text-center py-4 text-gray-500">
+                  Loading points configuration...
+                </div>
+              ) : pointsData ? (
+                <>
+                  {/* Current Points Configuration */}
+                  <div className="bg-white rounded-lg p-4 border-2 border-purple-200">
+                    <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-purple-600" />
+                      Current Configuration
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {pointsData.totalPoints}
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          Total Points
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {pointsData.pointsPerItem.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          Per Item
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {pointsData.totalItems}
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          Total Items
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <Badge className="bg-purple-600">
+                          {pointsData.difficulty}
+                        </Badge>
+                        <div className="text-xs text-gray-600 mt-1">
+                          Difficulty
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 text-sm text-gray-600 space-y-1">
+                      <div>📚 {pointsData.chapterCount} Chapters</div>
+                      <div>📖 {pointsData.subchapterCount} Subchapters</div>
+                      <div className="font-semibold text-purple-600 mt-2">
+                        Each chapter or subchapter ={" "}
+                        {pointsData.pointsPerItem.toFixed(2)} points
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recalculate Button */}
+                  <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <RotateCcw className="w-4 h-4" />
+                      Auto-Recalculation
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-3">
+                      If you&apos;ve added or removed chapters/subchapters,
+                      click below to recalculate the point distribution:
+                    </p>
+                    <Button
+                      onClick={handleRecalculatePoints}
+                      disabled={savingPoints}
+                      className="w-full bg-yellow-600 hover:bg-yellow-700"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      {savingPoints
+                        ? "Recalculating..."
+                        : "Recalculate Points Distribution"}
+                    </Button>
+                  </div>
+
+                  <Separator />
+
+                  {/* Update Points Form */}
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">
+                      Update Points Configuration
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="totalPoints">
+                            Total Points for Course
+                          </Label>
+                          <Input
+                            id="totalPoints"
+                            type="number"
+                            min="100"
+                            max="50000"
+                            value={pointsForm.totalPoints}
+                            onChange={(e) =>
+                              setPointsForm((prev) => ({
+                                ...prev,
+                                totalPoints: parseInt(e.target.value) || 0,
+                              }))
+                            }
+                            placeholder="e.g., 1000"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Range: 100 - 50,000 points
+                          </p>
+                        </div>
+                        <div>
+                          <Label htmlFor="difficulty">Difficulty Level</Label>
+                          <select
+                            id="difficulty"
+                            value={pointsForm.difficulty}
+                            onChange={(e) =>
+                              setPointsForm((prev) => ({
+                                ...prev,
+                                difficulty: e.target.value,
+                              }))
+                            }
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="BEGINNER">Beginner</option>
+                            <option value="INTERMEDIATE">Intermediate</option>
+                            <option value="ADVANCED">Advanced</option>
+                            <option value="EXPERT">Expert</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="adminNotes">
+                          Admin Notes (Optional)
+                        </Label>
+                        <Input
+                          id="adminNotes"
+                          value={pointsForm.adminNotes}
+                          onChange={(e) =>
+                            setPointsForm((prev) => ({
+                              ...prev,
+                              adminNotes: e.target.value,
+                            }))
+                          }
+                          placeholder="Any notes about this point assignment"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleAssignPoints}
+                        disabled={savingPoints}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Trophy className="w-4 h-4 mr-2" />
+                        {savingPoints
+                          ? "Updating..."
+                          : "Update Points Configuration"}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* No Points Assigned Yet */}
+                  <div className="text-center py-6 space-y-4">
+                    <Trophy className="w-16 h-16 mx-auto text-gray-400" />
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">
+                        No Points Assigned Yet
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Assign points to enable gamification for this course
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 max-w-md mx-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="totalPoints">
+                            Total Points for Course
+                          </Label>
+                          <Input
+                            id="totalPoints"
+                            type="number"
+                            min="100"
+                            max="50000"
+                            value={pointsForm.totalPoints}
+                            onChange={(e) =>
+                              setPointsForm((prev) => ({
+                                ...prev,
+                                totalPoints: parseInt(e.target.value) || 0,
+                              }))
+                            }
+                            placeholder="e.g., 1000"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Range: 100 - 50,000 points
+                          </p>
+                        </div>
+                        <div>
+                          <Label htmlFor="difficulty">Difficulty Level</Label>
+                          <select
+                            id="difficulty"
+                            value={pointsForm.difficulty}
+                            onChange={(e) =>
+                              setPointsForm((prev) => ({
+                                ...prev,
+                                difficulty: e.target.value,
+                              }))
+                            }
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="BEGINNER">Beginner</option>
+                            <option value="INTERMEDIATE">Intermediate</option>
+                            <option value="ADVANCED">Advanced</option>
+                            <option value="EXPERT">Expert</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="adminNotes">
+                          Admin Notes (Optional)
+                        </Label>
+                        <Input
+                          id="adminNotes"
+                          value={pointsForm.adminNotes}
+                          onChange={(e) =>
+                            setPointsForm((prev) => ({
+                              ...prev,
+                              adminNotes: e.target.value,
+                            }))
+                          }
+                          placeholder="Any notes about this point assignment"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleAssignPoints}
+                        disabled={savingPoints}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Trophy className="w-4 h-4 mr-2" />
+                        {savingPoints
+                          ? "Assigning..."
+                          : "Assign Points to Course"}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </motion.div>

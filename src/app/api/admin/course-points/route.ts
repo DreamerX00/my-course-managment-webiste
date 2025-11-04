@@ -32,6 +32,11 @@ export async function GET() {
         chapters: {
           select: {
             id: true,
+            subchapters: {
+              select: {
+                id: true,
+              },
+            },
           },
         },
         coursePoints: true,
@@ -42,24 +47,36 @@ export async function GET() {
     });
 
     // Format response
-    const formattedCourses = courses.map((course) => ({
-      id: course.id,
-      title: course.title,
-      description: course.description,
-      thumbnail: course.thumbnail,
-      isPublished: course.isPublished,
-      chapterCount: course.chapters.length,
-      pointsConfiguration: course.coursePoints
-        ? {
-            totalPoints: course.coursePoints.totalPoints,
-            pointsPerChapter: course.coursePoints.pointsPerChapter,
-            difficulty: course.coursePoints.difficulty,
-            assignedBy: course.coursePoints.assignedBy,
-            assignedAt: course.coursePoints.assignedAt,
-            updatedAt: course.coursePoints.updatedAt,
-          }
-        : null,
-    }));
+    const formattedCourses = courses.map((course) => {
+      // Count total items (chapters + subchapters)
+      const chapterCount = course.chapters.length;
+      const subchapterCount = course.chapters.reduce(
+        (sum, chapter) => sum + chapter.subchapters.length,
+        0
+      );
+      const totalItems = chapterCount + subchapterCount;
+
+      return {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        thumbnail: course.thumbnail,
+        isPublished: course.isPublished,
+        chapterCount,
+        subchapterCount,
+        totalItems,
+        pointsConfiguration: course.coursePoints
+          ? {
+              totalPoints: course.coursePoints.totalPoints,
+              pointsPerChapter: course.coursePoints.pointsPerChapter,
+              difficulty: course.coursePoints.difficulty,
+              assignedBy: course.coursePoints.assignedBy,
+              assignedAt: course.coursePoints.assignedAt,
+              updatedAt: course.coursePoints.updatedAt,
+            }
+          : null,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -130,12 +147,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get course and count chapters
+    // Get course and count chapters + subchapters
     const course = await db.course.findUnique({
       where: { id: courseId },
       include: {
         chapters: {
-          select: { id: true },
+          select: {
+            id: true,
+            subchapters: {
+              select: {
+                id: true,
+              },
+            },
+          },
         },
       },
     });
@@ -144,15 +168,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    if (course.chapters.length === 0) {
+    // Calculate total items (chapters + subchapters)
+    const chapterCount = course.chapters.length;
+    const subchapterCount = course.chapters.reduce(
+      (sum, chapter) => sum + chapter.subchapters.length,
+      0
+    );
+    const totalItems = chapterCount + subchapterCount;
+
+    if (totalItems === 0) {
       return NextResponse.json(
-        { error: "Course must have at least one chapter" },
+        { error: "Course must have at least one chapter or subchapter" },
         { status: 400 }
       );
     }
 
-    // Calculate points per chapter
-    const pointsPerChapter = totalPoints / course.chapters.length;
+    // Calculate points per item (distributed equally among all chapters and subchapters)
+    const pointsPerChapter = totalPoints / totalItems;
 
     // Create or update course points
     const coursePoints = await db.coursePoints.upsert({
@@ -179,7 +211,9 @@ export async function POST(req: NextRequest) {
       message: "Course points updated successfully",
       coursePoints: {
         ...coursePoints,
-        chapterCount: course.chapters.length,
+        chapterCount,
+        subchapterCount,
+        totalItems,
       },
     });
   } catch (error) {

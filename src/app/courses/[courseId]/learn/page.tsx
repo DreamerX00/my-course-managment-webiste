@@ -58,13 +58,23 @@ function isYouTubeUrl(url: string): boolean {
   return url.includes("youtube.com") || url.includes("youtu.be");
 }
 
+interface Subchapter {
+  id: string;
+  title: string;
+  content?: string;
+  videoUrl: string;
+  position: number;
+  chapterId: string;
+}
+
 interface Chapter {
   id: string;
   title: string;
   description: string;
   videoUrl: string;
   isFree: boolean;
-  content?: string; // Added content field
+  content?: string;
+  subchapters?: Subchapter[];
 }
 
 interface Course {
@@ -122,6 +132,12 @@ export default function CourseLearnPage() {
   const { toast } = useToast();
   const [course, setCourse] = useState<Course | null>(null);
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null);
+  const [currentSubchapter, setCurrentSubchapter] = useState<Subchapter | null>(
+    null
+  );
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
+    new Set()
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(false);
@@ -258,9 +274,20 @@ export default function CourseLearnPage() {
     return progress?.completedChapters?.includes(chapterId) || false;
   };
 
-  // Memoized TOC for current chapter
-  const tocHeadings = currentChapter?.content
-    ? extractMarkdownHeadings(getMarkdownContent(currentChapter.content))
+  // Determine what content to display (subchapter takes priority)
+  const displayContent = currentSubchapter || currentChapter;
+  const displayTitle = currentSubchapter?.title || currentChapter?.title;
+  const displayDescription = currentSubchapter
+    ? ""
+    : currentChapter?.description;
+  const displayVideoUrl =
+    currentSubchapter?.videoUrl || currentChapter?.videoUrl;
+  const displayContentBody =
+    currentSubchapter?.content || currentChapter?.content;
+
+  // Memoized TOC for current content (chapter or subchapter)
+  const tocHeadings = displayContentBody
+    ? extractMarkdownHeadings(getMarkdownContent(displayContentBody))
     : [];
 
   if (isLoading) {
@@ -342,48 +369,159 @@ export default function CourseLearnPage() {
         <nav className="space-y-1">
           {course.chapters.map((chapter, idx) => {
             const completed = isChapterCompleted(chapter.id);
-            const isCurrent = currentChapter?.id === chapter.id;
+            const isCurrent =
+              currentChapter?.id === chapter.id && !currentSubchapter;
+            const hasSubchapters =
+              chapter.subchapters && chapter.subchapters.length > 0;
+            const isExpanded = expandedChapters.has(chapter.id);
+
             return (
-              <button
-                key={chapter.id}
-                onClick={() => {
-                  setCurrentChapter(chapter);
-                  setTocMobileOpen(false);
-                  // Scroll to top on mobile
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className={`
-                  w-full text-left px-4 py-3 rounded-lg font-medium 
-                  flex items-start gap-3 transition-all
-                  ${
-                    isCurrent
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "hover:bg-gray-100 text-gray-700"
-                  }
-                `}
-              >
-                <div className="shrink-0 mt-0.5">
-                  {completed ? (
-                    <CheckCircle2
-                      className={`w-5 h-5 ${
-                        isCurrent ? "text-white" : "text-green-500"
-                      }`}
-                    />
+              <div key={chapter.id}>
+                <div className="flex items-stretch gap-1">
+                  {/* Expand/Collapse button for chapters with subchapters */}
+                  {hasSubchapters ? (
+                    <button
+                      onClick={() => {
+                        setExpandedChapters((prev) => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(chapter.id)) {
+                            newSet.delete(chapter.id);
+                          } else {
+                            newSet.add(chapter.id);
+                          }
+                          return newSet;
+                        });
+                      }}
+                      className="px-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
+                    >
+                      <svg
+                        className={`w-4 h-4 text-gray-500 transition-transform ${
+                          isExpanded ? "rotate-90" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
                   ) : (
-                    <Circle
-                      className={`w-5 h-5 ${
-                        isCurrent ? "text-white" : "text-gray-400"
-                      }`}
-                    />
+                    <div className="w-8" />
                   )}
+
+                  {/* Chapter button */}
+                  <button
+                    onClick={() => {
+                      setCurrentChapter(chapter);
+                      setCurrentSubchapter(null);
+                      setTocMobileOpen(false);
+                      // Auto-expand chapter if it has subchapters and is not expanded
+                      if (hasSubchapters && !isExpanded) {
+                        setExpandedChapters((prev) => {
+                          const newSet = new Set(prev);
+                          newSet.add(chapter.id);
+                          return newSet;
+                        });
+                      }
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`
+                      flex-1 text-left px-4 py-3 rounded-lg font-medium 
+                      flex items-start gap-3 transition-all
+                      ${
+                        isCurrent
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "hover:bg-gray-100 text-gray-700"
+                      }
+                    `}
+                  >
+                    <div className="shrink-0 mt-0.5">
+                      {completed ? (
+                        <CheckCircle2
+                          className={`w-5 h-5 ${
+                            isCurrent ? "text-white" : "text-green-500"
+                          }`}
+                        />
+                      ) : (
+                        <Circle
+                          className={`w-5 h-5 ${
+                            isCurrent ? "text-white" : "text-gray-400"
+                          }`}
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">
+                        Chapter {idx + 1}
+                      </div>
+                      <div className="text-sm line-clamp-2">
+                        {chapter.title}
+                      </div>
+                    </div>
+                  </button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">
-                    Chapter {idx + 1}
+
+                {/* Render subchapters if expanded */}
+                {hasSubchapters && isExpanded && (
+                  <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-2">
+                    {chapter.subchapters!.map((subchapter, subIdx) => {
+                      const subCompleted = isChapterCompleted(subchapter.id);
+                      const isSubCurrent =
+                        currentSubchapter?.id === subchapter.id;
+
+                      return (
+                        <button
+                          key={subchapter.id}
+                          onClick={() => {
+                            setCurrentChapter(chapter);
+                            setCurrentSubchapter(subchapter);
+                            setTocMobileOpen(false);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className={`
+                            w-full text-left px-3 py-2 rounded-lg font-medium 
+                            flex items-start gap-2 transition-all text-sm
+                            ${
+                              isSubCurrent
+                                ? "bg-blue-500 text-white shadow-md"
+                                : "hover:bg-gray-50 text-gray-600"
+                            }
+                          `}
+                        >
+                          <div className="shrink-0 mt-0.5">
+                            {subCompleted ? (
+                              <CheckCircle2
+                                className={`w-4 h-4 ${
+                                  isSubCurrent ? "text-white" : "text-green-500"
+                                }`}
+                              />
+                            ) : (
+                              <Circle
+                                className={`w-4 h-4 ${
+                                  isSubCurrent ? "text-white" : "text-gray-400"
+                                }`}
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-semibold uppercase tracking-wide mb-0.5 opacity-70">
+                              {idx + 1}.{subIdx + 1}
+                            </div>
+                            <div className="text-xs line-clamp-2">
+                              {subchapter.title}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className="text-sm line-clamp-2">{chapter.title}</div>
-                </div>
-              </button>
+                )}
+              </div>
             );
           })}
         </nav>
@@ -441,20 +579,20 @@ export default function CourseLearnPage() {
           )}
 
           {/* Video Player */}
-          {currentChapter?.videoUrl && (
+          {displayVideoUrl && (
             <div className="relative bg-black rounded-xl overflow-hidden mb-8 shadow-2xl">
               <div className="aspect-video">
-                {isYouTubeUrl(currentChapter.videoUrl) ? (
+                {isYouTubeUrl(displayVideoUrl) ? (
                   <iframe
-                    src={getYouTubeEmbedUrl(currentChapter.videoUrl) || ""}
-                    title={currentChapter.title}
+                    src={getYouTubeEmbedUrl(displayVideoUrl) || ""}
+                    title={displayTitle}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
                 ) : (
                   <video
-                    src={currentChapter.videoUrl}
+                    src={displayVideoUrl}
                     controls
                     className="w-full h-full"
                   />
@@ -468,20 +606,20 @@ export default function CourseLearnPage() {
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                  {currentChapter?.title}
+                  {displayTitle}
                 </h1>
-                <p className="text-lg text-gray-600">
-                  {currentChapter?.description}
-                </p>
+                {displayDescription && (
+                  <p className="text-lg text-gray-600">{displayDescription}</p>
+                )}
               </div>
-              {currentChapter && (
+              {displayContent && (
                 <div className="flex items-center gap-3 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                   <Checkbox
-                    id={`complete-${currentChapter.id}`}
-                    checked={isChapterCompleted(currentChapter.id)}
+                    id={`complete-${displayContent.id}`}
+                    checked={isChapterCompleted(displayContent.id)}
                     onCheckedChange={(checked) =>
                       handleToggleComplete(
-                        currentChapter.id,
+                        displayContent.id,
                         checked as boolean
                       )
                     }
@@ -489,10 +627,10 @@ export default function CourseLearnPage() {
                     className="w-5 h-5"
                   />
                   <label
-                    htmlFor={`complete-${currentChapter.id}`}
+                    htmlFor={`complete-${displayContent.id}`}
                     className="text-sm font-semibold text-gray-700 cursor-pointer select-none"
                   >
-                    {isChapterCompleted(currentChapter.id)
+                    {isChapterCompleted(displayContent.id)
                       ? "Completed ✓"
                       : "Mark complete"}
                   </label>
@@ -501,10 +639,10 @@ export default function CourseLearnPage() {
             </div>
           </div>
           {/* Markdown Content */}
-          {currentChapter?.content && (
+          {displayContentBody && (
             <div className="prose prose-lg dark:prose-invert max-w-none bg-white rounded-xl border border-gray-200 shadow-sm p-6 md:p-8 mb-8">
               <MarkdownDisplay
-                content={getMarkdownContent(currentChapter.content)}
+                content={getMarkdownContent(displayContentBody)}
               />
             </div>
           )}
@@ -513,29 +651,74 @@ export default function CourseLearnPage() {
           {course && currentChapter && (
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mt-10">
               {(() => {
-                const idx = course.chapters.findIndex(
-                  (c) => c.id === currentChapter.id
+                // Build a flat list of all items (chapters and subchapters)
+                const allItems: Array<{
+                  type: "chapter" | "subchapter";
+                  data: Chapter | Subchapter;
+                  chapterParent?: Chapter;
+                }> = [];
+                course.chapters.forEach((chapter) => {
+                  allItems.push({ type: "chapter", data: chapter });
+                  if (chapter.subchapters && chapter.subchapters.length > 0) {
+                    chapter.subchapters.forEach((sub) => {
+                      allItems.push({
+                        type: "subchapter",
+                        data: sub,
+                        chapterParent: chapter,
+                      });
+                    });
+                  }
+                });
+
+                // Find current index
+                const currentId = currentSubchapter?.id || currentChapter.id;
+                const currentIndex = allItems.findIndex(
+                  (item) => item.data.id === currentId
                 );
-                const prev = idx > 0 ? course.chapters[idx - 1] : null;
-                const next =
-                  idx < course.chapters.length - 1
-                    ? course.chapters[idx + 1]
+
+                const prevItem =
+                  currentIndex > 0 ? allItems[currentIndex - 1] : null;
+                const nextItem =
+                  currentIndex < allItems.length - 1
+                    ? allItems[currentIndex + 1]
                     : null;
+
+                const handlePrev = () => {
+                  if (prevItem) {
+                    if (prevItem.type === "chapter") {
+                      setCurrentChapter(prevItem.data as Chapter);
+                      setCurrentSubchapter(null);
+                    } else {
+                      setCurrentChapter(prevItem.chapterParent!);
+                      setCurrentSubchapter(prevItem.data as Subchapter);
+                    }
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                };
+
+                const handleNext = () => {
+                  if (nextItem) {
+                    if (nextItem.type === "chapter") {
+                      setCurrentChapter(nextItem.data as Chapter);
+                      setCurrentSubchapter(null);
+                    } else {
+                      setCurrentChapter(nextItem.chapterParent!);
+                      setCurrentSubchapter(nextItem.data as Subchapter);
+                    }
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                };
+
                 return (
                   <>
                     <button
-                      disabled={!prev}
-                      onClick={() => {
-                        if (prev) {
-                          setCurrentChapter(prev);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }
-                      }}
+                      disabled={!prevItem}
+                      onClick={handlePrev}
                       className={`
                         flex-1 sm:flex-none px-6 py-3 rounded-lg font-semibold 
                         border-2 transition-all flex items-center justify-center gap-2
                         ${
-                          prev
+                          prevItem
                             ? "bg-white text-blue-700 border-blue-300 hover:bg-blue-50 hover:border-blue-400 shadow-md hover:shadow-lg"
                             : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                         }
@@ -558,24 +741,21 @@ export default function CourseLearnPage() {
                       <span className="sm:hidden">Prev</span>
                     </button>
                     <button
-                      disabled={!next}
-                      onClick={() => {
-                        if (next) {
-                          setCurrentChapter(next);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }
-                      }}
+                      disabled={!nextItem}
+                      onClick={handleNext}
                       className={`
                         flex-1 sm:flex-none px-6 py-3 rounded-lg font-semibold 
                         border-2 transition-all flex items-center justify-center gap-2
                         ${
-                          next
+                          nextItem
                             ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg"
                             : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                         }
                       `}
                     >
-                      <span className="hidden sm:inline">Next Chapter</span>
+                      <span className="hidden sm:inline">
+                        Next {nextItem?.type === "chapter" ? "Chapter" : ""}
+                      </span>
                       <span className="sm:hidden">Next</span>
                       <svg
                         className="w-5 h-5"
