@@ -122,24 +122,61 @@ export default function CourseContentDetailsPage() {
 
       try {
         setLoading(true);
-        const response = await fetch(`/api/courses/${courseId}`);
 
-        if (!response.ok) {
+        // Fetch basic course info (no cache for admin)
+        const courseResponse = await fetch(`/api/courses/${courseId}`, {
+          cache: "no-store",
+        });
+
+        if (!courseResponse.ok) {
           throw new Error("Failed to fetch course details");
         }
 
-        const data = await response.json();
+        const courseData = await courseResponse.json();
 
         // Set course thumbnail
-        setCourseThumbnail(data.thumbnail || "");
+        setCourseThumbnail(courseData.thumbnail || "");
 
-        // Use courseDetails if available, otherwise use empty template
-        if (data.courseDetails) {
-          setContentDetails(data.courseDetails);
-          // Editor content will be updated via props, no need to manually set
-        } else {
-          // Use basic course data to pre-fill some fields
-          // Auto-populate instructor from current session if available
+        // Try to fetch detailed content from the details endpoint
+        try {
+          const detailsResponse = await fetch(
+            `/api/admin/courses/${courseId}/details`,
+            {
+              cache: "no-store", // Disable cache for admin
+            }
+          );
+
+          if (detailsResponse.ok) {
+            const detailsData = await detailsResponse.json();
+            setContentDetails(detailsData);
+          } else {
+            // Details not found, create empty template
+            const instructorInfo = session?.user
+              ? {
+                  name: session.user.name || "Instructor",
+                  avatar:
+                    session.user.image || "https://via.placeholder.com/150",
+                  rating: 4.8,
+                  students: 0,
+                }
+              : {
+                  name: "",
+                  avatar: "https://via.placeholder.com/150",
+                  rating: 0,
+                  students: 0,
+                };
+
+            setContentDetails({
+              ...createEmptyContentDetails(),
+              title: courseData.title || "",
+              price: courseData.price || 0,
+              isFree: !courseData.price || courseData.price === 0,
+              instructor: instructorInfo,
+            });
+          }
+        } catch (detailsError) {
+          console.error("Error fetching details:", detailsError);
+          // Fallback to empty template
           const instructorInfo = session?.user
             ? {
                 name: session.user.name || "Instructor",
@@ -156,9 +193,9 @@ export default function CourseContentDetailsPage() {
 
           setContentDetails({
             ...createEmptyContentDetails(),
-            title: data.title || "",
-            price: data.price || 0,
-            isFree: !data.price || data.price === 0,
+            title: courseData.title || "",
+            price: courseData.price || 0,
+            isFree: !courseData.price || courseData.price === 0,
             instructor: instructorInfo,
           });
         }
