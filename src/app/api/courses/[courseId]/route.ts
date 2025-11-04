@@ -207,7 +207,27 @@ export async function PATCH(
     cache.delete("courses-published");
     cache.clear(); // Clear all cache to ensure fresh data
 
-    return NextResponse.json(course);
+    // Refetch the updated course to ensure we return the latest data
+    const updatedCourse = await db.course.findUnique({
+      where: { id: courseId },
+      include: {
+        chapters: {
+          orderBy: {
+            position: "asc",
+          },
+          include: {
+            subchapters: {
+              orderBy: {
+                position: "asc",
+              },
+            },
+          },
+        },
+        courseDetails: true,
+      },
+    });
+
+    return NextResponse.json(updatedCourse);
   } catch (error) {
     console.error("Error updating course:", error);
     return NextResponse.json(

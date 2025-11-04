@@ -278,7 +278,7 @@ export async function POST(
         });
 
         if (coursePoints) {
-          // Check if this is the first time completing this chapter
+          // Check if this is a re-completion by looking at existing completion record
           const existingCompletion = await db.chapterCompletion.findUnique({
             where: {
               userId_chapterId: {
@@ -288,18 +288,17 @@ export async function POST(
             },
           });
 
-          const isFirstTime = !existingCompletion;
-
           // Calculate points
           const originalBasePoints = Math.round(coursePoints.pointsPerChapter);
           let basePoints = originalBasePoints;
           let bonusPoints = 0;
 
-          // If re-completion, only give 30% of base points
-          if (!isFirstTime) {
+          // If completion record exists, this is a re-completion (user completed, unmarked, and is completing again)
+          if (existingCompletion) {
+            // Re-completion: only give 30% of base points, no bonus
             basePoints = Math.round(originalBasePoints * 0.3);
           } else {
-            // First-time completion bonus (20% of base points)
+            // True first-time completion: give full points + 20% bonus
             bonusPoints = Math.round(originalBasePoints * 0.2);
           }
 
@@ -320,8 +319,8 @@ export async function POST(
               totalPoints,
               finalPoints,
               completionTime: 60, // Default 1 minute
-              isFirstTime: false, // Update to false on re-completion
               completedAt: new Date(),
+              // Keep isFirstTime unchanged to preserve history
             },
             create: {
               userId: session.user.id,
@@ -389,7 +388,7 @@ export async function POST(
         });
 
         if (chapterCompletion) {
-          const pointsToDeduct = chapterCompletion.totalPoints;
+          const pointsToDeduct = chapterCompletion.finalPoints;
 
           // Deduct points from user rank
           const userRank = await db.userRank.findUnique({
@@ -416,15 +415,9 @@ export async function POST(
             });
           }
 
-          // Delete the chapter completion record
-          await db.chapterCompletion.delete({
-            where: {
-              userId_chapterId: {
-                userId: session.user.id,
-                chapterId: chapterId,
-              },
-            },
-          });
+          // DON'T delete the completion record - keep it for history
+          // This preserves isFirstTime status for future re-completions
+          // The Progress.isCompleted = false is enough to track current state
 
           pointsAwarded = -pointsToDeduct; // Negative to indicate deduction
         }
@@ -477,7 +470,7 @@ export async function POST(
       progressPercentage: newProgressPercentage,
       completedCount: totalProgress,
       totalCount: totalItems,
-      pointsAwarded: isCompleted ? pointsAwarded : 0,
+      pointsAwarded: pointsAwarded, // Return actual points (positive for award, negative for deduct)
       updatedAt: progress.updatedAt,
     });
   } catch (error) {
