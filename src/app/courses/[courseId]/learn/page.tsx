@@ -245,11 +245,21 @@ export default function CourseLearnPage() {
       const updatedProgress = await response.json();
       setProgress(updatedProgress);
 
+      // Show success message with points if awarded or deducted
+      let pointsMessage = "";
+      if (updatedProgress.pointsAwarded > 0) {
+        pointsMessage = ` You earned ${updatedProgress.pointsAwarded} points! 🎉`;
+      } else if (updatedProgress.pointsAwarded < 0) {
+        pointsMessage = ` ${Math.abs(
+          updatedProgress.pointsAwarded
+        )} points deducted.`;
+      }
+
       toast({
         title: isCompleted ? "Chapter Completed!" : "Progress Updated",
         description: isCompleted
-          ? `Great job! You're ${updatedProgress.progressPercentage}% done.`
-          : "Progress updated successfully.",
+          ? `Great job! You're ${updatedProgress.progressPercentage}% done.${pointsMessage}`
+          : `Progress updated successfully.${pointsMessage}`,
       });
     } catch {
       // Revert optimistic update on error

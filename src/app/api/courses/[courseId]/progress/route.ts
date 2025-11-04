@@ -266,6 +266,174 @@ export async function POST(
       },
     });
 
+    // Step 5.5: Award or deduct points based on completion status
+    let pointsAwarded = 0;
+
+    if (isCompleted) {
+      // MARKING AS COMPLETED - Award points
+      try {
+        // Check if course has points configured
+        const coursePoints = await db.coursePoints.findUnique({
+          where: { courseId },
+        });
+
+        if (coursePoints) {
+          // Check if this is the first time completing this chapter
+          const existingCompletion = await db.chapterCompletion.findUnique({
+            where: {
+              userId_chapterId: {
+                userId: session.user.id,
+                chapterId: chapterId,
+              },
+            },
+          });
+
+          const isFirstTime = !existingCompletion;
+
+          // Calculate points
+          const originalBasePoints = Math.round(coursePoints.pointsPerChapter);
+          let basePoints = originalBasePoints;
+          let bonusPoints = 0;
+
+          // If re-completion, only give 30% of base points
+          if (!isFirstTime) {
+            basePoints = Math.round(originalBasePoints * 0.3);
+          } else {
+            // First-time completion bonus (20% of base points)
+            bonusPoints = Math.round(originalBasePoints * 0.2);
+          }
+
+          const totalPoints = basePoints + bonusPoints;
+          const finalPoints = totalPoints; // No multiplier applied in this simple version
+
+          // Save chapter completion record
+          await db.chapterCompletion.upsert({
+            where: {
+              userId_chapterId: {
+                userId: session.user.id,
+                chapterId: chapterId,
+              },
+            },
+            update: {
+              basePoints,
+              bonusPoints,
+              totalPoints,
+              finalPoints,
+              completionTime: 60, // Default 1 minute
+              isFirstTime: false, // Update to false on re-completion
+              completedAt: new Date(),
+            },
+            create: {
+              userId: session.user.id,
+              chapterId: chapterId,
+              courseId: courseId,
+              basePoints,
+              bonusPoints,
+              totalPoints,
+              finalPoints,
+              completionTime: 60, // Default 1 minute
+              isFirstTime: true,
+              isPerfectScore: false,
+              hasSpeedBonus: false,
+              streakMultiplier: 1.0,
+              completedAt: new Date(),
+            },
+          });
+
+          // Update user rank points
+          const userRank = await db.userRank.findUnique({
+            where: { userId: session.user.id },
+          });
+
+          if (userRank) {
+            await db.userRank.update({
+              where: { userId: session.user.id },
+              data: {
+                totalPoints: {
+                  increment: totalPoints,
+                },
+                weeklyPoints: {
+                  increment: totalPoints,
+                },
+              },
+            });
+          } else {
+            // Create user rank if it doesn't exist
+            await db.userRank.create({
+              data: {
+                userId: session.user.id,
+                totalPoints: totalPoints,
+                weeklyPoints: totalPoints,
+                currentRank: 1, // Start at rank 1 (Bronze)
+              },
+            });
+          }
+
+          pointsAwarded = totalPoints;
+        }
+      } catch (pointsError) {
+        console.error("Error awarding points:", pointsError);
+        // Continue even if points fail - don't block progress tracking
+      }
+    } else {
+      // UNMARKING AS COMPLETED - Deduct points
+      try {
+        // Get the chapter completion record to see how many points were awarded
+        const chapterCompletion = await db.chapterCompletion.findUnique({
+          where: {
+            userId_chapterId: {
+              userId: session.user.id,
+              chapterId: chapterId,
+            },
+          },
+        });
+
+        if (chapterCompletion) {
+          const pointsToDeduct = chapterCompletion.totalPoints;
+
+          // Deduct points from user rank
+          const userRank = await db.userRank.findUnique({
+            where: { userId: session.user.id },
+          });
+
+          if (userRank) {
+            // Ensure we don't go below 0
+            const newTotalPoints = Math.max(
+              0,
+              userRank.totalPoints - pointsToDeduct
+            );
+            const newWeeklyPoints = Math.max(
+              0,
+              userRank.weeklyPoints - pointsToDeduct
+            );
+
+            await db.userRank.update({
+              where: { userId: session.user.id },
+              data: {
+                totalPoints: newTotalPoints,
+                weeklyPoints: newWeeklyPoints,
+              },
+            });
+          }
+
+          // Delete the chapter completion record
+          await db.chapterCompletion.delete({
+            where: {
+              userId_chapterId: {
+                userId: session.user.id,
+                chapterId: chapterId,
+              },
+            },
+          });
+
+          pointsAwarded = -pointsToDeduct; // Negative to indicate deduction
+        }
+      } catch (pointsError) {
+        console.error("Error deducting points:", pointsError);
+        // Continue even if points fail - don't block progress tracking
+      }
+    }
+
     // Step 6: Get updated total progress
     const totalProgress = await db.progress.count({
       where: {
@@ -309,6 +477,7 @@ export async function POST(
       progressPercentage: newProgressPercentage,
       completedCount: totalProgress,
       totalCount: totalItems,
+      pointsAwarded: isCompleted ? pointsAwarded : 0,
       updatedAt: progress.updatedAt,
     });
   } catch (error) {
