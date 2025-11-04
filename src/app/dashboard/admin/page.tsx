@@ -470,20 +470,20 @@ export default function AdminPanelPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-yellow-50 to-pink-50 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-4xl font-extrabold text-blue-900 mb-6">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-yellow-50 to-pink-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-blue-900 mb-4 sm:mb-6">
           Admin Panel
         </h1>
-        <p className="text-lg text-gray-800 mb-8">
+        <p className="text-base sm:text-lg text-gray-800 mb-6 sm:mb-8">
           Manage courses, sessions, and content here.
         </p>
         {/* Create Course Form */}
         <form
           onSubmit={handleCreate}
-          className="mb-10 space-y-4 bg-blue-100 rounded-lg p-6 shadow border border-blue-200"
+          className="mb-6 sm:mb-10 space-y-4 bg-blue-100 rounded-lg p-4 sm:p-6 shadow border border-blue-200"
         >
-          <h2 className="text-2xl font-bold text-blue-800 mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-2">
             Add New Course
           </h2>
           <div>

@@ -261,7 +261,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2, duration: 0.7 }}
-          className="absolute left-1/2 -translate-x-1/2 bottom-8 flex flex-col items-center"
+          className="mt-12 sm:mt-16 flex flex-col items-center"
         >
           <span className="text-2xl text-blue-700 animate-bounce">↓</span>
           <span className="text-xs text-blue-700 mt-1">Scroll Down</span>

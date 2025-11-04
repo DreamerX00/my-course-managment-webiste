@@ -485,95 +485,111 @@ export default function ProfilePage() {
 
       <div className="container py-6 sm:py-8 md:py-12 px-4">
         <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          {/* Stats Grid - Redesigned */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {/* Total Courses */}
-            <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700 dashboard-stat-card dashboard-stat-card-animate">
-              <CardHeader className="pb-3">
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 bg-gradient-to-br from-blue-50/50 to-background dark:from-blue-950/20 dark:to-background">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors" />
+              <CardContent className="relative p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    Enrolled Courses
-                  </CardDescription>
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
-                    <GraduationCap className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/20">
+                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
+                      {enrolledCoursesCount}
+                    </div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-bold">{enrolledCoursesCount}</div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {inProgressCourses} in progress
-                </p>
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
+                    Enrolled Courses
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    {inProgressCourses} in progress
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
             {/* Completed Courses */}
-            <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100 dashboard-stat-card dashboard-stat-card-animate">
-              <CardHeader className="pb-3">
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 bg-gradient-to-br from-green-50/50 to-background dark:from-green-950/20 dark:to-background">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/10 transition-colors" />
+              <CardContent className="relative p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="flex items-center gap-2">
-                    <Trophy className="w-4 h-4" />
-                    Completed
-                  </CardDescription>
-                  <div className="p-2 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
-                    <Award className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 ring-1 ring-green-500/20">
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
+                      {profile.completedCourses}
+                    </div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-bold">
-                  {profile.completedCourses}
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
+                    Completed
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
+                    Completed
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {enrolledCoursesCount > 0
+                      ? `${Math.round(
+                          (profile.completedCourses / enrolledCoursesCount) *
+                            100
+                        )}% completion rate`
+                      : "None yet"}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {enrolledCoursesCount > 0
-                    ? `${Math.round(
-                        (profile.completedCourses / enrolledCoursesCount) * 100
-                      )}% completion rate`
-                    : "No courses yet"}
-                </p>
               </CardContent>
             </Card>
 
             {/* Average Progress */}
-            <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 dashboard-stat-card dashboard-stat-card-animate">
-              <CardHeader className="pb-3">
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 bg-gradient-to-br from-purple-50/50 to-background dark:from-purple-950/20 dark:to-background">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-purple-500/10 transition-colors" />
+              <CardContent className="relative p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Avg Progress
-                  </CardDescription>
-                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
-                    <Target className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 ring-1 ring-purple-500/20">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
+                      {Math.round(averageProgress)}%
+                    </div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-bold">
-                  {Math.round(averageProgress)}%
+                <div className="space-y-1 sm:space-y-2">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
+                    Average Progress
+                  </p>
+                  <Progress value={averageProgress} className="h-1.5 sm:h-2" />
                 </div>
-                <Progress value={averageProgress} className="mt-2 h-2" />
               </CardContent>
             </Card>
 
             {/* Total Score */}
-            <Card className="group hover:shadow-lg transition-all hover:-translate-y-1 border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 dashboard-stat-card dashboard-stat-card-animate">
-              <CardHeader className="pb-3">
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 bg-gradient-to-br from-yellow-50/50 to-background dark:from-yellow-950/20 dark:to-background">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-3xl group-hover:bg-yellow-500/10 transition-colors" />
+              <CardContent className="relative p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="flex items-center gap-2">
-                    <Trophy className="w-4 h-4" />
-                    Total Score
-                  </CardDescription>
-                  <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 group-hover:scale-110 transition-transform">
-                    <Sparkles className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 ring-1 ring-yellow-500/20">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
+                      {profile.totalScore}
+                    </div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-bold">{profile.totalScore}</div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Points earned
-                </p>
+                <div className="space-y-0.5 sm:space-y-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
+                    Total Score
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Points earned
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -629,30 +645,32 @@ export default function ProfilePage() {
                             router.push(`/courses/${course.id}/learn`)
                           }
                         >
-                          <CardContent className="p-6">
+                          <CardContent className="p-4 sm:p-6">
                             <div className="space-y-4">
                               {/* Course Header */}
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
+                                <div className="flex-1 min-w-0 w-full sm:w-auto">
+                                  <h3 className="text-lg sm:text-xl font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">
                                     {course.title}
                                   </h3>
-                                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                                  <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
                                     <div className="flex items-center gap-1">
-                                      <Calendar className="w-4 h-4" />
-                                      {new Date(
-                                        course.lastAccessed
-                                      ).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                        year: "numeric",
-                                      })}
+                                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                                      <span className="truncate">
+                                        {new Date(
+                                          course.lastAccessed
+                                        ).toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric",
+                                        })}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
 
                                 {/* Progress Badge */}
-                                <div className="text-center">
+                                <div className="text-center shrink-0 self-end sm:self-auto">
                                   {(() => {
                                     let colorClass = "text-muted-foreground";
                                     if (course.progress === 100)
@@ -668,7 +686,7 @@ export default function ProfilePage() {
                                     return (
                                       <>
                                         <div
-                                          className={`text-2xl font-bold ${colorClass}`}
+                                          className={`text-xl sm:text-2xl font-bold ${colorClass}`}
                                         >
                                           {course.progress}%
                                         </div>
@@ -729,28 +747,28 @@ export default function ProfilePage() {
                         }}
                       >
                         <CardHeader>
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                              <div className="text-5xl">
+                              <div className="text-4xl sm:text-5xl shrink-0">
                                 {profile.rank.currentRank?.icon}
                               </div>
                               <div>
                                 <CardTitle
-                                  className="text-2xl"
+                                  className="text-xl sm:text-2xl"
                                   style={{
                                     color: profile.rank.currentRank?.color,
                                   }}
                                 >
                                   {profile.rank.currentRank?.name}
                                 </CardTitle>
-                                <CardDescription>
+                                <CardDescription className="text-xs sm:text-sm">
                                   {profile.rank.currentRank?.description}
                                 </CardDescription>
                               </div>
                             </div>
                             <Badge
                               variant="outline"
-                              className="text-lg px-4 py-2"
+                              className="text-base sm:text-lg px-3 sm:px-4 py-1 sm:py-2 shrink-0"
                             >
                               {profile.rank.totalPoints.toLocaleString()} pts
                             </Badge>
@@ -828,38 +846,41 @@ export default function ProfilePage() {
                       {profile.achievements && (
                         <Card>
                           <CardHeader>
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="flex items-center gap-2">
-                                <Award className="w-5 h-5" />
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                                <Award className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                                 Achievements
                               </CardTitle>
-                              <Badge variant="outline">
+                              <Badge
+                                variant="outline"
+                                className="text-xs sm:text-sm shrink-0"
+                              >
                                 {profile.achievements.unlocked.length} /{" "}
                                 {profile.achievements.total}
                               </Badge>
                             </div>
-                            <CardDescription>
+                            <CardDescription className="text-xs sm:text-sm">
                               Unlock achievements by completing challenges and
                               reaching milestones
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
                             {profile.achievements.unlocked.length > 0 ? (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 {profile.achievements.unlocked.map(
                                   (achievement) => (
                                     <Card
                                       key={achievement.id}
                                       className="border-2"
                                     >
-                                      <CardContent className="pt-4">
-                                        <div className="flex items-start gap-3">
-                                          <div className="text-3xl">
+                                      <CardContent className="pt-3 sm:pt-4">
+                                        <div className="flex items-start gap-2 sm:gap-3">
+                                          <div className="text-2xl sm:text-3xl shrink-0">
                                             {achievement.icon}
                                           </div>
-                                          <div className="flex-1">
-                                            <div className="flex items-center justify-between">
-                                              <h4 className="font-semibold">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                              <h4 className="font-semibold text-sm sm:text-base break-words">
                                                 {achievement.name}
                                               </h4>
                                               <Badge
@@ -869,16 +890,16 @@ export default function ProfilePage() {
                                                     ? "default"
                                                     : "outline"
                                                 }
-                                                className="text-xs"
+                                                className="text-xs shrink-0"
                                               >
                                                 {achievement.rarity}
                                               </Badge>
                                             </div>
-                                            <p className="text-sm text-muted-foreground mt-1">
+                                            <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">
                                               {achievement.description}
                                             </p>
                                             <div className="flex items-center gap-2 mt-2">
-                                              <Sparkles className="w-3 h-3 text-yellow-600" />
+                                              <Sparkles className="w-3 h-3 text-yellow-600 shrink-0" />
                                               <span className="text-xs font-medium text-yellow-600">
                                                 +{achievement.pointsReward}{" "}
                                                 points
@@ -910,8 +931,8 @@ export default function ProfilePage() {
                       {profile.rank.rankHistory.length > 0 && (
                         <Card>
                           <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <TrendingUp className="w-5 h-5" />
+                            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
                               Rank History
                             </CardTitle>
                             <CardDescription>
@@ -923,10 +944,10 @@ export default function ProfilePage() {
                               {profile.rank.rankHistory.map((history) => (
                                 <div
                                   key={history.id}
-                                  className="flex items-center gap-4 p-3 rounded-lg border"
+                                  className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 rounded-lg border"
                                 >
                                   <div
-                                    className={`p-2 rounded-full ${
+                                    className={`p-2 rounded-full shrink-0 ${
                                       history.newRank > history.oldRank
                                         ? "bg-green-100 dark:bg-green-900/20"
                                         : history.newRank < history.oldRank
@@ -942,16 +963,16 @@ export default function ProfilePage() {
                                       <Target className="w-4 h-4 text-blue-600" />
                                     )}
                                   </div>
-                                  <div className="flex-1">
-                                    <div className="font-medium">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-sm sm:text-base">
                                       Rank {history.oldRank} → Rank{" "}
                                       {history.newRank}
                                     </div>
-                                    <div className="text-sm text-muted-foreground">
+                                    <div className="text-xs sm:text-sm text-muted-foreground break-words">
                                       {history.reason}
                                     </div>
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-muted-foreground shrink-0 self-end sm:self-auto">
                                     {new Date(
                                       history.createdAt
                                     ).toLocaleDateString()}
@@ -998,12 +1019,12 @@ export default function ProfilePage() {
                             transition={{ delay: index * 0.05 }}
                           >
                             <Card className="hover:shadow-md transition-shadow">
-                              <CardContent className="p-4">
-                                <div className="flex items-start gap-4">
+                              <CardContent className="p-3 sm:p-4">
+                                <div className="flex items-start gap-3 sm:gap-4">
                                   {/* Icon based on activity type */}
                                   <div
                                     className={cn(
-                                      "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
+                                      "shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
                                       activity.type === "completion" &&
                                         "bg-green-100 dark:bg-green-950",
                                       activity.type === "quiz" &&
@@ -1032,18 +1053,18 @@ export default function ProfilePage() {
                                   <div className="flex-1 min-w-0">
                                     {activity.type === "completion" && (
                                       <>
-                                        <p className="font-semibold text-foreground">
+                                        <p className="font-semibold text-foreground text-sm sm:text-base break-words">
                                           Completed{" "}
                                           <span className="text-green-600 dark:text-green-400">
                                             {activity.title}
                                           </span>
                                         </p>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-xs sm:text-sm text-muted-foreground break-words">
                                           {activity.courseTitle}
                                         </p>
                                         <div className="flex items-center gap-2 mt-1">
-                                          <Trophy className="w-4 h-4 text-amber-500" />
-                                          <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                                          <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+                                          <span className="text-xs sm:text-sm font-medium text-amber-600 dark:text-amber-400">
                                             +{activity.points} points
                                           </span>
                                         </div>
@@ -1052,15 +1073,15 @@ export default function ProfilePage() {
 
                                     {activity.type === "quiz" && (
                                       <>
-                                        <p className="font-semibold text-foreground">
+                                        <p className="font-semibold text-foreground text-sm sm:text-base break-words">
                                           Attempted Quiz:{" "}
                                           <span className="text-blue-600 dark:text-blue-400">
                                             {activity.title}
                                           </span>
                                         </p>
                                         <div className="flex items-center gap-2 mt-1">
-                                          <Star className="w-4 h-4 text-blue-500" />
-                                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                                          <Star className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 shrink-0" />
+                                          <span className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400">
                                             Score: {activity.score}%
                                           </span>
                                         </div>
@@ -1069,14 +1090,14 @@ export default function ProfilePage() {
 
                                     {activity.type === "promotion" && (
                                       <>
-                                        <p className="font-semibold text-foreground">
+                                        <p className="font-semibold text-foreground text-sm sm:text-base break-words">
                                           <span className="text-amber-600 dark:text-amber-400">
                                             Promoted!
                                           </span>{" "}
                                           Rank {activity.previousRank} → Rank{" "}
                                           {activity.newRank}
                                         </p>
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">
                                           {activity.reason}
                                         </p>
                                       </>
@@ -1084,14 +1105,14 @@ export default function ProfilePage() {
 
                                     {activity.type === "demotion" && (
                                       <>
-                                        <p className="font-semibold text-foreground">
+                                        <p className="font-semibold text-foreground text-sm sm:text-base break-words">
                                           <span className="text-red-600 dark:text-red-400">
                                             Demoted
                                           </span>{" "}
                                           Rank {activity.previousRank} → Rank{" "}
                                           {activity.newRank}
                                         </p>
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">
                                           {activity.reason}
                                         </p>
                                       </>
@@ -1134,51 +1155,55 @@ export default function ProfilePage() {
 
                 {/* Recent Courses List (outside main .map) */}
                 {profile.courses.length > 0 && (
-                  <div className="mt-8">
-                    <h3 className="text-lg font-semibold mb-4">
+                  <div className="mt-6 sm:mt-8">
+                    <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                       Recent Courses
                     </h3>
-                    {profile.courses
-                      .toSorted(
-                        (a, b) =>
-                          new Date(b.lastAccessed).getTime() -
-                          new Date(a.lastAccessed).getTime()
-                      )
-                      .slice(0, 5)
-                      .map((course, index) => (
-                        <button
-                          key={course.id}
-                          type="button"
-                          className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer animate-in fade-in slide-in-from-left-4 w-full text-left focus:outline-none focus:ring-2 focus:ring-primary"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                          aria-label={`Go to course ${course.title}`}
-                          onClick={() =>
-                            router.push(`/courses/${course.id}/learn`)
-                          }
-                        >
-                          <div className="p-3 rounded-lg bg-primary/10">
-                            <BookOpen className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium line-clamp-1">
-                              {course.title}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(course.lastAccessed).toLocaleDateString(
-                                "en-US",
-                                {
+                    <div className="space-y-2 sm:space-y-3">
+                      {profile.courses
+                        .toSorted(
+                          (a, b) =>
+                            new Date(b.lastAccessed).getTime() -
+                            new Date(a.lastAccessed).getTime()
+                        )
+                        .slice(0, 5)
+                        .map((course, index) => (
+                          <button
+                            key={course.id}
+                            type="button"
+                            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer animate-in fade-in slide-in-from-left-4 w-full text-left focus:outline-none focus:ring-2 focus:ring-primary"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                            aria-label={`Go to course ${course.title}`}
+                            onClick={() =>
+                              router.push(`/courses/${course.id}/learn`)
+                            }
+                          >
+                            <div className="p-2 sm:p-3 rounded-lg bg-primary/10 shrink-0">
+                              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium line-clamp-1 text-sm sm:text-base">
+                                {course.title}
+                              </h4>
+                              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                                {new Date(
+                                  course.lastAccessed
+                                ).toLocaleDateString("en-US", {
                                   month: "long",
                                   day: "numeric",
                                   year: "numeric",
-                                }
-                              )}
-                            </p>
-                          </div>
-                          <Badge variant="outline" className="shrink-0">
-                            {course.progress}%
-                          </Badge>
-                        </button>
-                      ))}
+                                })}
+                              </p>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className="shrink-0 text-xs sm:text-sm"
+                            >
+                              {course.progress}%
+                            </Badge>
+                          </button>
+                        ))}
+                    </div>
                   </div>
                 )}
               </CardContent>

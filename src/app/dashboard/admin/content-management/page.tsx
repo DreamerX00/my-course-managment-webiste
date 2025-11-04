@@ -202,27 +202,27 @@ export default function ContentManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-8">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-pink-50 to-yellow-50 pt-24 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-2">
                 Content Management
               </h1>
-              <p className="text-lg text-gray-600">
+              <p className="text-sm sm:text-base lg:text-lg text-gray-600">
                 Control how the Explore Courses page and Homepage are displayed
                 to users
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               {hasChanges && (
-                <span className="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+                <span className="text-xs sm:text-sm text-orange-600 bg-orange-50 px-2 sm:px-3 py-1 rounded-full">
                   Unsaved Changes
                 </span>
               )}
@@ -230,17 +230,18 @@ export default function ContentManagementPage() {
                 variant="outline"
                 onClick={resetSettings}
                 disabled={saving}
+                className="flex-1 sm:flex-none text-xs sm:text-sm"
               >
-                <RotateCcw className="h-4 w-4 mr-2" />
+                <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Reset
               </Button>
               <Button
                 onClick={saveSettings}
                 disabled={saving || !hasChanges}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none text-xs sm:text-sm"
               >
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? "Saving..." : "Save Changes"}
+                <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {saving ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
@@ -248,22 +249,38 @@ export default function ContentManagementPage() {
 
         {/* Main Content */}
         <Tabs defaultValue="filters" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="filters" className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Filter Categories
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-2">
+            <TabsTrigger
+              value="filters"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <Filter className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Filter Categories</span>
+              <span className="sm:hidden">Filters</span>
             </TabsTrigger>
-            <TabsTrigger value="featured" className="flex items-center gap-2">
-              <Star className="h-4 w-4" />
-              Featured Courses
+            <TabsTrigger
+              value="featured"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <Star className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Featured Courses</span>
+              <span className="sm:hidden">Featured</span>
             </TabsTrigger>
-            <TabsTrigger value="layout" className="flex items-center gap-2">
-              <Grid3X3 className="h-4 w-4" />
-              Layout Options
+            <TabsTrigger
+              value="layout"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <Grid3X3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Layout Options</span>
+              <span className="sm:hidden">Layout</span>
             </TabsTrigger>
-            <TabsTrigger value="preview" className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              Live Preview
+            <TabsTrigger
+              value="preview"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Live Preview</span>
+              <span className="sm:hidden">Preview</span>
             </TabsTrigger>
           </TabsList>
 

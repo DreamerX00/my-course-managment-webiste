@@ -234,67 +234,71 @@ export default function LeaderboardPage() {
 
         {/* Stats Cards */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 sm:pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Total Participants
                   </p>
-                  <p className="text-3xl font-bold">{data?.total || 0}</p>
+                  <p className="text-2xl sm:text-3xl font-bold">
+                    {data?.total || 0}
+                  </p>
                 </div>
-                <Users className="w-12 h-12 text-primary/20" />
+                <Users className="w-8 h-8 sm:w-12 sm:h-12 text-primary/20" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 sm:pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Top Points</p>
-                  <p className="text-3xl font-bold text-yellow-600">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Top Points
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-yellow-600">
                     {stats.topPoints.toLocaleString()}
                   </p>
                 </div>
-                <Star className="w-12 h-12 text-yellow-500/20" />
+                <Star className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-500/20" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 sm:pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Average Points
                   </p>
-                  <p className="text-3xl font-bold text-blue-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">
                     {stats.avgPoints.toLocaleString()}
                   </p>
                 </div>
-                <BarChart3 className="w-12 h-12 text-blue-500/20" />
+                <BarChart3 className="w-8 h-8 sm:w-12 sm:h-12 text-blue-500/20" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 sm:pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Total Completions
                   </p>
-                  <p className="text-3xl font-bold text-purple-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-purple-600">
                     {stats.totalCompletions.toLocaleString()}
                   </p>
                 </div>
-                <Target className="w-12 h-12 text-purple-500/20" />
+                <Target className="w-8 h-8 sm:w-12 sm:h-12 text-purple-500/20" />
               </div>
             </CardContent>
           </Card>
@@ -609,60 +613,62 @@ export default function LeaderboardPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
+                      className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 transition-all ${
                         entry.id === session?.user?.id
                           ? "bg-primary/10 border-primary/50 shadow-lg"
                           : "hover:bg-muted/50 hover:border-primary/30 border-transparent"
                       }`}
                     >
-                      <div className="w-16 flex justify-center">
-                        {entry.rank <= 3 ? (
-                          <div className="relative">
-                            {getRankIcon(entry.rank)}
-                            <div className="absolute -inset-2 bg-current opacity-10 blur-lg rounded-full"></div>
-                          </div>
-                        ) : (
-                          <Badge
-                            className={getRankBadgeColor(entry.rank)}
-                            variant="secondary"
-                          >
-                            #{entry.rank}
-                          </Badge>
-                        )}
-                      </div>
-                      <Avatar className="w-14 h-14 border-2">
-                        <AvatarImage src={entry.displayAvatar} />
-                        <AvatarFallback>
-                          {getInitials(entry.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-semibold text-lg truncate">
-                            {entry.name}
-                          </h4>
-                          {entry.id === session?.user?.id && (
+                      <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                        <div className="w-12 sm:w-16 flex justify-center shrink-0">
+                          {entry.rank <= 3 ? (
+                            <div className="relative">
+                              {getRankIcon(entry.rank)}
+                              <div className="absolute -inset-2 bg-current opacity-10 blur-lg rounded-full"></div>
+                            </div>
+                          ) : (
                             <Badge
-                              variant="default"
-                              className="text-xs animate-pulse"
+                              className={getRankBadgeColor(entry.rank)}
+                              variant="secondary"
                             >
-                              You
+                              #{entry.rank}
                             </Badge>
                           )}
-                          {entry.rank <= 10 &&
-                            entry.id !== session?.user?.id && (
-                              <Badge variant="secondary" className="text-xs">
-                                Top 10
+                        </div>
+                        <Avatar className="w-12 h-12 sm:w-14 sm:h-14 border-2 shrink-0">
+                          <AvatarImage src={entry.displayAvatar} />
+                          <AvatarFallback>
+                            {getInitials(entry.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-semibold text-base sm:text-lg truncate">
+                              {entry.name}
+                            </h4>
+                            {entry.id === session?.user?.id && (
+                              <Badge
+                                variant="default"
+                                className="text-xs animate-pulse"
+                              >
+                                You
                               </Badge>
                             )}
+                            {entry.rank <= 10 &&
+                              entry.id !== session?.user?.id && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Top 10
+                                </Badge>
+                              )}
+                          </div>
+                          {entry.title && (
+                            <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                              {entry.title}
+                            </p>
+                          )}
                         </div>
-                        {entry.title && (
-                          <p className="text-sm text-muted-foreground truncate">
-                            {entry.title}
-                          </p>
-                        )}
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right w-full sm:w-auto ml-auto">
                         <Badge
                           className={getScoreBadgeColor(entry.totalPoints)}
                           variant="outline"

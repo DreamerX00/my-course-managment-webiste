@@ -6,6 +6,15 @@ import { SearchBar } from "@/components/SearchBar";
 import { FilterBar } from "@/components/FilterBar";
 import { CourseGrid } from "@/components/CourseGrid";
 import { ModernCourseCard } from "@/components/ModernCourseCard";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Filter } from "lucide-react";
 
 interface Course {
   id: string;
@@ -40,6 +49,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Content settings state
   const [contentSettings, setContentSettings] =
@@ -209,45 +219,65 @@ export default function CoursesPage() {
 
         {/* Floating Filter Button for Mobile */}
         <div className="fixed bottom-6 right-6 z-40 md:hidden">
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.08 }}
-            onClick={() => {
-              // Scroll to filter bar
-              const filterBar = document.getElementById("mobile-filter-bar");
-              if (filterBar)
-                filterBar.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-            }}
-            className="bg-blue-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-400"
-            aria-label="Show Filters"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0013 13.414V19a1 1 0 01-1.447.894l-4-2A1 1 0 017 17v-3.586a1 1 0 00-.293-.707L3.293 6.707A1 1 0 013 6V4z"
-              />
-            </svg>
-          </motion.button>
+          <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
+            <SheetTrigger asChild>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.08 }}
+                className="bg-blue-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-400"
+                aria-label="Show Filters"
+              >
+                <Filter className="h-6 w-6" />
+              </motion.button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[80vh]">
+              <SheetHeader>
+                <SheetTitle>Filter Courses</SheetTitle>
+                <SheetDescription>
+                  Refine your course search with filters
+                </SheetDescription>
+              </SheetHeader>
+              <div className="mt-6 space-y-6 overflow-y-auto h-[calc(80vh-8rem)] pb-6">
+                <SearchBar onSearch={setSearchQuery} />
+                <FilterBar
+                  categories={dynamicCategories}
+                  selectedCategory={selectedCategory}
+                  onCategoryChange={(cat) => {
+                    setSelectedCategory(cat);
+                    setMobileFilterOpen(false);
+                  }}
+                  selectedPriceType={selectedPriceType}
+                  onPriceTypeChange={(price) => {
+                    setSelectedPriceType(price);
+                    setMobileFilterOpen(false);
+                  }}
+                  selectedSort={selectedSort}
+                  onSortChange={(sort) => {
+                    setSelectedSort(sort);
+                    setMobileFilterOpen(false);
+                  }}
+                  showSidebar={showFiltersSidebar}
+                  showSorting={showSortingDropdown}
+                  loading={settingsLoading}
+                  colorMap={contentSettings?.filterCategories?.reduce(
+                    (acc: Record<string, string>, cat) => {
+                      acc[cat.name] = cat.color;
+                      return acc;
+                    },
+                    {}
+                  )}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
-        {/* Search and Filters */}
+        {/* Search and Filters - Hidden on Mobile */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-8 space-y-6"
-          id="mobile-filter-bar"
+          className="mb-8 space-y-6 hidden md:block"
         >
           <SearchBar onSearch={setSearchQuery} className="max-w-md mx-auto" />
           <FilterBar
