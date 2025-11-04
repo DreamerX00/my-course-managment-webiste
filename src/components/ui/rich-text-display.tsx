@@ -33,21 +33,7 @@ export function RichTextDisplay({
   );
 }
 
-// Simple HTML renderer for cases where you just want to display HTML without TipTap
-export function SimpleHtmlDisplay({
-  content,
-  className = "",
-  maxHeight = "none",
-}: {
-  content: string;
-  className?: string;
-  maxHeight?: string;
-}) {
-  return (
-    <div
-      className={`simple-html-display prose prose-sm max-w-none ${className}`}
-      style={{ maxHeight, overflow: "auto" }}
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
-  );
-}
+// SECURITY: SimpleHtmlDisplay removed due to XSS vulnerability with dangerouslySetInnerHTML
+// If HTML rendering is needed in the future, use DOMPurify for sanitization:
+// import DOMPurify from 'dompurify';
+// const clean = DOMPurify.sanitize(content);

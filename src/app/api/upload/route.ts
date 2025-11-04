@@ -6,6 +6,17 @@ import { v2 as cloudinary } from "cloudinary";
 // Force dynamic rendering for Next.js 15+
 export const dynamic = "force-dynamic";
 
+// Security: File upload constraints
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+];
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -29,6 +40,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    // Security: Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit` },
+        { status: 400 }
+      );
+    }
+
+    // Security: Validate file type
+    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+    const isVideo = ALLOWED_VIDEO_TYPES.includes(file.type);
+
+    if (!isImage && !isVideo) {
+      return NextResponse.json(
+        {
+          error: `Invalid file type. Allowed types: images (${ALLOWED_IMAGE_TYPES.join(
+            ", "
+          )}) or videos (${ALLOWED_VIDEO_TYPES.join(", ")})`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -40,12 +74,14 @@ export async function POST(request: NextRequest) {
           {
             folder: `course-management/${folder}`,
             resource_type: "auto",
-            transformation:
-              folder === "avatar"
+            // Security: Apply transformations only to images
+            transformation: isImage
+              ? folder === "avatar"
                 ? [{ width: 400, height: 400, crop: "fill", gravity: "face" }]
                 : folder === "banner"
                 ? [{ width: 1200, height: 400, crop: "fill" }]
-                : undefined,
+                : undefined
+              : undefined,
           },
           (error, result) => {
             if (error) reject(error);
