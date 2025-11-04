@@ -59,6 +59,10 @@ export default function AdminPanelPage() {
   // Add state for free toggle
   const [isFree, setIsFree] = useState(true);
 
+  // State for image upload
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Add state for editing courses
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editCourseTitle, setEditCourseTitle] = useState("");
@@ -216,6 +220,70 @@ export default function AdminPanelPage() {
       });
     } finally {
       setCreating(false);
+    }
+  };
+
+  // Handler for image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Image must be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "courses");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      setImageUrl(data.secure_url);
+
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully!",
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -488,15 +556,57 @@ export default function AdminPanelPage() {
           )}
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1">
-              Image URL
+              Course Image
             </label>
-            <input
-              className="w-full border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              required
-              disabled={creating}
-            />
+            <div className="space-y-2">
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+
+              {/* Upload button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={creating || uploadingImage}
+                className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {uploadingImage ? "Uploading..." : "📤 Upload Image"}
+              </button>
+
+              {/* Image URL input (manual entry option) */}
+              <input
+                type="text"
+                placeholder="Or paste image URL here"
+                className="w-full border border-black rounded px-3 py-2 text-gray-900 bg-white font-bold placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                required
+                disabled={creating || uploadingImage}
+              />
+
+              {/* Image preview */}
+              {imageUrl && (
+                <div className="mt-2 border border-gray-300 rounded-lg p-2 bg-white">
+                  <p className="text-xs text-gray-600 mb-2">Preview:</p>
+                  <Image
+                    src={imageUrl}
+                    alt="Course thumbnail preview"
+                    width={200}
+                    height={112}
+                    className="rounded object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "/images/placeholder.png";
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1">
