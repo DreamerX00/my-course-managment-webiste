@@ -198,9 +198,10 @@ export async function PATCH(
       }
     }
 
-    // Invalidate cache after update
+    // Invalidate ALL course caches after update
     cache.delete("courses-all");
     cache.delete("courses-published");
+    cache.clear(); // Clear all cache to ensure fresh data
 
     return NextResponse.json(course);
   } catch (error) {

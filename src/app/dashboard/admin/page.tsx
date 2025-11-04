@@ -385,7 +385,18 @@ export default function AdminPanelPage() {
       });
       if (!res.ok) throw new Error("Failed to update publish status");
       const updatedCourse = await res.json();
+
+      // Update local state with the response
       setCourses(courses.map((c) => (c.id === course.id ? updatedCourse : c)));
+
+      // Refetch all courses to ensure we have the latest data from database
+      const refetchRes = await fetch("/api/courses?all=true", {
+        cache: "no-store",
+      });
+      if (refetchRes.ok) {
+        const allCourses = await refetchRes.json();
+        setCourses(allCourses);
+      }
 
       toast({
         title: "Success",
