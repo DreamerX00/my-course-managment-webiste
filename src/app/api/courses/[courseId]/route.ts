@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { db } from "@/lib/db";
-import { cache } from "@/lib/cache";
+
+// Disable caching for fresh data
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface CourseUpdateData {
   title?: string;
@@ -34,10 +37,6 @@ export async function GET(
           },
         },
         courseDetails: true,
-      },
-      cacheStrategy: {
-        ttl: 300, // 5 minutes cache for individual course
-        swr: 600, // 10 minutes stale-while-revalidate
       },
     });
 
@@ -87,9 +86,7 @@ export async function DELETE(
 
     await db.course.delete({ where: { id: courseId } });
 
-    // Invalidate cache after deletion
-    cache.delete("courses-all");
-    cache.delete("courses-published");
+    // No cache to invalidate - fresh data on every request
 
     return NextResponse.json({ success: true });
   } catch (error) {

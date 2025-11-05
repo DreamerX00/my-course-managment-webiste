@@ -4,10 +4,10 @@ import { authOptions } from "@/lib/auth-options";
 import { db } from "@/lib/db";
 import { createCourseSchema } from "@/lib/validations";
 import { validateRequest } from "@/lib/validation-helpers";
-import { withCache, cache } from "@/lib/cache";
 
-// Enable ISR with 5-minute revalidation instead of forcing dynamic
-export const revalidate = 300;
+// Disable caching for fresh data
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface AdminCategory {
   id: string;
@@ -43,134 +43,116 @@ interface CourseDetailsData {
 
 export async function GET(req: NextRequest) {
   const showAll = req.nextUrl?.searchParams.get("all") === "true";
-  const cacheKey = `courses-${showAll ? "all" : "published"}`;
 
   try {
-    // Use caching for published courses
-    const transformedCourses = await withCache(
-      cacheKey,
-      async () => {
-        // Get content settings for categories
-        const contentSettings = await db.contentSettings.findFirst();
-        const settings =
-          (contentSettings?.settings as CourseDetailsSettings) || {};
-        const adminCategories = settings.filterCategories || [
-          {
-            id: "web-dev",
-            name: "Web Development",
-            color: "#3B82F6",
-            order: 1,
-          },
-          {
-            id: "data-science",
-            name: "Data Science",
-            color: "#10B981",
-            order: 2,
-          },
-          {
-            id: "ai-ml",
-            name: "AI & Machine Learning",
-            color: "#8B5CF6",
-            order: 3,
-          },
-          {
-            id: "mobile-dev",
-            name: "Mobile Development",
-            color: "#F59E0B",
-            order: 4,
-          },
-          { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 },
-        ];
+    // Get content settings for categories WITHOUT caching
+    const contentSettings = await db.contentSettings.findFirst();
+    const settings = (contentSettings?.settings as CourseDetailsSettings) || {};
+    const adminCategories = settings.filterCategories || [
+      {
+        id: "web-dev",
+        name: "Web Development",
+        color: "#3B82F6",
+        order: 1,
+      },
+      {
+        id: "data-science",
+        name: "Data Science",
+        color: "#10B981",
+        order: 2,
+      },
+      {
+        id: "ai-ml",
+        name: "AI & Machine Learning",
+        color: "#8B5CF6",
+        order: 3,
+      },
+      {
+        id: "mobile-dev",
+        name: "Mobile Development",
+        color: "#F59E0B",
+        order: 4,
+      },
+      { id: "blockchain", name: "Blockchain", color: "#EF4444", order: 5 },
+    ];
 
-        // Optimized query with Accelerate caching
-        const courses = await db.course.findMany({
-          where: showAll ? undefined : { isPublished: true },
+    // Optimized query WITHOUT Accelerate caching
+    const courses = await db.course.findMany({
+      where: showAll ? undefined : { isPublished: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        thumbnail: true,
+        price: true,
+        isPublished: true,
+        createdAt: true,
+        updatedAt: true,
+        courseDetails: true,
+        _count: {
+          select: {
+            students: true,
+            chapters: true,
+          },
+        },
+        chapters: {
           select: {
             id: true,
-            title: true,
-            description: true,
-            thumbnail: true,
-            price: true,
-            isPublished: true,
-            createdAt: true,
-            updatedAt: true,
-            courseDetails: true,
             _count: {
               select: {
-                students: true,
-                chapters: true,
-              },
-            },
-            chapters: {
-              select: {
-                id: true,
-                _count: {
-                  select: {
-                    lessons: true,
-                    subchapters: true,
-                  },
-                },
+                lessons: true,
+                subchapters: true,
               },
             },
           },
-          orderBy: { createdAt: "desc" },
-          // Accelerate caching: cache results for 5 minutes
-          cacheStrategy: {
-            ttl: 300,
-            swr: 600, // Serve stale for 10 minutes while revalidating
-          },
-        });
-
-        // Transform the data to match our frontend interface
-        return courses.map((course) => {
-          const totalChapters = course._count.chapters;
-          const totalLessons = course.chapters.reduce(
-            (acc: number, chapter) =>
-              acc + chapter._count.lessons + chapter._count.subchapters,
-            0
-          );
-          const estimatedHours = Math.round((totalLessons * 30) / 60);
-          const enrolledCount = course._count.students;
-          const details = course.courseDetails as CourseDetailsData | null;
-
-          // Determine category
-          const assignedCategory =
-            details?.category ||
-            getCategoryFromTitle(course.title, adminCategories);
-
-          // Use CourseDetails fields if available, otherwise fallback
-          return {
-            id: course.id,
-            title: details?.title || course.title,
-            description: details?.description || course.description,
-            instructor:
-              (details?.instructor as InstructorData)?.name || "Instructor",
-            category: assignedCategory,
-            price: details?.price ?? course.price ?? 0,
-            rating: details?.rating
-              ? Math.round(details.rating * 10) / 10
-              : 4.5,
-            enrolledCount: details?.enrolledCount ?? enrolledCount,
-            duration: details?.duration || `${estimatedHours} hours`,
-            chaptersCount: totalChapters,
-            thumbnail:
-              course.thumbnail ||
-              "https://images.unsplash.com/photo-1517694712202-14dd953bb09f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-            isFree: details?.isFree ?? (!course.price || course.price === 0),
-            isPublished: course.isPublished,
-            createdAt: course.createdAt,
-            updatedAt: course.updatedAt,
-          };
-        });
+        },
       },
-      showAll ? 60 : 300 // Cache admin view for 1min, public for 5min
-    );
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Transform the data to match our frontend interface
+    const transformedCourses = courses.map((course) => {
+      const totalChapters = course._count.chapters;
+      const totalLessons = course.chapters.reduce(
+        (acc: number, chapter) =>
+          acc + chapter._count.lessons + chapter._count.subchapters,
+        0
+      );
+      const estimatedHours = Math.round((totalLessons * 30) / 60);
+      const enrolledCount = course._count.students;
+      const details = course.courseDetails as CourseDetailsData | null;
+
+      // Determine category
+      const assignedCategory =
+        details?.category ||
+        getCategoryFromTitle(course.title, adminCategories);
+
+      // Use CourseDetails fields if available, otherwise fallback
+      return {
+        id: course.id,
+        title: details?.title || course.title,
+        description: details?.description || course.description,
+        instructor:
+          (details?.instructor as InstructorData)?.name || "Instructor",
+        category: assignedCategory,
+        price: details?.price ?? course.price ?? 0,
+        rating: details?.rating ? Math.round(details.rating * 10) / 10 : 4.5,
+        enrolledCount: details?.enrolledCount ?? enrolledCount,
+        duration: details?.duration || `${estimatedHours} hours`,
+        chaptersCount: totalChapters,
+        thumbnail:
+          course.thumbnail ||
+          "https://images.unsplash.com/photo-1517694712202-14dd953bb09f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        isFree: details?.isFree ?? (!course.price || course.price === 0),
+        isPublished: course.isPublished,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
+      };
+    });
 
     return NextResponse.json(transformedCourses, {
       headers: {
-        "Cache-Control": showAll
-          ? "private, max-age=60" // Admin: short cache
-          : "public, s-maxage=300, stale-while-revalidate=600", // Public: CDN cache
+        "Cache-Control": "no-store, no-cache, must-revalidate",
       },
     });
   } catch (error) {
@@ -180,8 +162,7 @@ export async function GET(req: NextRequest) {
       {
         status: 500,
         headers: {
-          // Cache errors briefly to prevent thundering herd
-          "Cache-Control": "public, s-maxage=10, stale-if-error=300",
+          "Cache-Control": "no-store",
         },
       }
     );
@@ -325,9 +306,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Invalidate cache after course creation
-    cache.delete("courses-all");
-    cache.delete("courses-published");
+    // No cache to invalidate - fresh data on every request
 
     return NextResponse.json(course, { status: 201 });
   } catch (error) {
