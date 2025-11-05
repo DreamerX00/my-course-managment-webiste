@@ -199,10 +199,7 @@ export async function PATCH(
       }
     }
 
-    // Invalidate ALL course caches after update
-    cache.delete("courses-all");
-    cache.delete("courses-published");
-    cache.clear(); // Clear all cache to ensure fresh data
+    // No cache to invalidate - fresh data on every request
 
     // Refetch the updated course to ensure we return the latest data
     const updatedCourse = await db.course.findUnique({

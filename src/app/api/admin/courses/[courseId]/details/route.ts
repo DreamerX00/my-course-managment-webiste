@@ -73,11 +73,7 @@ export async function POST(
       },
     });
 
-    // Clear cache to ensure fresh data is loaded
-    const { cache } = await import("@/lib/cache");
-    cache.delete("courses-all");
-    cache.delete("courses-published");
-    cache.clear(); // Clear all cache
+    // No cache to invalidate - fresh data on every request
 
     return NextResponse.json(
       { message: "Content details saved successfully", data: courseDetails },
